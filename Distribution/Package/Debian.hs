@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, ScopedTypeVariables, TypeSynonymInstances #-}
+{-# LANGUAGE CPP, ScopedTypeVariables, TupleSections, TypeSynonymInstances #-}
 
 -- |
 -- Module      :  Distribution.Package.Debian
@@ -21,12 +21,15 @@ import Codec.Binary.UTF8.String (decodeString)
 import Control.Arrow (second)
 import Control.Exception (SomeException, try, bracket, IOException)
 import Control.Monad (when,mplus)
+import Control.Monad.Reader (ReaderT(runReaderT), ask)
+import Control.Monad.Trans (lift)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Char (toLower, isSpace)
 import Data.List
 import qualified Data.Map as Map
 import Data.Maybe
 import Data.Set (Set, member)
+import qualified Data.Set as Set
 import qualified Data.Set (fromList)
 import Data.Version (showVersion)
 import Debian.Control
@@ -42,7 +45,7 @@ import System.Directory
 import System.FilePath ((</>))
 import System.IO (IOMode (ReadMode), hGetContents, hPutStrLn, hSetBinaryMode, openFile, stderr)
 import System.IO.Error (ioeGetFileName, isDoesNotExistError)
-import System.IO.Unsafe (unsafePerformIO)
+import System.IO.Unsafe (unsafePerformIO, unsafeInterleaveIO)
 import System.Posix.Files (setFileCreationMask)
 import System.Process (readProcessWithExitCode)
 import System.Unix.Process
@@ -318,16 +321,16 @@ libPaths compiler debVersions
         do a <- getDirPaths "/usr/lib"
            b <- getDirPaths "/usr/lib/haskell-packages/ghc/lib"
            -- Build a map from names of installed debs to version numbers
-           mapM (packageInfo compiler debVersions) (a ++ b) >>= return . catMaybes
+           runDpkgT $ mapM (packageInfo compiler debVersions) (a ++ b) >>= return . catMaybes
     | True = error $ "Can't handle compiler flavor: " ++ show (compilerFlavor compiler)
     where
       getDirPaths path = try (getDirectoryContents path) >>= return . map (\ x -> (path, x)) . either (\ (_ :: SomeException) -> []) id
 
-packageInfo :: Compiler ->  DebMap -> (FilePath, String) -> IO (Maybe PackageInfo)
+packageInfo :: Compiler ->  DebMap -> (FilePath, String) -> DpkgT IO (Maybe PackageInfo)
 packageInfo compiler debVersions (d, f) =
     case parseNameVersion f of
       Nothing -> return Nothing
-      Just (p, v) -> doesDirectoryExist (d </> f </> cdir) >>= cond (return Nothing) (info (d, p, v))
+      Just (p, v) -> lift (doesDirectoryExist (d </> f </> cdir)) >>= cond (return Nothing) (info (d, p, v))
     where
       cdir = display (compilerId compiler)
       info (d, p, v) = 
@@ -345,17 +348,33 @@ packageInfo compiler debVersions (d, f) =
             (_a, "") -> Nothing
             (a, b) -> Just (reverse (tail b), reverse a) 
 
+-- |Create a map from pathname to the names of the packages that contains that pathname.
+-- We need to make sure we consume all the files, so 
+dpkgFileMap :: IO (Map.Map FilePath (Data.Set.Set String))
+dpkgFileMap =
+    getDirectoryContents "/var/lib/dpkg/info" >>=
+    return . map (\ name -> ("/var/lib/dpkg/info/" ++ name, take (length name - 5) name)) . filter (isSuffixOf ".list") >>=
+    mapM (\ (path, name) -> unsafeInterleaveIO (readFile path) >>= return . lines >>= return . (name,)) >>=
+    return . foldl (\ mp (name, paths) -> foldl (\ mp path -> Map.insertWith Set.union (path :: FilePath) (Set.singleton name :: Set.Set String) mp) mp paths) (Map.empty :: Map.Map FilePath (Set.Set String))
+
+type DpkgT m = ReaderT (Map.Map FilePath (Set.Set String)) m
+
+runDpkgT x =
+    do m <- dpkgFileMap
+       runReaderT x m
+
 -- |Given a path, return the name of the package that owns it.
-debOfFile :: FilePath -> IO (Maybe String)
-debOfFile s =
-    do (out, _err, code) <- lazyCommand cmd L.empty >>= return . collectOutputUnpacked
-       case code of
-         ExitSuccess -> return (takePackageName out)
-         _ -> return Nothing
+debOfFile :: FilePath -> DpkgT IO (Maybe String)
+debOfFile path =
+    do mp <- ask
+       return $ testPath (Map.lookup path mp)
     where
-      cmd = "cd /var/lib/dpkg/info && grep '" ++ s ++ "' *.list"
-      -- We already know here that suff actually is a suffix of s
-      --dropSuffix suff s = take (length s - length suff) s
+      testPath :: Maybe (Set.Set FilePath) -> Maybe FilePath
+      testPath Nothing = Nothing
+      testPath (Just s) =
+          case Set.size s of
+            1 -> Just (Set.findMin s)
+            _ -> Nothing
 
 takePackageName :: String -> Maybe String
 takePackageName s =
