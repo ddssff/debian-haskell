@@ -1,0 +1,13 @@
+Document: libghc-debian-doc
+Title: Manual for the Haskell Debian library
+Abstract:  This library includes modules covering almost every aspect of the
+ Debian packaging system, including low level data types such as version
+ numbers and dependency relations, on up to the types necessary for computing
+ and installing build dependencies, building source and binary packages,
+ and inserting them into a repository.
+Section: Programming
+
+Format: HTML
+Index: /usr/share/doc/libghc-debian-doc/html/doc-index.html
+Files: /usr/share/doc/libghc-debian-doc/html/*.html
+ /usr/share/doc/libghc-debian-doc/html/src/*.html
