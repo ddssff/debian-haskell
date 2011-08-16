@@ -491,12 +491,21 @@ getDebianMaintainer flags =
 
 cdbsRules :: PackageDescription -> String
 cdbsRules pkgDesc =
-    unlines (intercalate [""] ([header] ++ [comments] {- ++ devrules ++ profrules -} ))
+    unlines (intercalate [""] ([header, execs, comments] {- ++ devrules ++ profrules -} ))
     where
       header =
           ["#!/usr/bin/make -f",
            "include /usr/share/cdbs/1/rules/debhelper.mk",
            "include /usr/share/cdbs/1/class/hlibrary.mk"]
+      execs =
+          concatMap (\ executable ->
+                         let deb = map toLower (exeName executable)
+                             src = "dist-ghc/build/" ++ deb ++ "/" ++ deb
+                             dst = "debian/" ++ deb ++ "/usr/bin/" ++ deb in
+                         [ -- Magic rule required to get binaries to build in packages that have no libraries
+                           "build/" ++ deb ++ ":: build-ghc-stamp",
+                           "binary-fixup/" ++ deb ++ "::",
+                           "\tinstall -m 755 -s -D " ++ src ++ " " ++ dst]) (executables pkgDesc)
       comments =
           ["# How to install an extra file into the documentation package",
            "#binary-fixup/libghc-" ++ libName ++ "-doc::",
