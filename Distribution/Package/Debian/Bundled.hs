@@ -20,9 +20,12 @@ module Distribution.Package.Debian.Bundled
     , isLibrary
     , docPrefix
     , builtIns
+    , PackageType(..)
+    , debianName
     ) where
 
 import qualified Data.ByteString.Char8 as B
+import Data.Char (toLower)
 import Data.Function (on)
 import Data.List (find,isPrefixOf,sortBy)
 import Data.Maybe (maybeToList)
@@ -38,7 +41,7 @@ import Distribution.Simple.PackageIndex (PackageIndex, SearchResult(None, Unambi
 import Distribution.Simple.Program (configureAllKnownPrograms, defaultProgramConfiguration)
 import Distribution.Package (PackageIdentifier(..), PackageName(..), Dependency(..))
 import Distribution.Verbosity(normal)
-import Distribution.Version (withinRange)
+import Distribution.Version (withinRange, VersionRange(..))
 import Text.ParserCombinators.Parsec(ParseError)
 import Text.Regex.TDFA ((=~))
 
@@ -328,5 +331,18 @@ isLibrary :: Compiler -> Dependency -> Bool
 isLibrary _ (Dependency (PackageName "happy") _ ) = False
 isLibrary _ _ = True
 
-docPrefix :: String -> String
-docPrefix _ = "libghc-"
+docPrefix :: String -> VersionRange -> String
+docPrefix _ _ = "libghc-"
+
+data PackageType = Development | Profiling | Documentation | Extra deriving (Eq, Show)
+
+debianName :: PackageType -> String -> Maybe Version -> String
+debianName Extra name range = name
+debianName typ name@"parsec" (Just version) | version < Version [3] [] =  "libghc-parsec2" ++ suffix typ
+debianName typ name@"parsec" (Just version) | version >= Version [3] [] = "libghc-parsec3" ++ suffix typ
+debianName typ name _ =                                                   "libghc-" ++ map toLower name ++ suffix typ
+
+suffix Documentation = "-doc"
+suffix Development = "-dev"
+suffix Profiling = "-prof"
+suffix _ = ""

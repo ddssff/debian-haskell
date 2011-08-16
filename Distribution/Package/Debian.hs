@@ -624,25 +624,25 @@ control flags bundled compiler debianMaintainer pkgDesc =
                                               [D.Rel "${haskell:Depends}" Nothing Nothing],
                                               [D.Rel "${misc:Depends}" Nothing Nothing]]),
            Field ("Description", " " ++ maybe debianDescription (const executableDescription) (library pkgDesc))]
-      develLibrarySpecs = if isJust (library pkgDesc) then [librarySpec "any" "-dev"] else []
-      profileLibrarySpecs = if debLibProf flags && isJust  (library pkgDesc) then [librarySpec "any" "-prof"] else []
+      develLibrarySpecs = if isJust (library pkgDesc) then [librarySpec "any" Development] else []
+      profileLibrarySpecs = if debLibProf flags && isJust  (library pkgDesc) then [librarySpec "any" Profiling] else []
       docLibrarySpecs = if isJust (library pkgDesc) then [docSpecsParagraph] else []
       docSpecsParagraph =
           Paragraph
-          [Field ("Package", " " ++ debianDocumentationPackageName (unPackageName . pkgName . package $ pkgDesc)),
+          [Field ("Package", " " ++ debianName Documentation (unPackageName . pkgName . package $ pkgDesc) (Just (pkgVersion (package pkgDesc)))),
            Field ("Architecture", " " ++ "all"),
            Field ("Section", " " ++ "doc"),
            Field ("Depends", " " ++ showDeps' "Depends:" [[D.Rel "${haskell:Depends}" Nothing Nothing],
                                                            [D.Rel "${misc:Depends}" Nothing Nothing]]),
            Field ("Recommends", " " ++ "${haskell:Recommends}"),
            Field ("Suggests", " " ++ "${haskell:Suggests}"),
-           Field ("Description", " " ++ libraryDescription "-doc")]
-      librarySpec arch suffix =
+           Field ("Description", " " ++ libraryDescription Documentation)]
+      librarySpec arch typ =
           Paragraph
-          [Field ("Package", " " ++ prefix ++ map toLower (unPackageName . pkgName . package $ pkgDesc) ++ suffix),
+          [Field ("Package", " " ++ debianName typ (unPackageName . pkgName . package $ pkgDesc) (Just (pkgVersion (package pkgDesc)))),
            Field ("Architecture", " " ++ arch),
            Field ("Depends", " " ++ showDeps' "Depends:" (
-                     (if suffix == "-dev"
+                     (if typ == Development
                       then [[D.Rel "${shlibs:Depends}" Nothing Nothing]]
                       else []) ++
                      [[D.Rel "${haskell:Depends}" Nothing Nothing],
@@ -650,12 +650,7 @@ control flags bundled compiler debianMaintainer pkgDesc =
            Field ("Recommends", " " ++ "${haskell:Recommends}"),
            Field ("Suggests", " " ++ "${haskell:Suggests}"),
            Field ("Provides", " " ++ "${haskell:Provides}"),
-           Field ("Description", " " ++ libraryDescription suffix)]
-          where prefix = case suffix of
-                           "-dev" -> "libghc-"
-                           "-prof" -> "libghc-"
-                           -- "-doc" -> docPrefix (unPackageName . pkgName . package $ pkgDesc)
-                           _ -> error $ "Unknown suffix: " ++ suffix
+           Field ("Description", " " ++ libraryDescription typ)]
       -- The haskell-cdbs package contains the hlibrary.mk file with
       -- the rules for building haskell packages.
       debianBuildDeps :: D.Relations
@@ -684,9 +679,9 @@ control flags bundled compiler debianMaintainer pkgDesc =
                 "\n " ++ (trim . intercalate "\n " . map addDot . lines $ text')
       addDot line = if all (flip elem " \t") line then "." else line
       executableDescription = " " ++ "An executable built with the " ++ display (package pkgDesc) ++ " library."
-      libraryDescription "-prof" = debianDescription ++ "\n .\n This package contains the libraries compiled with profiling enabled."
-      libraryDescription "-dev" = debianDescription ++ "\n .\n This package contains the normal library files."
-      libraryDescription "-doc" = debianDescription ++ "\n .\n This package contains the documentation files."
+      libraryDescription Profiling = debianDescription ++ "\n .\n This package contains the libraries compiled with profiling enabled."
+      libraryDescription Development = debianDescription ++ "\n .\n This package contains the normal library files."
+      libraryDescription Documentation = debianDescription ++ "\n .\n This package contains the documentation files."
       libraryDescription x = error $ "Unexpected library package name suffix: " ++ show x
 
 showDeps xss = intercalate ", " (map (intercalate " | " . map show) xss)
@@ -754,12 +749,6 @@ unPackageName (PackageName s) = s
 debianSourcePackageName :: PackageDescription -> String
 debianSourcePackageName pkgDesc = "haskell-" ++ map toLower (unPackageName . pkgName . package $ pkgDesc)
 
-debianProfilingPackageName :: String -> String
-debianProfilingPackageName x = "libghc-" ++ map toLower x ++ "-prof"
-
-debianDevelPackageName :: String -> String
-debianDevelPackageName x = "libghc-" ++ map toLower x ++ "-dev"
-
 --debianDevelPackageName' (Dependency (PackageName name) _) = debianDevelPackageName name
 
 -- debianPackageName prefix name suffix = prefix ++ (map toLower name) ++ suffix
@@ -775,7 +764,7 @@ profilingDependencies
    (BuildDepends (Dependency (PackageName name) ranges))
   = concat
     (map
-        (\ x -> debianRelations (debianProfilingPackageName x) ranges)
+        (\ x -> debianRelations Profiling x ranges)
       $ filter (not . flip member base) [name])
 profilingDependencies _ _ = []
 
@@ -783,60 +772,25 @@ profilingDependencies _ _ = []
 -- the ones they were built with.  FIXME: These should have version
 -- dependencies.
 develDependencies :: Compiler -> Dependency_ -> D.Relations
-develDependencies
-    compiler
-   (BuildDepends (Dependency (PackageName name) ranges))
-  = concat
-    (map
-        (\ x -> debianRelations (debianDevelPackageName x) ranges)
-      $ filter (not . flip member base) [name])
+develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name base = []
+develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
+    debianRelations Development name ranges
 develDependencies compiler dep@(ExtraLibs _)
-  = concat
-    (map (\ x -> debianRelations x AnyVersion) $ adapt dep)
+  = concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
 develDependencies _ _ = []
 
 -- The build dependencies for a package include the profiling
 -- libraries and the documentation packages, used for creating cross
 -- references.
 buildDependencies :: Compiler -> Dependency_ -> D.Relations
-buildDependencies
-    compiler
-    (BuildDepends (Dependency (PackageName name) ranges))
-  = concat
-    (map
-      (\ x -> debianRelations x ranges)
-      (if member name base
-        then []
-        else [debianDevelPackageName name, debianProfilingPackageName name]))
-buildDependencies compiler dep@(ExtraLibs _)
-  = concat
-    (map (\ x -> debianRelations x AnyVersion) $ adapt dep)
-buildDependencies compiler dep
-  = concat
-    (map (\ x -> debianRelations x ranges) $ adapt dep)
+buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name base = []
+buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
+    debianRelations Development name ranges ++ debianRelations Profiling name ranges
+buildDependencies compiler dep@(ExtraLibs _) =
+    concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
+buildDependencies compiler dep =
+    concat (map (\ x -> debianRelations Extra x ranges) $ adapt dep)
     where (Dependency (PackageName name) ranges) = unboxDependency dep
-
-adapt :: Dependency_ -> [String]
-adapt (BuildTools (Dependency (PackageName "gtk2hsC2hs") _))
-  = ["gtk2hs-buildtools"]
-adapt (BuildTools (Dependency (PackageName "gtk2hsHookGenerator") _))
-  = ["gtk2hs-buildtools"]
-adapt (BuildTools (Dependency (PackageName "gtk2hsTypeGen") _))
-  = ["gtk2hs-buildtools"]
-adapt (PkgConfigDepends (Dependency (PackageName pkg) _))
-  = unsafePerformIO
-    $ do
-      ret
-        <- readProcessWithExitCode "apt-file" ["-l", "search", pkg ++ ".pc"] ""
-      return
-        $ case ret of
-            (ExitSuccess, out, _) -> [takeWhile (not . isSpace) out]
-            _ -> []
-adapt (ExtraLibs "gcrypt") = ["libgcrypt11-dev"]
-adapt (ExtraLibs x) = ["lib" ++ x ++ "-dev"]
-adapt dep
-  = [name]
-  where  (Dependency (PackageName name) _) = unboxDependency dep
 
 -- The documentation dependencies for a package include the documentation
 -- package for any libraries which are build dependencies, so we have access
@@ -847,7 +801,7 @@ docDependencies
     (BuildDepends (Dependency (PackageName name) ranges))
   = concat
     (map
-        (\ x -> debianRelations (debianDocumentationPackageName x) ranges)
+        (\ x -> debianRelations Documentation x ranges)
       $ filter (not . flip member base) [name])
 docDependencies _ _ = []
 
@@ -889,9 +843,9 @@ base
       "time",
       "unix"]
 
-debianRelations :: String -> VersionRange -> D.Relations
-debianRelations name range =
-    map (merge . concat . map (relation name)) (canon range)
+debianRelations :: PackageType -> String -> VersionRange -> D.Relations
+debianRelations typ name range =
+    map (merge . concat . map (debianRelation typ name)) (canon range)
     where
       -- A debian dependency list is always a list of or-relations
       -- which are anded.  This function turns the more freeform cabal
@@ -900,13 +854,6 @@ debianRelations name range =
       canon (IntersectVersionRanges a b) = canon a ++ canon b
       canon (UnionVersionRanges a b) = map concat (cartesianProduct [canon a, canon b])
       canon x = [[x]]
-      -- Turn simple Cabal relations into Debian relations
-      relation name AnyVersion = [D.Rel name Nothing Nothing]
-      relation name (ThisVersion version) = [D.Rel name (Just (D.EEQ (parseDebianVersion (showVersion version)))) Nothing]
-      relation name (EarlierVersion version) = [D.Rel name (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
-      relation name (LaterVersion version) = [D.Rel name (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
-      relation name (WildcardVersion version) = [D.Rel name (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing, D.Rel name (Just (D.SLT (parseDebianVersion (showVersion (upperBound version))))) Nothing]
-      relation _ _ = error $ "Invalid argument to debianRelations: " ++ show range
       -- Merge some combinations that frequently show up.
       merge (D.Rel name1 (Just (D.EEQ ver1)) arch1 : D.Rel name2 (Just (D.SLT ver2)) arch2 : xs)
           | name1 == name2 && ver1 == ver2 && arch1 == arch2
@@ -916,13 +863,59 @@ debianRelations name range =
               = merge (D.Rel name1 (Just (D.GRE ver1)) arch1 : xs)
       merge (x : xs) = x : merge xs
       merge [] = []
-      upperBound v = v { versionBranch = bump (versionBranch v) }
-      bump = reverse . (zipWith (+) (1:(repeat 0))) . reverse
 
+-- |Turn simple Cabal relations into Debian relations.  There are some
+-- special cases in here for the mapping of cabal package names to debian.
+debianRelation :: PackageType -> String -> VersionRange -> [D.Relation]
+debianRelation typ name range@AnyVersion =
+    [D.Rel (debianName typ name Nothing) Nothing Nothing]
+debianRelation typ name range@(ThisVersion version) =
+    [D.Rel (debianName typ name (Just version)) (Just (D.EEQ (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name@"parsec" range@(EarlierVersion version)
+    | version < Version [3] [] =
+        [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+    | version >= Version [3] [] =
+        [D.Rel (debianName typ name (Just (Version [2] []))) Nothing Nothing,
+         D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name range@(EarlierVersion version) =
+    [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name@"parsec" range@(LaterVersion version)
+    | version < Version [3] [] =
+        [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing,
+         D.Rel (debianName typ name (Just (Version [3] []))) Nothing Nothing]
+    | version >= Version [3] [] =
+        [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name range@(LaterVersion version) =
+    [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name range@(WildcardVersion version) =
+    [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing,
+     D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion (upperBound version))))) Nothing]
+    where upperBound v = v { versionBranch = bump (versionBranch v) }
+          bump = reverse . (zipWith (+) (1:(repeat 0))) . reverse
 
-debianDocumentationPackageName :: String -> String
-debianDocumentationPackageName x =
-    docPrefix (map toLower x) ++ map toLower x ++ "-doc"
+debianRelation _ _ ranges = error $ "Invalid argument to debianRelation: " ++ show ranges
+
+adapt :: Dependency_ -> [String]
+adapt (BuildTools (Dependency (PackageName "gtk2hsC2hs") _))
+  = ["gtk2hs-buildtools"]
+adapt (BuildTools (Dependency (PackageName "gtk2hsHookGenerator") _))
+  = ["gtk2hs-buildtools"]
+adapt (BuildTools (Dependency (PackageName "gtk2hsTypeGen") _))
+  = ["gtk2hs-buildtools"]
+adapt (PkgConfigDepends (Dependency (PackageName pkg) _))
+  = unsafePerformIO
+    $ do
+      ret
+        <- readProcessWithExitCode "apt-file" ["-l", "search", pkg ++ ".pc"] ""
+      return
+        $ case ret of
+            (ExitSuccess, out, _) -> [takeWhile (not . isSpace) out]
+            _ -> []
+adapt (ExtraLibs "gcrypt") = ["libgcrypt11-dev"]
+adapt (ExtraLibs x) = ["lib" ++ x ++ "-dev"]
+adapt dep
+  = [name]
+  where  (Dependency (PackageName name) _) = unboxDependency dep
 
 -- | cartesianProduct [[1,2,3], [4,5],[6]] -> [[1,4,6],[1,5,6],[2,4,6],[2,5,6],[3,4,6],[3,5,6]]
 cartesianProduct :: [[a]] -> [[a]]
