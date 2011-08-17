@@ -88,6 +88,7 @@ ghcBuiltIns :: Compiler -> Bundled
 ghcBuiltIns compiler@(Compiler {compilerId = CompilerId GHC compilerVersion}) =
     fromJust $
     Map.lookup compilerVersion (Map.fromList [ (Version [7,2,1] [], (GHC, Version [7,2,1] [], ghc721BuiltIns))
+                                             , (Version [7,0,3] [], (GHC, Version [7,0,3] [], ghc701BuiltIns))
                                              , (Version [7,0,1] [], (GHC, Version [7,0,1] [], ghc701BuiltIns))
                                              , (Version [6,8,3] [], (GHC, Version [6,8,3] [], ghc683BuiltIns))
                                              , (Version [6,8,2] [], (GHC, Version [6,8,2] [], ghc682BuiltIns))
@@ -99,6 +100,7 @@ builtIns :: Compiler -> IO [Bundled]
 builtIns compiler = 
     do ghc6 <- fmap maybeToList $ ghc6BuiltIns compiler
        return $ ghc6 ++ [ (GHC, Version [7,2,1] [], ghc721BuiltIns)
+                        , (GHC, Version [7,0,3] [], ghc701BuiltIns)
                         , (GHC, Version [7,0,1] [], ghc701BuiltIns)
                         , (GHC, Version [6,8,3] [], ghc683BuiltIns)
                         , (GHC, Version [6,8,2] [], ghc682BuiltIns)
