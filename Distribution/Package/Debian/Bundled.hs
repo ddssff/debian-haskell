@@ -23,12 +23,13 @@ module Distribution.Package.Debian.Bundled
     , ghc6BuiltIns
     , PackageType(..)
     , debianName
+    , ghcBuiltIns
     ) where
 
 import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower)
 import Data.Function (on)
-import Data.List (find,isPrefixOf,sortBy)
+import Data.List (find, isPrefixOf, sortBy, groupBy)
 import Data.Maybe (maybeToList)
 import Data.Version (Version(..))
 import Debian.Control(Control'(Control), fieldValue, parseControlFromFile)
@@ -43,6 +44,9 @@ import Distribution.Simple.Program (configureAllKnownPrograms, defaultProgramCon
 import Distribution.Package (PackageIdentifier(..), PackageName(..), Dependency(..))
 import Distribution.Verbosity(normal)
 import Distribution.Version (withinRange, VersionRange(..))
+import System.Unix.Chroot (fchroot)
+import System.Unix.Process (lazyProcess, collectStdout)
+import Data.ByteString.Lazy.Char8 (empty, unpack)
 import Text.ParserCombinators.Parsec(ParseError)
 import Text.Regex.TDFA ((=~))
 
@@ -67,6 +71,17 @@ isBundled builtIns c (Dependency pkg version) =
   where checkVersion = flip withinRange version
 
 type Bundled = (CompilerFlavor, Version, [PackageIdentifier])
+
+-- |Return a list of built in packages for the compiler in an environment.
+ghcBuiltIns :: FilePath -> IO [PackageIdentifier]
+ghcBuiltIns root =
+    fchroot root (lazyProcess "ghc-pkg" ["list", "--simple-output"] Nothing Nothing empty) >>=
+    return . map parsePackageIdentifier . words . unpack . fst . collectStdout
+    where
+      parsePackageIdentifier s =
+          let (v', n') = break (== '-') (reverse s)
+              (v, n) = (reverse (tail n'), reverse v') in
+          PackageIdentifier (PackageName n) (Version (map read (filter (/= ".") (groupBy (\ a b -> (a == '.') == (b == '.')) v))) [])
 
 builtIns :: Compiler -> IO [Bundled]
 builtIns compiler = 

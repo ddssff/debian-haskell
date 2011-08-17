@@ -76,7 +76,7 @@ import Distribution.Verbosity (Verbosity)
 import Distribution.Version (Version(..),VersionRange(..))
 import Distribution.Simple.Setup (defaultDistPref)
 import Distribution.Package.Debian.Setup (Flags(..), DebAction(..), DebType(..))
-import Distribution.Package.Debian.Bundled
+import Distribution.Package.Debian.Bundled (Bundled, builtIns, isBundled, PackageType(..), debianName, ghcBuiltIns)
 import qualified Distribution.Compat.ReadP as ReadP
 import Distribution.Text ( Text(parse) )
 import Text.PrettyPrint.HughesPJ
@@ -138,9 +138,10 @@ simplePackageDescription genPkgDesc flags = do
     
 debian :: GenericPackageDescription	-- ^ info from the .cabal file
        -> Flags				-- ^ command line flags
+       -> FilePath                      -- ^ root of build environment
        -> IO ()
 
-debian genPkgDesc flags =
+debian genPkgDesc flags root =
     case rpmCompiler flags of
       GHC ->
           do (compiler, pkgDesc) <- simplePackageDescription genPkgDesc flags
@@ -156,9 +157,9 @@ debian genPkgDesc flags =
                      do control <- readFile "debian/control" >>= either (error . show) return . parseControl "debian/control"
                         substvars pkgDesc compiler debVersions control cabalPackages name
                  Debianize ->
-                     debianize True pkgDesc flags compiler (debOutputDir flags)
+                     debianize True pkgDesc flags compiler root (debOutputDir flags)
                  UpdateDebianization ->
-                     updateDebianization True pkgDesc flags compiler (debOutputDir flags)
+                     updateDebianization True pkgDesc flags compiler root (debOutputDir flags)
       c -> die ("the " ++ show c ++ " compiler is not yet supported")
 
 autoreconf :: Verbosity -> PackageDescription -> IO ()
@@ -415,9 +416,9 @@ devToDoc compiler name
 cond ifF _ifT False = ifF
 cond _ifF ifT True = ifT
 
-debianize force pkgDesc flags compiler tgtPfx =
+debianize force pkgDesc flags compiler root tgtPfx =
     mapM_ removeIfExists ["debian/control", "debian/changelog"] >>
-    updateDebianization force pkgDesc flags compiler tgtPfx
+    updateDebianization force pkgDesc flags compiler root tgtPfx
 
 removeFileIfExists x = doesFileExist x >>= (`when` (removeFile x))
 removeDirectoryIfExists x = doesDirectoryExist x >>= (`when` (removeDirectory x))
@@ -427,15 +428,16 @@ updateDebianization :: Bool                -- ^whether to forcibly create file
                     -> PackageDescription  -- ^info from the .cabal file
                     -> Flags		 -- ^command line yflags
                     -> Compiler            -- ^compiler details
+                    -> FilePath            -- ^path to build environment
                     -> FilePath            -- ^directory in which to create files
                     -> IO ()
-updateDebianization _force pkgDesc flags compiler tgtPfx =
+updateDebianization _force pkgDesc flags compiler root tgtPfx =
     do createDirectoryIfMissing True "debian"
        date <- getCurrentLocalRFC822Time
        copyright <- try (readFile' (licenseFile pkgDesc)) >>=
                     return . either (\ (_ :: SomeException) -> showLicense . license $ pkgDesc) id
        debianMaintainer <- getDebianMaintainer flags >>= maybe (error "Missing value for --maintainer") return
-       controlUpdate (tgtPfx </> "control") flags compiler debianMaintainer pkgDesc
+       controlUpdate (tgtPfx </> "control") flags compiler root debianMaintainer pkgDesc
        changelogUpdate (tgtPfx </> "changelog") debianMaintainer pkgDesc date
        replaceFile (tgtPfx </> "rules") (cdbsRules pkgDesc)
        getPermissions "debian/rules" >>= setPermissions "debian/rules" . (\ p -> p {executable = True})
@@ -533,13 +535,13 @@ cdbsRules pkgDesc =
 list :: b -> ([a] -> b) -> [a] -> b
 list d f l = case l of [] -> d; _ -> f l
 
-controlUpdate :: FilePath -> Flags -> Compiler -> String -> PackageDescription -> IO ()
-controlUpdate path flags compiler debianMaintainer pkgDesc =
+controlUpdate :: FilePath -> Flags -> Compiler -> FilePath -> String -> PackageDescription -> IO ()
+controlUpdate path flags compiler root debianMaintainer pkgDesc =
     builtIns compiler >>= \bundled ->
     try (readFile path) >>=
     either (\ (_ :: SomeException) -> writeFile path (show (newCtl bundled))) (\ s -> writeFile (path ++ ".new") $! show (merge (newCtl bundled) (oldCtl s)))
     where
-      newCtl bundled = control flags bundled compiler debianMaintainer pkgDesc
+      newCtl bundled = control flags bundled compiler root debianMaintainer pkgDesc
       oldCtl s = either (const (Control [])) id (parseControl "debian/control" s)
       merge (Control new) (Control old) =
           case (new, old) of
@@ -596,8 +598,8 @@ mergeDeps x y =
       depPackageNames xs = nub (map depPackageName xs)
       depPackageName (D.Rel x _ _) = x
 
-control :: Flags -> [Bundled] -> Compiler -> String -> PackageDescription -> Control
-control flags bundled compiler debianMaintainer pkgDesc =
+control :: Flags -> [Bundled] -> Compiler -> FilePath -> String -> PackageDescription -> Control
+control flags bundled compiler root debianMaintainer pkgDesc =
     Control {unControl =
              ([sourceSpec] ++
               develLibrarySpecs ++
@@ -670,12 +672,12 @@ control flags bundled compiler debianMaintainer pkgDesc =
            [D.Rel "cdbs" Nothing Nothing],
            [D.Rel "ghc" Nothing Nothing]] ++
           (if debLibProf flags then [[D.Rel "ghc-prof" Nothing Nothing]] else []) ++
-          (concat . map (debianDependencies bundled compiler buildDependencies) . allBuildDepends $ pkgDesc)
+          (concat . map (debianDependencies bundled compiler root buildDependencies) . allBuildDepends $ pkgDesc)
       debianBuildDepsIndep :: D.Relations
       debianBuildDepsIndep =
           nub $
           [[D.Rel "ghc-doc" Nothing Nothing]] ++
-          (concat . map (debianDependencies bundled compiler docDependencies) . allBuildDepends $ pkgDesc)
+          (concat . map (debianDependencies bundled compiler root docDependencies) . allBuildDepends $ pkgDesc)
       debianDescription = 
           (synopsis pkgDesc) ++
           case description pkgDesc of
@@ -725,10 +727,10 @@ allBuildDepends pkgDesc =
 -- library is required as a build dependency we need the profiling
 -- version, which pulls in the regular version, and we need the
 -- documentation so the cross references can be resolved.
-debianDependencies :: [Bundled] -> Compiler -> (Compiler -> Dependency_ -> D.Relations) -> Dependency_ -> D.Relations
-debianDependencies bundled compiler toDebRels dep
+debianDependencies :: [Bundled] -> Compiler -> FilePath -> (FilePath -> Dependency_ -> D.Relations) -> Dependency_ -> D.Relations
+debianDependencies bundled compiler _ toDebRels dep
   | isBundled bundled compiler $ unboxDependency dep = []
-debianDependencies _ compiler toDebRels dep = toDebRels compiler dep
+debianDependencies _ compiler root toDebRels dep = toDebRels root dep
 
 changelogUpdate :: FilePath -> String -> PackageDescription -> String -> IO ()
 changelogUpdate path debianMaintainer pkgDesc date =
@@ -767,51 +769,51 @@ debianVersionNumber pkgDesc = parseDebianVersion . showVersion . pkgVersion . pa
 
 -- The profiling packages depend on the other profiling packages.
 -- FIXME: These should have version dependencies.
-profilingDependencies :: Compiler -> Dependency_ -> D.Relations
+profilingDependencies :: FilePath -> Dependency_ -> D.Relations
 profilingDependencies
-   compiler
+   root
    (BuildDepends (Dependency (PackageName name) ranges))
   = concat
     (map
         (\ x -> debianRelations Profiling x ranges)
-      $ filter (not . flip member (base compiler)) [name])
+      $ filter (not . flip member (base root)) [name])
 profilingDependencies _ _ = []
 
 -- The development packages depend on the other development packages,
 -- the ones they were built with.  FIXME: These should have version
 -- dependencies.
-develDependencies :: Compiler -> Dependency_ -> D.Relations
-develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
-develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
+develDependencies :: FilePath -> Dependency_ -> D.Relations
+develDependencies root (BuildDepends (Dependency (PackageName name) ranges)) | member name (base root) = []
+develDependencies _ (BuildDepends (Dependency (PackageName name) ranges)) =
     debianRelations Development name ranges
-develDependencies compiler dep@(ExtraLibs _)
+develDependencies _ dep@(ExtraLibs _)
   = concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
 develDependencies _ _ = []
 
 -- The build dependencies for a package include the profiling
 -- libraries and the documentation packages, used for creating cross
 -- references.
-buildDependencies :: Compiler -> Dependency_ -> D.Relations
-buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
-buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
+buildDependencies :: FilePath -> Dependency_ -> D.Relations
+buildDependencies root (BuildDepends (Dependency (PackageName name) ranges)) | member name (base root) = []
+buildDependencies _ (BuildDepends (Dependency (PackageName name) ranges)) =
     debianRelations Development name ranges ++ debianRelations Profiling name ranges
-buildDependencies compiler dep@(ExtraLibs _) =
+buildDependencies _ dep@(ExtraLibs _) =
     concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
-buildDependencies compiler dep =
+buildDependencies _ dep =
     concat (map (\ x -> debianRelations Extra x ranges) $ adapt dep)
     where (Dependency (PackageName name) ranges) = unboxDependency dep
 
 -- The documentation dependencies for a package include the documentation
 -- package for any libraries which are build dependencies, so we have access
 -- to all the cross references.
-docDependencies :: Compiler -> Dependency_ -> D.Relations
+docDependencies :: FilePath -> Dependency_ -> D.Relations
 docDependencies
-    compiler
+    root
     (BuildDepends (Dependency (PackageName name) ranges))
   = concat
     (map
         (\ x -> debianRelations Documentation x ranges)
-      $ filter (not . flip member (base compiler)) [name])
+      $ filter (not . flip member (base root)) [name])
 docDependencies _ _ = []
 
 -- generated with:
@@ -824,7 +826,8 @@ docDependencies _ _ = []
 --   | grep dev$ \
 --   | sed 's/-dev//;s/$/",/;s/^/"/'
 
-base compiler = Data.Set.fromList (let (Just (_, _, xs)) = unsafePerformIO (ghc6BuiltIns compiler) in map (unPackageName . pkgName ) xs)
+-- base compiler = Data.Set.fromList (let (Just (_, _, xs)) = unsafePerformIO (ghc6BuiltIns compiler) in map (unPackageName . pkgName ) xs)
+base root = Data.Set.fromList (map (unPackageName . pkgName) (unsafePerformIO (ghcBuiltIns root)))
 
 {-
 base :: Set String
