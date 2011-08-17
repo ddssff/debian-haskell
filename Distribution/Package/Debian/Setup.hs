@@ -110,7 +110,7 @@ options =
              "Override the default package release",
       Option "" ["debdir"] (ReqArg (\path x -> x { debOutputDir = path }) "DEBDIR")
              ("Override the default output directory (" ++ show (debOutputDir emptyFlags) ++ ")"),
-      Option "" ["root"] (ReqArg (\ path x -> x { buildRoot = Just path }) "BUILDROOT")
+      Option "" ["root"] (ReqArg (\ path x -> x { buildRoot = path }) "BUILDROOT")
              "Use the compiler information in the given build environment.",
       Option "v" ["verbose"] (ReqArg (\verb x -> x { rpmVerbosity = readEOrFail flagToVerbosity verb }) "n")
              "Change build verbosity",
