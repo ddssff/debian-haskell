@@ -44,6 +44,7 @@ data Flags = Flags
     , rpmRelease :: Maybe String
     , rpmSplitObjs :: Bool
     , debOutputDir :: FilePath
+    , buildRoot :: FilePath
     , rpmVerbosity :: Verbosity
     , rpmVersion :: Maybe String
     , debMaintainer :: Maybe String
@@ -70,6 +71,7 @@ emptyFlags = Flags
     , rpmRelease = Nothing
     , rpmSplitObjs = True
     , debOutputDir = "./debian"
+    , buildRoot = "/"
     , rpmVerbosity = normal
     , rpmVersion = Nothing
     , debMaintainer = Nothing
@@ -108,6 +110,8 @@ options =
              "Override the default package release",
       Option "" ["debdir"] (ReqArg (\path x -> x { debOutputDir = path }) "DEBDIR")
              ("Override the default output directory (" ++ show (debOutputDir emptyFlags) ++ ")"),
+      Option "" ["root"] (ReqArg (\ path x -> x { buildRoot = Just path }) "BUILDROOT")
+             "Use the compiler information in the given build environment.",
       Option "v" ["verbose"] (ReqArg (\verb x -> x { rpmVerbosity = readEOrFail flagToVerbosity verb }) "n")
              "Change build verbosity",
       Option "" ["version"] (ReqArg (\vers x -> x { rpmVersion = Just vers }) "VERSION")

@@ -138,10 +138,9 @@ simplePackageDescription genPkgDesc flags = do
     
 debian :: GenericPackageDescription	-- ^ info from the .cabal file
        -> Flags				-- ^ command line flags
-       -> FilePath                      -- ^ root of build environment
        -> IO ()
 
-debian genPkgDesc flags root =
+debian genPkgDesc flags =
     case rpmCompiler flags of
       GHC ->
           do (compiler, pkgDesc) <- simplePackageDescription genPkgDesc flags
@@ -157,9 +156,9 @@ debian genPkgDesc flags root =
                      do control <- readFile "debian/control" >>= either (error . show) return . parseControl "debian/control"
                         substvars pkgDesc compiler debVersions control cabalPackages name
                  Debianize ->
-                     debianize True pkgDesc flags compiler root (debOutputDir flags)
+                     debianize True pkgDesc flags compiler (buildRoot flags) (debOutputDir flags)
                  UpdateDebianization ->
-                     updateDebianization True pkgDesc flags compiler root (debOutputDir flags)
+                     updateDebianization True pkgDesc flags compiler (buildRoot flags) (debOutputDir flags)
       c -> die ("the " ++ show c ++ " compiler is not yet supported")
 
 autoreconf :: Verbosity -> PackageDescription -> IO ()
