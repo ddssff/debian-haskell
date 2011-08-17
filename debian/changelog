@@ -1,3 +1,10 @@
+haskell-debian (3.57) unstable; urgency=low
+
+  * Re-order generated dependencies so we are more likely to build
+    with newer packages installed.
+
+ -- David Fox <dsf@seereason.com>  Tue, 16 Aug 2011 19:04:29 -0700
+
 haskell-debian (3.56-1) unstable; urgency=low
 
   * I created a new repository by importing the sid version of
