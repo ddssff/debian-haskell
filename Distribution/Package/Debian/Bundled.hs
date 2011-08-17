@@ -19,8 +19,8 @@ module Distribution.Package.Debian.Bundled
     , isBundled
     , isLibrary
     , docPrefix
-    , builtIns
-    , ghc6BuiltIns
+    -- , builtIns
+    -- , ghc6BuiltIns
     , PackageType(..)
     , debianName
     , ghcBuiltIns
@@ -30,7 +30,8 @@ import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower)
 import Data.Function (on)
 import Data.List (find, isPrefixOf, sortBy, groupBy)
-import Data.Maybe (maybeToList)
+import qualified Data.Map as Map
+import Data.Maybe (maybeToList, fromJust)
 import Data.Version (Version(..))
 import Debian.Control(Control'(Control), fieldValue, parseControlFromFile)
 import Debian.Relation.ByteString()
@@ -73,15 +74,26 @@ isBundled builtIns c (Dependency pkg version) =
 type Bundled = (CompilerFlavor, Version, [PackageIdentifier])
 
 -- |Return a list of built in packages for the compiler in an environment.
-ghcBuiltIns :: FilePath -> IO [PackageIdentifier]
-ghcBuiltIns root =
-    fchroot root (lazyProcess "ghc-pkg" ["list", "--simple-output"] Nothing Nothing empty) >>=
-    return . map parsePackageIdentifier . words . unpack . fst . collectStdout
-    where
-      parsePackageIdentifier s =
-          let (v', n') = break (== '-') (reverse s)
-              (v, n) = (reverse (tail n'), reverse v') in
-          PackageIdentifier (PackageName n) (Version (map read (filter (/= ".") (groupBy (\ a b -> (a == '.') == (b == '.')) v))) [])
+-- ghcBuiltIns :: FilePath -> IO [PackageIdentifier]
+-- ghcBuiltIns root =
+--     fchroot root (lazyProcess "ghc-pkg" ["list", "--simple-output"] Nothing Nothing empty) >>=
+--     return . map parsePackageIdentifier . words . unpack . fst . collectStdout
+--     where
+--       parsePackageIdentifier s =
+--           let (v', n') = break (== '-') (reverse s)
+--               (v, n) = (reverse (tail n'), reverse v') in
+--           PackageIdentifier (PackageName n) (Version (map read (filter (/= ".") (groupBy (\ a b -> (a == '.') == (b == '.')) v))) [])
+
+ghcBuiltIns :: Compiler -> Bundled
+ghcBuiltIns compiler@(Compiler {compilerId = CompilerId GHC compilerVersion}) =
+    fromJust $
+    Map.lookup compilerVersion (Map.fromList [ (Version [7,2,1] [], (GHC, Version [7,2,1] [], ghc721BuiltIns))
+                                             , (Version [7,0,1] [], (GHC, Version [7,0,1] [], ghc701BuiltIns))
+                                             , (Version [6,8,3] [], (GHC, Version [6,8,3] [], ghc683BuiltIns))
+                                             , (Version [6,8,2] [], (GHC, Version [6,8,2] [], ghc682BuiltIns))
+                                             , (Version [6,8,1] [], (GHC, Version [6,8,1] [], ghc681BuiltIns))
+                                             , (Version [6,6,1] [], (GHC, Version [6,6,1] [], ghc661BuiltIns))
+                                             , (Version [6,6] [], (GHC, Version [6,6] [], ghc66BuiltIns)) ])
 
 builtIns :: Compiler -> IO [Bundled]
 builtIns compiler = 
@@ -94,6 +106,7 @@ builtIns compiler =
                         , (GHC, Version [6,6,1] [], ghc661BuiltIns)
                         , (GHC, Version [6,6] [], ghc66BuiltIns)
                         ]
+
 ghc6BuiltIns :: Compiler -> IO (Maybe (CompilerFlavor, Version, [PackageIdentifier]))
 ghc6BuiltIns compiler@(Compiler {compilerId = CompilerId GHC compilerVersion}) =
 #ifdef CABAL19

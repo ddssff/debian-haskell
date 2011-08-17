@@ -21,6 +21,7 @@ module Distribution.Package.Debian.Setup (
 
 import Control.Monad (when)
 import Data.Char (toLower)
+import Data.Version (Version, parseVersion)
 import Distribution.Compiler (CompilerFlavor(..))
 import Distribution.ReadE (readEOrFail)
 import Distribution.PackageDescription (FlagName(..))
@@ -30,11 +31,13 @@ import System.Console.GetOpt (ArgDescr (..), ArgOrder (..), OptDescr (..),
 import System.Environment (getProgName)
 import System.Exit (exitWith, ExitCode (..))
 import System.IO (Handle, hPutStrLn, stderr, stdout)
+import Text.ParserCombinators.ReadP (readP_to_S)
 
 data Flags = Flags
     {
       rpmPrefix :: FilePath
     , rpmCompiler :: CompilerFlavor
+    , rpmCompilerVersion :: Maybe Version
     , rpmConfigurationsFlags :: [(FlagName, Bool)]
     , rpmHaddock :: Bool
     , rpmHelp :: Bool
@@ -62,6 +65,7 @@ emptyFlags = Flags
     {
       rpmPrefix = "/usr/lib/haskell-packages/ghc6"
     , rpmCompiler = GHC
+    , rpmCompilerVersion = Nothing
     , rpmConfigurationsFlags = []
     , rpmHaddock = True
     , rpmHelp = False
@@ -94,6 +98,8 @@ options =
              "Compile with NHC",
       Option "h?" ["help"] (NoArg (\x -> x { rpmHelp = True }))
              "Show this help text",
+      Option "" ["ghc-version"] (ReqArg (\ ver x -> x { rpmCompilerVersion = Just (last (map fst (readP_to_S parseVersion ver)))}) "VERSION")
+             "Version of GHC in build environment",
       Option "" ["name"] (ReqArg (\name x -> x { rpmName = Just name }) "NAME")
              "Override the default package name",
       Option "" ["disable-haddock"] (NoArg (\x -> x { rpmHaddock = False }))
