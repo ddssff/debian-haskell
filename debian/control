@@ -111,7 +111,7 @@ Description: Documentation for Debian package system library
 Package: haskell-debian-utils
 Section: devel
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ghc, ${misc:Depends}, ${shlibs:Depends}
 Recommends: apt-file
 Description: Various helpers to work with Debian packages
  This package contains tools shipped with the Haskell library “debian”:
