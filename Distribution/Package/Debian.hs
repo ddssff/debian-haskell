@@ -43,7 +43,7 @@ import Debian.Version.Internal (DebianVersion (DebianVersion))
 import System.Cmd (system)
 import System.Directory
 import System.FilePath ((</>), dropExtension)
-import System.IO (IOMode (ReadMode), hGetContents, hPutStrLn, hSetBinaryMode, openFile, stderr)
+import System.IO (IOMode (ReadMode), hGetContents, hPutStrLn, hSetBinaryMode, openFile, stderr, withFile)
 import System.IO.Error (ioeGetFileName, isDoesNotExistError)
 import System.IO.Unsafe (unsafePerformIO, unsafeInterleaveIO)
 import System.Posix.Files (setFileCreationMask)
@@ -356,8 +356,11 @@ dpkgFileMap =
       let fp = "/var/lib/dpkg/info"
       names <- getDirectoryContents fp >>= return . filter (isSuffixOf ".list")
       let paths = map (fp </>) names
-      files <- mapM (unsafeInterleaveIO . readFile) paths
-      return $ Map.fromList $ zip (map dropExtension names) (map (Set.fromList . lines) files)
+      files <- mapM (strictReadF lines) paths
+      return $ Map.fromList $ zip (map dropExtension names) (map Set.fromList files)
+
+strictReadF f path = withFile path ReadMode (\h -> hGetContents h >>= (\x -> return $! f x))
+strictRead = strictReadF id
 
 -- |Given a path, return the name of the package that owns it.
 debOfFile :: FilePath -> ReaderT (Map.Map FilePath (Set.Set String)) IO (Maybe String)
