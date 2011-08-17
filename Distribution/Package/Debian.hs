@@ -28,7 +28,7 @@ import Data.Char (toLower, isSpace)
 import Data.List
 import qualified Data.Map as Map
 import Data.Maybe
-import Data.Set (Set, member)
+import Data.Set (Set, member, fromList)
 import qualified Data.Set as Set
 import qualified Data.Set (fromList)
 import Data.Version (showVersion)
@@ -774,14 +774,14 @@ profilingDependencies
   = concat
     (map
         (\ x -> debianRelations Profiling x ranges)
-      $ filter (not . flip member base) [name])
+      $ filter (not . flip member (base compiler)) [name])
 profilingDependencies _ _ = []
 
 -- The development packages depend on the other development packages,
 -- the ones they were built with.  FIXME: These should have version
 -- dependencies.
 develDependencies :: Compiler -> Dependency_ -> D.Relations
-develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name base = []
+develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
 develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
     debianRelations Development name ranges
 develDependencies compiler dep@(ExtraLibs _)
@@ -792,7 +792,7 @@ develDependencies _ _ = []
 -- libraries and the documentation packages, used for creating cross
 -- references.
 buildDependencies :: Compiler -> Dependency_ -> D.Relations
-buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name base = []
+buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
 buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) =
     debianRelations Development name ranges ++ debianRelations Profiling name ranges
 buildDependencies compiler dep@(ExtraLibs _) =
@@ -811,7 +811,7 @@ docDependencies
   = concat
     (map
         (\ x -> debianRelations Documentation x ranges)
-      $ filter (not . flip member base) [name])
+      $ filter (not . flip member (base compiler)) [name])
 docDependencies _ _ = []
 
 -- generated with:
@@ -824,6 +824,9 @@ docDependencies _ _ = []
 --   | grep dev$ \
 --   | sed 's/-dev//;s/$/",/;s/^/"/'
 
+base compiler = Data.Set.fromList (let (Just (_, _, xs)) = unsafePerformIO (ghc6BuiltIns compiler) in map (unPackageName . pkgName ) xs)
+
+{-
 base :: Set String
 base
   = Data.Set.fromList
@@ -851,6 +854,7 @@ base
       "template-haskell",
       "time",
       "unix"]
+-}
 
 debianRelations :: PackageType -> String -> VersionRange -> D.Relations
 debianRelations typ name range =

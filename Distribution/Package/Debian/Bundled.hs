@@ -20,6 +20,7 @@ module Distribution.Package.Debian.Bundled
     , isLibrary
     , docPrefix
     , builtIns
+    , ghc6BuiltIns
     , PackageType(..)
     , debianName
     ) where
