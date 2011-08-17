@@ -884,21 +884,23 @@ debianRelation typ name@"parsec" range@(EarlierVersion version)
     | version < Version [3] [] =
         [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
     | version >= Version [3] [] =
-        [D.Rel (debianName typ name (Just (Version [2] []))) Nothing Nothing,
-         D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+        -- Put the parsec3 package in front of parsec2 so things are
+        -- more likely to get built with parsec3.
+        [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing,
+         D.Rel (debianName typ name (Just (Version [2] []))) Nothing Nothing]
 debianRelation typ name range@(EarlierVersion version) =
     [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
 debianRelation typ name@"parsec" range@(LaterVersion version)
     | version < Version [3] [] =
-        [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing,
-         D.Rel (debianName typ name (Just (Version [3] []))) Nothing Nothing]
+        [D.Rel (debianName typ name (Just (Version [3] []))) Nothing Nothing,
+         D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
     | version >= Version [3] [] =
         [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
 debianRelation typ name range@(LaterVersion version) =
     [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
 debianRelation typ name range@(WildcardVersion version) =
-    [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing,
-     D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion (upperBound version))))) Nothing]
+    [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion (upperBound version))))) Nothing,
+     D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
     where upperBound v = v { versionBranch = bump (versionBranch v) }
           bump = reverse . (zipWith (+) (1:(repeat 0))) . reverse
 
