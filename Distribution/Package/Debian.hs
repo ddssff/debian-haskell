@@ -42,7 +42,7 @@ import Debian.Version.String
 import Debian.Version.Internal (DebianVersion (DebianVersion))
 import System.Cmd (system)
 import System.Directory
-import System.FilePath ((</>))
+import System.FilePath ((</>), dropExtension)
 import System.IO (IOMode (ReadMode), hGetContents, hPutStrLn, hSetBinaryMode, openFile, stderr)
 import System.IO.Error (ioeGetFileName, isDoesNotExistError)
 import System.IO.Unsafe (unsafePerformIO, unsafeInterleaveIO)
@@ -321,12 +321,12 @@ libPaths compiler debVersions
         do a <- getDirPaths "/usr/lib"
            b <- getDirPaths "/usr/lib/haskell-packages/ghc/lib"
            -- Build a map from names of installed debs to version numbers
-           runDpkgT $ mapM (packageInfo compiler debVersions) (a ++ b) >>= return . catMaybes
+           dpkgFileMap >>= runReaderT (mapM (packageInfo compiler debVersions) (a ++ b)) >>= return . catMaybes
     | True = error $ "Can't handle compiler flavor: " ++ show (compilerFlavor compiler)
     where
       getDirPaths path = try (getDirectoryContents path) >>= return . map (\ x -> (path, x)) . either (\ (_ :: SomeException) -> []) id
 
-packageInfo :: Compiler ->  DebMap -> (FilePath, String) -> DpkgT IO (Maybe PackageInfo)
+packageInfo :: Compiler ->  DebMap -> (FilePath, String) -> ReaderT (Map.Map FilePath (Set.Set String)) IO (Maybe PackageInfo)
 packageInfo compiler debVersions (d, f) =
     case parseNameVersion f of
       Nothing -> return Nothing
@@ -350,21 +350,17 @@ packageInfo compiler debVersions (d, f) =
 
 -- |Create a map from pathname to the names of the packages that contains that pathname.
 -- We need to make sure we consume all the files, so 
-dpkgFileMap :: IO (Map.Map FilePath (Data.Set.Set String))
+dpkgFileMap :: IO (Map.Map FilePath (Set.Set String))
 dpkgFileMap =
-    getDirectoryContents "/var/lib/dpkg/info" >>=
-    return . map (\ name -> ("/var/lib/dpkg/info/" ++ name, take (length name - 5) name)) . filter (isSuffixOf ".list") >>=
-    mapM (\ (path, name) -> unsafeInterleaveIO (readFile path) >>= return . lines >>= return . (name,)) >>=
-    return . foldl (\ mp (name, paths) -> foldl (\ mp path -> Map.insertWith Set.union (path :: FilePath) (Set.singleton name :: Set.Set String) mp) mp paths) (Map.empty :: Map.Map FilePath (Set.Set String))
-
-type DpkgT m = ReaderT (Map.Map FilePath (Set.Set String)) m
-
-runDpkgT x =
-    do m <- dpkgFileMap
-       runReaderT x m
+    do
+      let fp = "/var/lib/dpkg/info"
+      names <- getDirectoryContents fp >>= return . filter (isSuffixOf ".list")
+      let paths = map (fp </>) names
+      files <- mapM (unsafeInterleaveIO . readFile) paths
+      return $ Map.fromList $ zip (map dropExtension names) (map (Set.fromList . lines) files)
 
 -- |Given a path, return the name of the package that owns it.
-debOfFile :: FilePath -> DpkgT IO (Maybe String)
+debOfFile :: FilePath -> ReaderT (Map.Map FilePath (Set.Set String)) IO (Maybe String)
 debOfFile path =
     do mp <- ask
        return $ testPath (Map.lookup path mp)
