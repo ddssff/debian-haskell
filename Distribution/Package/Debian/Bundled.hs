@@ -71,7 +71,8 @@ type Bundled = (CompilerFlavor, Version, [PackageIdentifier])
 builtIns :: Compiler -> IO [Bundled]
 builtIns compiler = 
     do ghc6 <- fmap maybeToList $ ghc6BuiltIns compiler
-       return $ ghc6 ++ [ (GHC, Version [7,0,1] [], ghc701BuiltIns)
+       return $ ghc6 ++ [ (GHC, Version [7,2,1] [], ghc721BuiltIns)
+                        , (GHC, Version [7,0,1] [], ghc701BuiltIns)
                         , (GHC, Version [6,8,3] [], ghc683BuiltIns)
                         , (GHC, Version [6,8,2] [], ghc682BuiltIns)
                         , (GHC, Version [6,8,1] [], ghc681BuiltIns)
@@ -161,6 +162,36 @@ installedVersions name packageIndex =
                                    
 v :: String -> [Int] -> PackageIdentifier
 v n x = PackageIdentifier (PackageName n) (Version x [])
+
+ghc721BuiltIns :: [PackageIdentifier]
+ghc721BuiltIns = [
+    v "Cabal" [1,12,0],
+    v "array" [0,3,0,3],
+    v "base" [4,4,0,0],
+    v "bin-package-db" [0,0,0,0],
+    v "binary" [0,5,0,2],
+    v "bytestring" [0,9,2,0],
+    v "containers" [0,4,1,0],
+    v "directory" [1,1,0,1],
+    v "extensible-exceptions" [0,1,1,3],
+    v "filepath" [1,2,0,1],
+    v "ghc" [7,2,1],
+    -- ghc-binary renamed to binary
+    v "ghc-prim" [0,2,0,0],
+    v "haskell2010" [1,1,0,0],
+    v "haskell98" [2,0,0,0],
+    v "hoopl" [3,8,7,1], -- new
+    v "hpc" [0,5,1,0],
+    v "integer-gmp" [0,3,0,0],
+    v "old-locale" [1,0,0,3],
+    v "old-time" [1,0,0,7],
+    v "pretty" [1,1,0,0],
+    v "process" [1,1,0,0], 
+    -- random removed
+    v "rts" [1,0],
+    v "template-haskell" [2,6,0,0],
+    v "time" [1,2,0,5],
+    v "unix" [2,5,0,0] ]
 
 ghc701BuiltIns :: [PackageIdentifier]
 ghc701BuiltIns = [
