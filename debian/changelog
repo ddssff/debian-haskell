@@ -1,3 +1,15 @@
+haskell-debian (new) unstable; urgency=low
+
+  * Add a --ghc-version option to specify what the ghc version is in the
+    build environment, in case it is different from the one where the
+    autobuilder is being run.  This affects what packages cabal-debian
+    thinks are built into the compiler.  I have non-working code to actually
+    look in the environment for this information, but it depends on having
+    the compiler already installed there.
+  * Greatly sped-up cabal-debian.
+
+ -- David Fox <dsf@seereason.com>  Fri, 19 Aug 2011 08:34:36 -0700
+
 haskell-debian (3.57) unstable; urgency=low
 
   * Re-order generated dependencies so we are more likely to build
