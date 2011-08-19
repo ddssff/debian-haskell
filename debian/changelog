@@ -1,4 +1,4 @@
-haskell-debian (new) unstable; urgency=low
+haskell-debian (3.58) unstable; urgency=low
 
   * Add a --ghc-version option to specify what the ghc version is in the
     build environment, in case it is different from the one where the
