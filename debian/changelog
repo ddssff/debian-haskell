@@ -7,6 +7,7 @@ haskell-debian (3.58) unstable; urgency=low
     look in the environment for this information, but it depends on having
     the compiler already installed there.
   * Greatly sped-up cabal-debian.
+  * Add --build-dep to specify extra build dependencies.
 
  -- David Fox <dsf@seereason.com>  Fri, 19 Aug 2011 08:34:36 -0700
 

@@ -52,6 +52,7 @@ data Flags = Flags
     , rpmVersion :: Maybe String
     , debMaintainer :: Maybe String
     , debAction :: DebAction
+    , buildDeps :: [String]
     }
     deriving (Eq, Show)
 
@@ -80,6 +81,7 @@ emptyFlags = Flags
     , rpmVersion = Nothing
     , debMaintainer = Nothing
     , debAction = Usage
+    , buildDeps = []
     }
 
 options :: [OptDescr (Flags -> Flags)]
@@ -126,6 +128,8 @@ options =
              "Override the Maintainer name and email in $DEBEMAIL/$EMAIL/$DEBFULLNAME/$FULLNAME",
       Option "" ["debianize"] (NoArg (\x -> x {debAction = Debianize}))
              "Generate a new debianization, replacing any existing one.  One of --debianize, --substvar, or --update-debianization is required.",
+      Option "" ["build-dep"] (ReqArg (\ name x -> x {buildDeps = name : (buildDeps x)}) "Debian binary package name")
+             "Specify a package to add to the build dependency list in debian/control, e.g. '--build-dep libglib2.0-dev'.",
       Option "" ["substvar"] (ReqArg (\ name x -> x {debAction = SubstVar (read name)}) "Doc, Prof, or Dev")
              (unlines ["Write out the list of dependencies required for the dev, prof or doc package depending",
                        "on the argument.  This value can be added to the appropriate substvars file."]),

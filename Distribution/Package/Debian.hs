@@ -615,7 +615,7 @@ control flags bundled compiler debianMaintainer pkgDesc =
             Field ("Priority", " " ++ "extra"),
             Field ("Section", " " ++ "haskell"),
             Field ("Maintainer", " " ++ debianMaintainer),
-            Field ("Build-Depends", " " ++ showDeps' "Build-Depends:" debianBuildDeps),
+            Field ("Build-Depends", " " ++ showDeps' "Build-Depends:" (debianBuildDeps ++ map rel (buildDeps flags))),
             Field ("Build-Depends-Indep", " " ++ showDeps' "Build-Depends-Indep:" debianBuildDepsIndep),
             --Field ("Build-Depends-Indep", " " ++ buildDepsIndep),
             Field ("Standards-Version", " " ++ "3.9.1"),
@@ -625,6 +625,7 @@ control flags bundled compiler debianMaintainer pkgDesc =
                    then "http://hackage.haskell.org/package/" ++
                         unPackageName (pkgName $ package pkgDesc)
                    else homepage pkgDesc)])
+      rel x = [D.Rel x Nothing Nothing]
       executableSpec executable =
           Paragraph
           [Field ("Package", " " ++ map toLower (exeName executable)),
