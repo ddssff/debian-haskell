@@ -511,7 +511,7 @@ cdbsRules pkgDesc =
                 [ -- Magic rule required to get binaries to build in packages that have no libraries
                   "build/" ++ exeDeb e ++ ":: build-ghc-stamp"
                 , "binary-fixup/" ++ exeDeb e ++ "::"
-                , "\ttest -f " ++ src ++ " && install -m 755 -s -D " ++ src ++ " " ++ dst ]
+                , "\tinstall -m 755 -s -D " ++ src ++ " " ++ dst ++ " || true"]
             _ ->
                 [ -- Magic rule required to get binaries to build in packages that have no libraries
                   "build/" ++ utilsDeb ++ ":: build-ghc-stamp"
@@ -520,7 +520,7 @@ cdbsRules pkgDesc =
                          let exe = exeName executable
                              src = "dist-ghc/build/" ++ exe ++ "/" ++ exe
                              dst = "debian/" ++ utilsDeb ++ "/usr/bin/" ++ exe in
-                         "\ttest -f " ++ src ++ " && install -m 755 -s -D " ++ src ++ " " ++ dst) (executables pkgDesc)
+                         "\tinstall -m 755 -s -D " ++ src ++ " " ++ dst ++ " || true") (executables pkgDesc)
       comments =
           ["# How to install an extra file into the documentation package",
            "#binary-fixup/" ++ docDeb ++ "::",
