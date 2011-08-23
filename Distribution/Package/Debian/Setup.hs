@@ -53,6 +53,8 @@ data Flags = Flags
     , debMaintainer :: Maybe String
     , debAction :: DebAction
     , buildDeps :: [String]
+    , debName :: Maybe String
+    , epoch :: Maybe Int
     }
     deriving (Eq, Show)
 
@@ -82,6 +84,8 @@ emptyFlags = Flags
     , debMaintainer = Nothing
     , debAction = Usage
     , buildDeps = []
+    , debName = Nothing
+    , epoch = Nothing
     }
 
 options :: [OptDescr (Flags -> Flags)]
@@ -130,6 +134,10 @@ options =
              "Generate a new debianization, replacing any existing one.  One of --debianize, --substvar, or --update-debianization is required.",
       Option "" ["build-dep"] (ReqArg (\ name x -> x {buildDeps = name : (buildDeps x)}) "Debian binary package name")
              "Specify a package to add to the build dependency list in debian/control, e.g. '--build-dep libglib2.0-dev'.",
+      Option "" ["deb-name"] (ReqArg (\ name x -> x {debName = Just name}) "NAME")
+             "Specify the base name of the debian package, the part between 'libghc-' and '-dev'.  Normally this is the downcased cabal name.",
+      Option "" ["epoch"] (ReqArg (\ n x -> x {epoch = Just (read n)}) "DIGIT")
+             "Specify the an epoch number for the package version number.",
       Option "" ["substvar"] (ReqArg (\ name x -> x {debAction = SubstVar (read name)}) "Doc, Prof, or Dev")
              (unlines ["Write out the list of dependencies required for the dev, prof or doc package depending",
                        "on the argument.  This value can be added to the appropriate substvars file."]),

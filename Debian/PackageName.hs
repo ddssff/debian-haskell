@@ -15,23 +15,23 @@ import qualified Distribution.Package as Cabal (PackageName(..))
 
 newtype PackageName = PackageName {unPackageName :: String}
 
-sourcePackageName :: Cabal.PackageName -> PackageName
-sourcePackageName p = PackageName $ "haskell-" ++ (unPackageName . basePackageName $ p)
+sourcePackageName :: Maybe String -> Cabal.PackageName -> PackageName
+sourcePackageName base p = PackageName $ "haskell-" ++ (unPackageName . basePackageName base $ p)
 
-docPackageName :: Cabal.PackageName -> PackageName
-docPackageName p = PackageName $ "libghc-" ++ (unPackageName . basePackageName $ p) ++ "-doc"
+docPackageName :: Maybe String -> Cabal.PackageName -> PackageName
+docPackageName base p = PackageName $ "libghc-" ++ (unPackageName . basePackageName base $ p) ++ "-doc"
 
-devPackageName :: Cabal.PackageName -> PackageName
-devPackageName p = PackageName $ "libghc-" ++ (unPackageName . basePackageName $ p) ++ "-dev"
+devPackageName :: Maybe String -> Cabal.PackageName -> PackageName
+devPackageName base p = PackageName $ "libghc-" ++ (unPackageName . basePackageName base $ p) ++ "-dev"
 
-profPackageName :: Cabal.PackageName -> PackageName
-profPackageName p = PackageName $ "libghc-" ++ (unPackageName . basePackageName $ p) ++ "-prof"
+profPackageName :: Maybe String -> Cabal.PackageName -> PackageName
+profPackageName base p = PackageName $ "libghc-" ++ (unPackageName . basePackageName base $ p) ++ "-prof"
 
-utilsPackageName :: Cabal.PackageName -> PackageName
-utilsPackageName p = PackageName $ "haskell-" ++ (unPackageName . basePackageName $ p) ++ "-utils"
+utilsPackageName :: Maybe String -> Cabal.PackageName -> PackageName
+utilsPackageName base p = PackageName $ "haskell-" ++ (unPackageName . basePackageName base $ p) ++ "-utils"
 
-basePackageName :: Cabal.PackageName -> PackageName
-basePackageName (Cabal.PackageName p) = PackageName $ map (fixChars . toLower) p
+basePackageName :: Maybe String -> Cabal.PackageName -> PackageName
+basePackageName base (Cabal.PackageName p) = PackageName $ maybe (map (fixChars . toLower) p) id base
 
 fixChars :: Char -> Char
 fixChars '_' = '-'

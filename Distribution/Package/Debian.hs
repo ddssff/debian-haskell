@@ -38,7 +38,7 @@ import qualified Debian.Relation as D
 import Debian.Release (parseReleaseName)
 import Debian.Changes (ChangeLogEntry(..), prettyEntry)
 import Debian.Time (getCurrentLocalRFC822Time)
-import Debian.Version
+import Debian.Version ()
 import Debian.Version.String
 import Debian.Version.Internal (DebianVersion (DebianVersion))
 import System.Cmd (system)
@@ -429,7 +429,7 @@ removeIfExists x = removeFileIfExists x >> removeDirectoryIfExists x
 
 updateDebianization :: Bool                -- ^whether to forcibly create file
                     -> PackageDescription  -- ^info from the .cabal file
-                    -> Flags		 -- ^command line yflags
+                    -> Flags		 -- ^command line flags
                     -> Compiler            -- ^compiler details
                     -> FilePath            -- ^directory in which to create files
                     -> IO ()
@@ -440,8 +440,8 @@ updateDebianization _force pkgDesc flags compiler tgtPfx =
                     return . either (\ (_ :: SomeException) -> showLicense . license $ pkgDesc) id
        debianMaintainer <- getDebianMaintainer flags >>= maybe (error "Missing value for --maintainer") return
        controlUpdate (tgtPfx </> "control") flags compiler debianMaintainer pkgDesc
-       changelogUpdate (tgtPfx </> "changelog") debianMaintainer pkgDesc date
-       replaceFile (tgtPfx </> "rules") (cdbsRules pkgDesc)
+       changelogUpdate (debName flags) (epoch flags) (tgtPfx </> "changelog") debianMaintainer pkgDesc date
+       replaceFile (tgtPfx </> "rules") (cdbsRules (debName flags) pkgDesc)
        getPermissions "debian/rules" >>= setPermissions "debian/rules" . (\ p -> p {executable = True})
        replaceFile (tgtPfx </> "compat") "7" -- should this be hardcoded, or automatically read from /var/lib/dpkg/status?
        replaceFile (tgtPfx </> "copyright") copyright
@@ -493,8 +493,8 @@ getDebianMaintainer flags =
                          email    <- lookup "DEBEMAIL" env `mplus` lookup "EMAIL" env
                          return (fullname ++ " <" ++ email ++ ">")
 
-cdbsRules :: PackageDescription -> String
-cdbsRules pkgDesc =
+cdbsRules :: Maybe String -> PackageDescription -> String
+cdbsRules base pkgDesc =
     unlines (intercalate [""] ([header, execs, comments] {- ++ devrules ++ profrules -} ))
     where
       header =
@@ -527,9 +527,9 @@ cdbsRules pkgDesc =
            "#\techo \"Some informative text\" > debian/" ++ docDeb ++ "/usr/share/doc/" ++ docDeb ++ "/AnExtraDocFile"]
       p = pkgName . package $ pkgDesc
       libName = unPackageName p
-      docDeb = D.unPackageName (D.docPackageName p)
-      utilsDeb = D.unPackageName (D.utilsPackageName p)
-      exeDeb e = D.unPackageName (D.basePackageName (PackageName (exeName e)))
+      docDeb = D.unPackageName (D.docPackageName base p)
+      utilsDeb = D.unPackageName (D.utilsPackageName base p)
+      exeDeb e = D.unPackageName (D.basePackageName Nothing (PackageName (exeName e)))
 
 list :: b -> ([a] -> b) -> [a] -> b
 list d f l = case l of [] -> d; _ -> f l
@@ -606,13 +606,13 @@ control flags bundled compiler debianMaintainer pkgDesc =
               docLibrarySpecs ++
               (case executables pkgDesc of
                  [] -> []
-                 [e] -> [utilsSpec (D.unPackageName (D.basePackageName (PackageName (exeName e))))]
-                 _ -> [utilsSpec (D.unPackageName (D.utilsPackageName (pkgName (package pkgDesc))))]))}
+                 [e] -> [utilsSpec (D.unPackageName (D.basePackageName Nothing (PackageName (exeName e))))]
+                 _ -> [utilsSpec (D.unPackageName (D.utilsPackageName (debName flags) (pkgName (package pkgDesc))))]))}
     where
       --buildDepsIndep = ""
       sourceSpec =
           Paragraph
-          ([Field ("Source", " " ++ D.unPackageName (debianSourcePackageName pkgDesc)),
+          ([Field ("Source", " " ++ D.unPackageName (debianSourcePackageName (debName flags) pkgDesc)),
             Field ("Priority", " " ++ "extra"),
             Field ("Section", " " ++ "haskell"),
             Field ("Maintainer", " " ++ debianMaintainer),
@@ -735,18 +735,18 @@ debianDependencies bundled compiler toDebRels dep
   | isBundled [bundled] compiler $ unboxDependency dep = []
 debianDependencies _ compiler toDebRels dep = toDebRels compiler dep
 
-changelogUpdate :: FilePath -> String -> PackageDescription -> String -> IO ()
-changelogUpdate path debianMaintainer pkgDesc date =
+changelogUpdate :: Maybe String -> Maybe Int -> FilePath -> String -> PackageDescription -> String -> IO ()
+changelogUpdate base epoch path debianMaintainer pkgDesc date =
     try (readFile path) >>= either (\ (_ :: SomeException) -> writeFile path log) (const (writeFile (path ++ ".new") log))
     where
-      log = changelog debianMaintainer pkgDesc date
+      log = changelog base epoch debianMaintainer pkgDesc date
 
-changelog :: String -> PackageDescription -> String -> String
-changelog debianMaintainer pkgDesc date =
+changelog :: Maybe String -> Maybe Int -> String -> PackageDescription -> String -> String
+changelog base epoch debianMaintainer pkgDesc date =
     render (prettyEntry
-            (Entry { logPackage = D.unPackageName (debianSourcePackageName pkgDesc)
+            (Entry { logPackage = D.unPackageName (debianSourcePackageName base pkgDesc)
                    , logVersion =
-                     updateOriginal (++ "-1~hackage1") $
+                     updateOriginal (\ s -> maybe "" (\ n -> show n ++ ":") epoch ++ s ++ "-1~hackage1") $
                      debianVersionNumber pkgDesc
                    , logDists = [parseReleaseName "unstable"]
                    , logUrgency = "low"
@@ -760,8 +760,8 @@ updateOriginal f (DebianVersion str dv) = DebianVersion (f str) dv
 unPackageName :: PackageName -> String
 unPackageName (PackageName s) = s
 
-debianSourcePackageName :: PackageDescription -> D.PackageName
-debianSourcePackageName pkgDesc = D.sourcePackageName . pkgName . package $ pkgDesc
+debianSourcePackageName :: Maybe String -> PackageDescription -> D.PackageName
+debianSourcePackageName base pkgDesc = D.sourcePackageName base . pkgName . package $ pkgDesc
 
 --debianDevelPackageName' (Dependency (PackageName name) _) = debianDevelPackageName name
 
