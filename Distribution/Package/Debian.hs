@@ -33,6 +33,7 @@ import qualified Data.Set as Set
 import qualified Data.Set (fromList)
 import Data.Version (showVersion)
 import Debian.Control
+import qualified Debian.PackageName as D
 import qualified Debian.Relation as D
 import Debian.Release (parseReleaseName)
 import Debian.Changes (ChangeLogEntry(..), prettyEntry)
@@ -501,37 +502,34 @@ cdbsRules pkgDesc =
            "include /usr/share/cdbs/1/rules/debhelper.mk",
            "include /usr/share/cdbs/1/class/hlibrary.mk"]
       execs =
-          concatMap (\ executable ->
-                         let deb = map toLower (exeName executable)
-                             src = "dist-ghc/build/" ++ deb ++ "/" ++ deb
-                             dst = "debian/" ++ deb ++ "/usr/bin/" ++ deb in
-                         [ -- Magic rule required to get binaries to build in packages that have no libraries
-                           "build/" ++ deb ++ ":: build-ghc-stamp",
-                           "binary-fixup/" ++ deb ++ "::",
-                           "\tinstall -m 755 -s -D " ++ src ++ " " ++ dst]) (executables pkgDesc)
+          case executables pkgDesc of
+            [] -> []
+            [e] ->
+                let exe = exeName e
+                    src = "dist-ghc/build/" ++ exe ++ "/" ++ exe
+                    dst = "debian/" ++ exeDeb e ++ "/usr/bin/" ++ exe in
+                [ -- Magic rule required to get binaries to build in packages that have no libraries
+                  "build/" ++ exeDeb e ++ ":: build-ghc-stamp"
+                , "binary-fixup/" ++ exeDeb e ++ "::"
+                , "\ttest -f " ++ src ++ " && install -m 755 -s -D " ++ src ++ " " ++ dst ]
+            _ ->
+                [ -- Magic rule required to get binaries to build in packages that have no libraries
+                  "build/" ++ utilsDeb ++ ":: build-ghc-stamp"
+                , "binary-fixup/" ++ utilsDeb ++ "::" ] ++
+                map (\ executable ->
+                         let exe = exeName executable
+                             src = "dist-ghc/build/" ++ exe ++ "/" ++ exe
+                             dst = "debian/" ++ utilsDeb ++ "/usr/bin/" ++ exe in
+                         "\ttest -f " ++ src ++ " && install -m 755 -s -D " ++ src ++ " " ++ dst) (executables pkgDesc)
       comments =
           ["# How to install an extra file into the documentation package",
-           "#binary-fixup/libghc-" ++ libName ++ "-doc::",
-           "#\techo \"Some informative text\" > debian/libghc-" ++ libName ++ "-doc/usr/share/doc/libghc-" ++ libName ++ "-doc/AnExtraDocFile"]
-{-
-      devrules =
-          case (library pkgDesc, executables pkgDesc) of
-            (_, []) -> []
-            (_, execs) ->
-                [["binary-fixup/" ++ (debianDevelPackageName libName) ++ "::"] ++
-                 concat (map (\ exec -> ["\tmkdir -p debian/" ++ exeName exec ++ "/usr/bin",
-		                         "\tmv debian/" ++ (debianDevelPackageName libName) ++
-                                         "/usr/lib/haskell-packages/ghc/bin/" ++ exeName exec ++
-                                         " debian/" ++ exeName exec ++ "/usr/bin"]) (executables pkgDesc))]
-      profrules =
-          case (library pkgDesc, executables pkgDesc) of
-            (_, []) -> []
-            (_, execs) ->
-                [["binary-fixup/" ++ (debianProfilingPackageName libName) ++ "::"] ++
-		 map (\ exec -> "\trm debian/" ++ (debianProfilingPackageName libName) ++
-                                "/usr/lib/haskell-packages/ghc/bin/" ++ exeName exec) (executables pkgDesc)]
--}
-      libName = unPackageName . pkgName . package $ pkgDesc
+           "#binary-fixup/" ++ docDeb ++ "::",
+           "#\techo \"Some informative text\" > debian/" ++ docDeb ++ "/usr/share/doc/" ++ docDeb ++ "/AnExtraDocFile"]
+      p = pkgName . package $ pkgDesc
+      libName = unPackageName p
+      docDeb = D.unPackageName (D.docPackageName p)
+      utilsDeb = D.unPackageName (D.utilsPackageName p)
+      exeDeb e = D.unPackageName (D.basePackageName (PackageName (exeName e)))
 
 list :: b -> ([a] -> b) -> [a] -> b
 list d f l = case l of [] -> d; _ -> f l
@@ -606,12 +604,15 @@ control flags bundled compiler debianMaintainer pkgDesc =
               develLibrarySpecs ++
               profileLibrarySpecs ++ 
               docLibrarySpecs ++
-              map executableSpec (executables pkgDesc))}
+              (case executables pkgDesc of
+                 [] -> []
+                 [e] -> [utilsSpec (D.unPackageName (D.basePackageName (PackageName (exeName e))))]
+                 _ -> [utilsSpec (D.unPackageName (D.utilsPackageName (pkgName (package pkgDesc))))]))}
     where
       --buildDepsIndep = ""
       sourceSpec =
           Paragraph
-          ([Field ("Source", " " ++ debianSourcePackageName pkgDesc),
+          ([Field ("Source", " " ++ D.unPackageName (debianSourcePackageName pkgDesc)),
             Field ("Priority", " " ++ "extra"),
             Field ("Section", " " ++ "haskell"),
             Field ("Maintainer", " " ++ debianMaintainer),
@@ -626,9 +627,9 @@ control flags bundled compiler debianMaintainer pkgDesc =
                         unPackageName (pkgName $ package pkgDesc)
                    else homepage pkgDesc)])
       rel x = [D.Rel x Nothing Nothing]
-      executableSpec executable =
+      utilsSpec p =
           Paragraph
-          [Field ("Package", " " ++ map toLower (exeName executable)),
+          [Field ("Package", " " ++ p),
            Field ("Architecture", " " ++ "any"),
            Field ("Section", " " ++ "misc"),
            -- No telling what the dependencies of an executable might
@@ -743,7 +744,7 @@ changelogUpdate path debianMaintainer pkgDesc date =
 changelog :: String -> PackageDescription -> String -> String
 changelog debianMaintainer pkgDesc date =
     render (prettyEntry
-            (Entry { logPackage = debianSourcePackageName pkgDesc
+            (Entry { logPackage = D.unPackageName (debianSourcePackageName pkgDesc)
                    , logVersion =
                      updateOriginal (++ "-1~hackage1") $
                      debianVersionNumber pkgDesc
@@ -759,8 +760,8 @@ updateOriginal f (DebianVersion str dv) = DebianVersion (f str) dv
 unPackageName :: PackageName -> String
 unPackageName (PackageName s) = s
 
-debianSourcePackageName :: PackageDescription -> String
-debianSourcePackageName pkgDesc = "haskell-" ++ map toLower (unPackageName . pkgName . package $ pkgDesc)
+debianSourcePackageName :: PackageDescription -> D.PackageName
+debianSourcePackageName pkgDesc = D.sourcePackageName . pkgName . package $ pkgDesc
 
 --debianDevelPackageName' (Dependency (PackageName name) _) = debianDevelPackageName name
 
