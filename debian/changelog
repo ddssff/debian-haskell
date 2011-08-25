@@ -1,3 +1,12 @@
+haskell-debian (3.58-0.2) unstable; urgency=low
+
+  * Remove the --deb-name option, all the package name special cases need
+    to be encoded in the Distribution.Package.Debian.Bundled.debianName function
+    so that we can fix both the names for the package we are building and
+    the names of its dependencies.
+
+ -- David Fox <dsf@seereason.com>  Thu, 25 Aug 2011 10:58:11 -0700
+
 haskell-debian (3.58-0.1) unstable; urgency=low
 
   * Add --deb-name option, which sets the part of the package name between
