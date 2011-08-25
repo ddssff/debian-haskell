@@ -441,7 +441,7 @@ updateDebianization _force pkgDesc flags compiler tgtPfx =
        debianMaintainer <- getDebianMaintainer flags >>= maybe (error "Missing value for --maintainer") return
        controlUpdate (tgtPfx </> "control") flags compiler debianMaintainer pkgDesc
        changelogUpdate flags (tgtPfx </> "changelog") debianMaintainer pkgDesc date
-       replaceFile (tgtPfx </> "rules") (cdbsRules (debName flags) pkgDesc)
+       replaceFile (tgtPfx </> "rules") (cdbsRules pkgDesc)
        getPermissions "debian/rules" >>= setPermissions "debian/rules" . (\ p -> p {executable = True})
        replaceFile (tgtPfx </> "compat") "7" -- should this be hardcoded, or automatically read from /var/lib/dpkg/status?
        replaceFile (tgtPfx </> "copyright") copyright
@@ -493,8 +493,8 @@ getDebianMaintainer flags =
                          email    <- lookup "DEBEMAIL" env `mplus` lookup "EMAIL" env
                          return (fullname ++ " <" ++ email ++ ">")
 
-cdbsRules :: Maybe String -> PackageDescription -> String
-cdbsRules base pkgDesc =
+cdbsRules :: PackageDescription -> String
+cdbsRules pkgDesc =
     unlines (intercalate [""] ([header, execs, comments] {- ++ devrules ++ profrules -} ))
     where
       header =
@@ -527,9 +527,9 @@ cdbsRules base pkgDesc =
            "#\techo \"Some informative text\" > debian/" ++ docDeb ++ "/usr/share/doc/" ++ docDeb ++ "/AnExtraDocFile"]
       p = pkgName . package $ pkgDesc
       libName = unPackageName p
-      docDeb = D.docPackageName base p
-      utilsDeb = D.utilsPackageName base p
-      exeDeb e = D.basePackageName Nothing (PackageName (exeName e))
+      docDeb = debianName Documentation (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc)))
+      utilsDeb = debianName Utilities (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc)))
+      exeDeb e = debianName Extra (PackageName (exeName e)) Nothing
 
 list :: b -> ([a] -> b) -> [a] -> b
 list d f l = case l of [] -> d; _ -> f l
@@ -606,13 +606,13 @@ control flags bundled compiler debianMaintainer pkgDesc =
               docLibrarySpecs ++
               (case executables pkgDesc of
                  [] -> []
-                 [e] -> [utilsSpec (D.basePackageName Nothing (PackageName (exeName e)))]
-                 _ -> [utilsSpec (D.utilsPackageName (debName flags) (pkgName (package pkgDesc)))]))}
+                 [e] -> [utilsSpec (debianName Extra (PackageName (exeName e)) Nothing)]
+                 _ -> [utilsSpec (debianName Utilities (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc))))]))}
     where
       --buildDepsIndep = ""
       sourceSpec =
           Paragraph
-          ([Field ("Source", " " ++ debianSourcePackageName (debName flags) pkgDesc),
+          ([Field ("Source", " " ++ debianName Source (pkgName . package $ pkgDesc) (Just (pkgVersion (package pkgDesc)))),
             Field ("Priority", " " ++ "extra"),
             Field ("Section", " " ++ "haskell"),
             Field ("Maintainer", " " ++ debianMaintainer),
@@ -643,7 +643,7 @@ control flags bundled compiler debianMaintainer pkgDesc =
       docLibrarySpecs = if isJust (library pkgDesc) then [docSpecsParagraph] else []
       docSpecsParagraph =
           Paragraph
-          [Field ("Package", " " ++ D.docPackageName (debName flags) (pkgName (package pkgDesc))),
+          [Field ("Package", " " ++ debianName Documentation (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc)))),
            Field ("Architecture", " " ++ "all"),
            Field ("Section", " " ++ "doc"),
            Field ("Depends", " " ++ showDeps' "Depends:" [[D.Rel "${haskell:Depends}" Nothing Nothing],
@@ -653,7 +653,7 @@ control flags bundled compiler debianMaintainer pkgDesc =
            Field ("Description", " " ++ libraryDescription Documentation)]
       librarySpec arch typ =
           Paragraph
-          [Field ("Package", " " ++ D.libPackageName typ (debName flags) (pkgName (package pkgDesc))),
+          [Field ("Package", " " ++ debianName typ (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc)))),
            Field ("Architecture", " " ++ arch),
            Field ("Depends", " " ++ showDeps' "Depends:" (
                      (if typ == Development
@@ -744,7 +744,7 @@ changelogUpdate flags path debianMaintainer pkgDesc date =
 changelog :: Flags -> String -> PackageDescription -> String -> String
 changelog flags debianMaintainer pkgDesc date =
     render (prettyEntry
-            (Entry { logPackage = debianSourcePackageName (debName flags) pkgDesc
+            (Entry { logPackage = debianName Source (pkgName . package $ pkgDesc) (Just (pkgVersion (package pkgDesc)))
                    , logVersion = updateOriginal f $ debianVersionNumber pkgDesc
                    , logDists = [parseReleaseName "unstable"]
                    , logUrgency = "low"
@@ -760,9 +760,6 @@ updateOriginal f (DebianVersion str dv) = DebianVersion (f str) dv
 
 unPackageName :: PackageName -> String
 unPackageName (PackageName s) = s
-
-debianSourcePackageName :: Maybe String -> PackageDescription -> String
-debianSourcePackageName base pkgDesc = D.sourcePackageName base . pkgName . package $ pkgDesc
 
 --debianDevelPackageName' (Dependency (PackageName name) _) = debianDevelPackageName name
 

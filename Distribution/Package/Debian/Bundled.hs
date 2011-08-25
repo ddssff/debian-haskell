@@ -24,11 +24,6 @@ module Distribution.Package.Debian.Bundled
     , debianName
     , versionSplits
     , ghcBuiltIns
-    , sourcePackageName
-    , docPackageName
-    , utilsPackageName
-    , basePackageName
-    , libPackageName
     ) where
 
 import qualified Data.ByteString.Char8 as B
@@ -401,7 +396,7 @@ isLibrary _ _ = True
 data PackageType = Source | Development | Profiling | Documentation | Utilities | Extra deriving (Eq, Show)
 
 debianName :: PackageType -> PackageName -> Maybe Version -> String
-debianName Extra (PackageName name) range = name
+debianName Extra (PackageName name) _ = name
 debianName typ (PackageName name) (Just version) =
     prefix typ ++ base ++ suffix typ
     where
@@ -428,31 +423,6 @@ prefix Development = "libghc-"
 prefix Profiling = "libghc-"
 prefix Utilities = "haskell-"
 prefix Extra = ""
-
--- This is intended to help enforce the requirements on debian package names when building
--- them from cabal package names - no upper case, no underscores, etc.  Its semi redundant with
--- the stuff just above.
-
-sourcePackageName :: Maybe String -> PackageName -> String
-sourcePackageName base p = "haskell-" ++ basePackageName base p
-
-docPackageName :: Maybe String -> PackageName -> String
-docPackageName base p = "libghc-" ++ basePackageName base p ++ "-doc"
-
-libPackageName :: PackageType -> Maybe String -> PackageName -> String
-libPackageName typ base p = "libghc-" ++ basePackageName base p ++ suffix typ
-
-devPackageName :: Maybe String -> PackageName -> String
-devPackageName base p = "libghc-" ++ basePackageName base p ++ "-dev"
-
-profPackageName :: Maybe String -> PackageName -> String
-profPackageName base p = "libghc-" ++ basePackageName base p ++ "-prof"
-
-utilsPackageName :: Maybe String -> PackageName -> String
-utilsPackageName base p = "haskell-" ++ basePackageName base p ++ "-utils"
-
-basePackageName :: Maybe String -> PackageName -> String
-basePackageName base (PackageName p) = maybe (map (fixChar . toLower) p) id base
 
 fixChar :: Char -> Char
 fixChar '_' = '-'
