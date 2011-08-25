@@ -1,4 +1,5 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+{-# OPTIONS -fno-warn-orphans #-}
 module Debian.Version.String
     ( ParseDebianVersion(..)
     ) where

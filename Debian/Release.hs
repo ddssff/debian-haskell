@@ -55,11 +55,13 @@ sectionNameOfSubSection = sectionName' . section
 
 -- |Parse the value that appears in the @Section@ field of a .changes file.
 -- (Does this need to be unesacped?)
-parseSection section =
-    case span (/= '/') section of
+parseSection :: String -> SubSection
+parseSection s =
+    case span (/= '/') s of
       (x, "") -> SubSection (Section "main") x
       ("main", y) -> SubSection (Section "main") y
       (x, y) -> SubSection (Section x) (tail y)
 
+parseSection' :: String -> Section
 parseSection' name =
     Section (unEscapeString name)

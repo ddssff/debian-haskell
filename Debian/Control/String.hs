@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances, ScopedTypeVariables, TypeSynonymInstances #-}
+{-# OPTIONS -fno-warn-orphans #-}
 module Debian.Control.String
     ( -- * Types
       Control'(..)

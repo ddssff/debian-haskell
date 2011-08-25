@@ -1,5 +1,6 @@
 -- |A module for parsing, comparing, and (eventually) modifying debian version
 -- numbers. <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version>
+{-# OPTIONS -fno-warn-orphans -fno-warn-unused-do-bind #-}
 module Debian.Version.Common
     (DebianVersion -- |Exported abstract because the internal representation is likely to change 
     , ParseDebianVersion(..)
@@ -156,15 +157,16 @@ evr (DebianVersion s _) =
       -- I really don't think this can happen.
       _ -> error ("Invalid Debian Version String: " ++ s)
 
+epoch :: DebianVersion -> Maybe Int
 epoch v = case evr v of (x, _, _) -> x
+version :: DebianVersion -> String
 version v = case evr v of (_, x, _) -> x
+revision :: DebianVersion -> Maybe String
 revision v = case evr v of (_, _, x) -> x
 
 -- Build a Debian version number from epoch, version, revision
 buildDebianVersion :: Maybe Int -> String -> Maybe String -> DebianVersion
-buildDebianVersion epoch version revision =
+buildDebianVersion e v r =
     either (error . show) (DebianVersion str) $ parse parseDV str str
     where
-      str = (maybe "" (\ n -> show n ++ ":") epoch ++
-                   version ++
-                   maybe "" (\ s -> "-" ++ s) revision)
+      str = (maybe "" (\ n -> show n ++ ":") e ++ v ++ maybe "" (\ s -> "-" ++ s) r)

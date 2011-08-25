@@ -1,3 +1,4 @@
+{-# OPTIONS -fno-warn-orphans #-}
 module Debian.Version.ByteString
     ( ParseDebianVersion(..)
     ) where

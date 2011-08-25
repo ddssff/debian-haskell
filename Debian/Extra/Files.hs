@@ -12,12 +12,12 @@ withTemporaryFile :: MonadIO m
                   -> String		-- ^ The text that the file should contain
                   -> m a		-- ^ The function's return value
 withTemporaryFile f text =
-    do path <- liftIO $ writeTemporaryFile text
+    do path <- liftIO writeTemporaryFile
        result <- f path
        liftIO $ removeFile path
        return result
     where
-      writeTemporaryFile text =
+      writeTemporaryFile =
           do dir <- getTemporaryDirectory
              (path, h) <- openBinaryTempFile dir "wtf.tmp"
              hPutStr h text

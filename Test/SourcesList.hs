@@ -3,7 +3,7 @@ module Test.SourcesList where
 import Test.HUnit
 
 import Debian.Sources
-import Data.Maybe
+--import Data.Maybe
 
 -- * Unit Tests
 
@@ -40,7 +40,7 @@ testSourcesList =
                     , "deb http://ftp.debian.org/whee space%20dist main"
                     , "deb http://ftp.debian.org/whee dist space%20section"
                     ]
-      invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ main contrib non-free # exact path with sections"
+      _invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ main contrib non-free # exact path with sections"
 
 testSourcesListParse :: Test
 testSourcesListParse =
@@ -55,5 +55,6 @@ testSourcesListParse =
                       "deb http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n",
                       "deb-src http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n"])
 
+sourcesListTests :: [Test]
 sourcesListTests =
     [ testQuoteWords, testSourcesList, testSourcesListParse ]

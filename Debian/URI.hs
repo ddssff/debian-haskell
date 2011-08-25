@@ -1,3 +1,4 @@
+{-# OPTIONS -fno-warn-orphans #-}
 module Debian.URI
     ( module Network.URI
     , URIString
@@ -17,7 +18,7 @@ import System.Directory (getDirectoryContents)
 --import System.Exit
 --import System.Unix.Process (lazyCommand, collectOutput)
 import System.Unix.Process (collectStdout)
-import System.Unix.Progress (lazyCommandSF, quieter)
+import System.Unix.Progress (lazyCommandSF {-, quieter-})
 --import System.Unix.ProcessExtra (cmdOutput, cmdOutputStrict)
 import Text.Regex (mkRegex, matchRegex)
 
