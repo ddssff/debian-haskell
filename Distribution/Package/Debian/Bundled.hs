@@ -401,18 +401,27 @@ isLibrary _ _ = True
 docPrefix :: String -> VersionRange -> String
 docPrefix _ _ = "libghc-"
 
-data PackageType = Development | Profiling | Documentation | Extra deriving (Eq, Show)
+data PackageType = Source | Development | Profiling | Documentation | Utilities | Extra deriving (Eq, Show)
 
 debianName :: PackageType -> PackageName -> Maybe Version -> String
 debianName Extra (PackageName name) range = name
-debianName typ (PackageName "parsec") (Just version) | version < Version [3] [] =  "libghc-parsec2" ++ suffix typ
-debianName typ (PackageName "parsec") (Just version) | version >= Version [3] [] = "libghc-parsec3" ++ suffix typ
-debianName typ (PackageName name) _ = "libghc-" ++ map toLower name ++ suffix typ
+debianName typ (PackageName "parsec") (Just version) | version < Version [3] [] =  prefix typ ++ "parsec2" ++ suffix typ
+debianName typ (PackageName "parsec") (Just version) | version >= Version [3] [] = prefix typ ++ "parsec3" ++ suffix typ
+debianName typ (PackageName name) _ = prefix typ ++ map fixChar name ++ suffix typ
 
+suffix Source = ""
 suffix Documentation = "-doc"
 suffix Development = "-dev"
 suffix Profiling = "-prof"
-suffix _ = ""
+suffix Utilities = "-utils"
+suffix Extra = ""
+
+prefix Source = "haskell-"
+prefix Documentation = "libghc-"
+prefix Development = "libghc-"
+prefix Profiling = "libghc-"
+prefix Utilities = "haskell-"
+prefix Extra = ""
 
 -- This is intended to help enforce the requirements on debian package names when building
 -- them from cabal package names - no upper case, no underscores, etc.  Its semi redundant with
@@ -437,8 +446,8 @@ utilsPackageName :: Maybe String -> PackageName -> String
 utilsPackageName base p = "haskell-" ++ basePackageName base p ++ "-utils"
 
 basePackageName :: Maybe String -> PackageName -> String
-basePackageName base (PackageName p) = maybe (map (fixChars . toLower) p) id base
+basePackageName base (PackageName p) = maybe (map (fixChar . toLower) p) id base
 
-fixChars :: Char -> Char
-fixChars '_' = '-'
-fixChars c = c
+fixChar :: Char -> Char
+fixChar '_' = '-'
+fixChar c = c
