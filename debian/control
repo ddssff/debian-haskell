@@ -18,9 +18,7 @@ Build-Depends: debhelper (>= 7)
   , libghc-regex-tdfa-prof
   , libghc-bzlib-dev (>= 0.5.0.0-4)
   , libghc-bzlib-prof
-  , libghc-haxml-dev (>= 1:1.20)
-  , libghc-haxml-dev (<< 1:1.21)
-  , libghc-haxml-prof
+  , libghc-haxml-prof (>= 1:1.20)
   , libghc-unixutils-dev (>= 1.37)
   , libghc-unixutils-prof (>= 1.37)
   , libghc-zlib-dev
@@ -36,7 +34,6 @@ Build-Depends-Indep: ghc-doc
   , libghc-regex-tdfa-doc
   , libghc-bzlib-doc
   , libghc-haxml-doc (>= 1:1.20)
-  , libghc-haxml-doc (<< 1:1.21)
   , libghc-unixutils-doc (>= 1.37)
   , libghc-zlib-doc
   , libghc-network-doc
