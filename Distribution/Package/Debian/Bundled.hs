@@ -22,6 +22,7 @@ module Distribution.Package.Debian.Bundled
     -- , ghc6BuiltIns
     , PackageType(..)
     , debianName
+    , versionSplits
     , ghcBuiltIns
     , sourcePackageName
     , docPackageName
@@ -401,9 +402,18 @@ data PackageType = Source | Development | Profiling | Documentation | Utilities 
 
 debianName :: PackageType -> PackageName -> Maybe Version -> String
 debianName Extra (PackageName name) range = name
-debianName typ (PackageName "parsec") (Just version) | version < Version [3] [] =  prefix typ ++ "parsec2" ++ suffix typ
-debianName typ (PackageName "parsec") (Just version) | version >= Version [3] [] = prefix typ ++ "parsec3" ++ suffix typ
+debianName typ (PackageName name) (Just version) =
+    prefix typ ++ base ++ suffix typ
+    where
+      base = foldr f (map fixChar name) versionSplits
+      f (PackageName n, v, ltName, geName) debName
+          | n == name && version < v = ltName
+          | n == name = geName
+          | True = debName
 debianName typ (PackageName name) _ = prefix typ ++ map fixChar name ++ suffix typ
+
+versionSplits = [(PackageName "parsec", Version [3] [], "parsec", "parsec3"),
+                 (PackageName "QuickCheck", Version [2] [], "quickcheck1", "quickcheck2")]
 
 suffix Source = ""
 suffix Documentation = "-doc"

@@ -77,7 +77,7 @@ import Distribution.Verbosity (Verbosity)
 import Distribution.Version (Version(..),VersionRange(..))
 import Distribution.Simple.Setup (defaultDistPref)
 import Distribution.Package.Debian.Setup (Flags(..), DebAction(..), DebType(..))
-import Distribution.Package.Debian.Bundled (Bundled, isBundled, PackageType(..), debianName, ghcBuiltIns {-, builtIns, ghc6BuiltIns-})
+import Distribution.Package.Debian.Bundled (Bundled, isBundled, PackageType(..), debianName, versionSplits, ghcBuiltIns {-, builtIns, ghc6BuiltIns-})
 import qualified Distribution.Package.Debian.Bundled as D
 import qualified Distribution.Compat.ReadP as ReadP
 import Distribution.Text ( Text(parse) )
@@ -885,12 +885,24 @@ debianRelations typ name range =
       merge [] = []
 
 -- |Turn simple Cabal relations into Debian relations.  There are some
--- special cases in here for the mapping of cabal package names to debian.
+-- special cases in here where we have to split a range because the
+-- debian package name changes at a certain version number
+-- (specifically, parsec and quickcheck.)
 debianRelation :: PackageType -> PackageName -> VersionRange -> [D.Relation]
 debianRelation typ name range@AnyVersion =
     [D.Rel (debianName typ name Nothing) Nothing Nothing]
 debianRelation typ name range@(ThisVersion version) =
     [D.Rel (debianName typ name (Just version)) (Just (D.EEQ (parseDebianVersion (showVersion version)))) Nothing]
+debianRelation typ name (EarlierVersion version) =
+    foldr split [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing] versionSplits
+    where split (n, v, _, _) rels
+              | n == name && version < v =
+                  [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+              | n == name && version >= v =
+                  [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing,
+                   D.Rel (debianName typ name (Just v)) Nothing Nothing]
+              | True = rels
+{-
 debianRelation typ name@(PackageName "parsec") range@(EarlierVersion version)
     | version < Version [3] [] =
         [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
@@ -899,16 +911,28 @@ debianRelation typ name@(PackageName "parsec") range@(EarlierVersion version)
         -- more likely to get built with parsec3.
         [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing,
          D.Rel (debianName typ name (Just (Version [2] []))) Nothing Nothing]
-debianRelation typ name range@(EarlierVersion version) =
-    [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+    | True =
+        [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
+-}
+debianRelation typ name (LaterVersion version) =
+    foldr split [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing] versionSplits
+    where split (n, v, _, _) rels
+              | n == name && version < v =
+                  [D.Rel (debianName typ name (Just v)) Nothing Nothing,
+                   D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
+              | n == name && version >= v =
+                  [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
+              | True = rels
+{-
 debianRelation typ name@(PackageName "parsec") range@(LaterVersion version)
     | version < Version [3] [] =
         [D.Rel (debianName typ name (Just (Version [3] []))) Nothing Nothing,
          D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
     | version >= Version [3] [] =
         [D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
-debianRelation typ name range@(LaterVersion version) =
-    [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
+    | True =
+        [D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
+-}
 debianRelation typ name range@(WildcardVersion version) =
     [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion (upperBound version))))) Nothing,
      D.Rel (debianName typ name (Just version)) (Just (D.GRE (parseDebianVersion (showVersion version)))) Nothing]
