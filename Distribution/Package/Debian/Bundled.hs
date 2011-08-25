@@ -24,6 +24,11 @@ module Distribution.Package.Debian.Bundled
     , PackageType(..)
     , debianName
     , ghcBuiltIns
+    , sourcePackageName
+    , docPackageName
+    , utilsPackageName
+    , basePackageName
+    , libPackageName
     ) where
 
 import qualified Data.ByteString.Char8 as B
@@ -408,3 +413,32 @@ suffix Documentation = "-doc"
 suffix Development = "-dev"
 suffix Profiling = "-prof"
 suffix _ = ""
+
+-- This is intended to help enforce the requirements on debian package names when building
+-- them from cabal package names - no upper case, no underscores, etc.  Its semi redundant with
+-- the stuff just above.
+
+sourcePackageName :: Maybe String -> PackageName -> String
+sourcePackageName base p = "haskell-" ++ basePackageName base p
+
+docPackageName :: Maybe String -> PackageName -> String
+docPackageName base p = "libghc-" ++ basePackageName base p ++ "-doc"
+
+libPackageName :: PackageType -> Maybe String -> PackageName -> String
+libPackageName typ base p = "libghc-" ++ basePackageName base p ++ suffix typ
+
+devPackageName :: Maybe String -> PackageName -> String
+devPackageName base p = "libghc-" ++ basePackageName base p ++ "-dev"
+
+profPackageName :: Maybe String -> PackageName -> String
+profPackageName base p = "libghc-" ++ basePackageName base p ++ "-prof"
+
+utilsPackageName :: Maybe String -> PackageName -> String
+utilsPackageName base p = "haskell-" ++ basePackageName base p ++ "-utils"
+
+basePackageName :: Maybe String -> PackageName -> String
+basePackageName base (PackageName p) = maybe (map (fixChars . toLower) p) id base
+
+fixChars :: Char -> Char
+fixChars '_' = '-'
+fixChars c = c

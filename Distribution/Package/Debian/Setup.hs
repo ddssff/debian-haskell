@@ -54,6 +54,7 @@ data Flags = Flags
     , debAction :: DebAction
     , buildDeps :: [String]
     , debName :: Maybe String
+    , debVersion :: Maybe String
     , epoch :: Maybe Int
     }
     deriving (Eq, Show)
@@ -85,6 +86,7 @@ emptyFlags = Flags
     , debAction = Usage
     , buildDeps = []
     , debName = Nothing
+    , debVersion = Nothing
     , epoch = Nothing
     }
 
@@ -136,6 +138,8 @@ options =
              "Specify a package to add to the build dependency list in debian/control, e.g. '--build-dep libglib2.0-dev'.",
       Option "" ["deb-name"] (ReqArg (\ name x -> x {debName = Just name}) "NAME")
              "Specify the base name of the debian package, the part between 'libghc-' and '-dev'.  Normally this is the downcased cabal name.",
+      Option "" ["deb-version"] (ReqArg (\ version x -> x {debVersion = Just version}) "VERSION")
+             "Specify the version number for the debian package.  This will pin the version and should be considered dangerous.",
       Option "" ["epoch"] (ReqArg (\ n x -> x {epoch = Just (read n)}) "DIGIT")
              "Specify the an epoch number for the package version number.",
       Option "" ["substvar"] (ReqArg (\ name x -> x {debAction = SubstVar (read name)}) "Doc, Prof, or Dev")
