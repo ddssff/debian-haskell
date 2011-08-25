@@ -500,8 +500,8 @@ cdbsRules pkgDesc =
       header =
           ["#!/usr/bin/make -f",
            "",
-           "DEB_CABAL_PACKAGE = " ++ debianName Extra (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc)))
-           ""
+           "DEB_CABAL_PACKAGE = " ++ debianName Extra (pkgName (package pkgDesc)) (Just (pkgVersion (package pkgDesc))),
+           "",
            "include /usr/share/cdbs/1/rules/debhelper.mk",
            "include /usr/share/cdbs/1/class/hlibrary.mk"]
       execs =
