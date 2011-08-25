@@ -18,7 +18,6 @@ module Distribution.Package.Debian.Bundled
     , bundledWith
     , isBundled
     , isLibrary
-    , docPrefix
     -- , builtIns
     -- , ghc6BuiltIns
     , PackageType(..)
@@ -397,9 +396,6 @@ ghc66BuiltIns = [
 isLibrary :: Compiler -> Dependency -> Bool
 isLibrary _ (Dependency (PackageName "happy") _ ) = False
 isLibrary _ _ = True
-
-docPrefix :: String -> VersionRange -> String
-docPrefix _ _ = "libghc-"
 
 data PackageType = Source | Development | Profiling | Documentation | Utilities | Extra deriving (Eq, Show)
 
