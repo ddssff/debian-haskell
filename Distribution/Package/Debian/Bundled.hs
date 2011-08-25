@@ -426,4 +426,4 @@ prefix Extra = ""
 
 fixChar :: Char -> Char
 fixChar '_' = '-'
-fixChar c = c
+fixChar c = toLower c
