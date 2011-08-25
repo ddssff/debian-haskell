@@ -403,11 +403,11 @@ docPrefix _ _ = "libghc-"
 
 data PackageType = Development | Profiling | Documentation | Extra deriving (Eq, Show)
 
-debianName :: PackageType -> String -> Maybe Version -> String
-debianName Extra name range = name
-debianName typ name@"parsec" (Just version) | version < Version [3] [] =  "libghc-parsec2" ++ suffix typ
-debianName typ name@"parsec" (Just version) | version >= Version [3] [] = "libghc-parsec3" ++ suffix typ
-debianName typ name _ =                                                   "libghc-" ++ map toLower name ++ suffix typ
+debianName :: PackageType -> PackageName -> Maybe Version -> String
+debianName Extra (PackageName name) range = name
+debianName typ (PackageName "parsec") (Just version) | version < Version [3] [] =  "libghc-parsec2" ++ suffix typ
+debianName typ (PackageName "parsec") (Just version) | version >= Version [3] [] = "libghc-parsec3" ++ suffix typ
+debianName typ (PackageName name) _ = "libghc-" ++ map toLower name ++ suffix typ
 
 suffix Documentation = "-doc"
 suffix Development = "-dev"

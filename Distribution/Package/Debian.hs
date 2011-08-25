@@ -776,7 +776,7 @@ debianVersionNumber pkgDesc = parseDebianVersion . showVersion . pkgVersion . pa
 profilingDependencies :: Compiler -> Dependency_ -> D.Relations
 profilingDependencies
    compiler
-   (BuildDepends (Dependency (PackageName name) ranges))
+   (BuildDepends (Dependency name ranges))
   = concat
     (map
         (\ x -> debianRelations Profiling x ranges)
@@ -787,8 +787,8 @@ profilingDependencies _ _ = []
 -- the ones they were built with.  FIXME: These should have version
 -- dependencies.
 develDependencies :: Compiler -> Dependency_ -> D.Relations
-develDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
-develDependencies _ (BuildDepends (Dependency (PackageName name) ranges)) =
+develDependencies compiler (BuildDepends (Dependency name ranges)) | member name (base compiler) = []
+develDependencies _ (BuildDepends (Dependency name ranges)) =
     debianRelations Development name ranges
 develDependencies _ dep@(ExtraLibs _)
   = concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
@@ -798,14 +798,14 @@ develDependencies _ _ = []
 -- libraries and the documentation packages, used for creating cross
 -- references.
 buildDependencies :: Compiler -> Dependency_ -> D.Relations
-buildDependencies compiler (BuildDepends (Dependency (PackageName name) ranges)) | member name (base compiler) = []
-buildDependencies _ (BuildDepends (Dependency (PackageName name) ranges)) =
+buildDependencies compiler (BuildDepends (Dependency name ranges)) | member name (base compiler) = []
+buildDependencies _ (BuildDepends (Dependency name ranges)) =
     debianRelations Development name ranges ++ debianRelations Profiling name ranges
 buildDependencies _ dep@(ExtraLibs _) =
     concat (map (\ x -> debianRelations Extra x AnyVersion) $ adapt dep)
 buildDependencies _ dep =
     concat (map (\ x -> debianRelations Extra x ranges) $ adapt dep)
-    where (Dependency (PackageName name) ranges) = unboxDependency dep
+    where (Dependency name ranges) = unboxDependency dep
 
 -- The documentation dependencies for a package include the documentation
 -- package for any libraries which are build dependencies, so we have access
@@ -813,7 +813,7 @@ buildDependencies _ dep =
 docDependencies :: Compiler -> Dependency_ -> D.Relations
 docDependencies
     compiler
-    (BuildDepends (Dependency (PackageName name) ranges))
+    (BuildDepends (Dependency name ranges))
   = concat
     (map
         (\ x -> debianRelations Documentation x ranges)
@@ -831,7 +831,7 @@ docDependencies _ _ = []
 --   | sed 's/-dev//;s/$/",/;s/^/"/'
 
 base compiler =
-    Data.Set.fromList (let {- (Just (_, _, xs)) = unsafePerformIO (ghc6BuiltIns compiler) -} (_, _, xs) = ghcBuiltIns compiler in map (unPackageName . pkgName ) xs)
+    Data.Set.fromList (let {- (Just (_, _, xs)) = unsafePerformIO (ghc6BuiltIns compiler) -} (_, _, xs) = ghcBuiltIns compiler in map pkgName xs)
 
 {-
 base :: Set String
@@ -863,7 +863,7 @@ base
       "unix"]
 -}
 
-debianRelations :: PackageType -> String -> VersionRange -> D.Relations
+debianRelations :: PackageType -> PackageName -> VersionRange -> D.Relations
 debianRelations typ name range =
     map (merge . concat . map (debianRelation typ name)) (canon range)
     where
@@ -886,12 +886,12 @@ debianRelations typ name range =
 
 -- |Turn simple Cabal relations into Debian relations.  There are some
 -- special cases in here for the mapping of cabal package names to debian.
-debianRelation :: PackageType -> String -> VersionRange -> [D.Relation]
+debianRelation :: PackageType -> PackageName -> VersionRange -> [D.Relation]
 debianRelation typ name range@AnyVersion =
     [D.Rel (debianName typ name Nothing) Nothing Nothing]
 debianRelation typ name range@(ThisVersion version) =
     [D.Rel (debianName typ name (Just version)) (Just (D.EEQ (parseDebianVersion (showVersion version)))) Nothing]
-debianRelation typ name@"parsec" range@(EarlierVersion version)
+debianRelation typ name@(PackageName "parsec") range@(EarlierVersion version)
     | version < Version [3] [] =
         [D.Rel (debianName typ name (Just version)) (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
     | version >= Version [3] [] =
@@ -901,7 +901,7 @@ debianRelation typ name@"parsec" range@(EarlierVersion version)
          D.Rel (debianName typ name (Just (Version [2] []))) Nothing Nothing]
 debianRelation typ name range@(EarlierVersion version) =
     [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing]
-debianRelation typ name@"parsec" range@(LaterVersion version)
+debianRelation typ name@(PackageName "parsec") range@(LaterVersion version)
     | version < Version [3] [] =
         [D.Rel (debianName typ name (Just (Version [3] []))) Nothing Nothing,
          D.Rel (debianName typ name (Just version)) (Just (D.SGR (parseDebianVersion (showVersion version)))) Nothing]
@@ -917,13 +917,13 @@ debianRelation typ name range@(WildcardVersion version) =
 
 debianRelation _ _ ranges = error $ "Invalid argument to debianRelation: " ++ show ranges
 
-adapt :: Dependency_ -> [String]
+adapt :: Dependency_ -> [PackageName]
 adapt (BuildTools (Dependency (PackageName "gtk2hsC2hs") _))
-  = ["gtk2hs-buildtools"]
+  = [PackageName "gtk2hs-buildtools"]
 adapt (BuildTools (Dependency (PackageName "gtk2hsHookGenerator") _))
-  = ["gtk2hs-buildtools"]
+  = [PackageName "gtk2hs-buildtools"]
 adapt (BuildTools (Dependency (PackageName "gtk2hsTypeGen") _))
-  = ["gtk2hs-buildtools"]
+  = [PackageName "gtk2hs-buildtools"]
 adapt (PkgConfigDepends (Dependency (PackageName pkg) _))
   = unsafePerformIO
     $ do
@@ -931,13 +931,13 @@ adapt (PkgConfigDepends (Dependency (PackageName pkg) _))
         <- readProcessWithExitCode "apt-file" ["-l", "search", pkg ++ ".pc"] ""
       return
         $ case ret of
-            (ExitSuccess, out, _) -> [takeWhile (not . isSpace) out]
+            (ExitSuccess, out, _) -> [PackageName (takeWhile (not . isSpace) out)]
             _ -> []
-adapt (ExtraLibs "gcrypt") = ["libgcrypt11-dev"]
-adapt (ExtraLibs x) = ["lib" ++ x ++ "-dev"]
+adapt (ExtraLibs "gcrypt") = [PackageName "libgcrypt11-dev"]
+adapt (ExtraLibs x) = [PackageName  ("lib" ++ x ++ "-dev")]
 adapt dep
   = [name]
-  where  (Dependency (PackageName name) _) = unboxDependency dep
+  where  (Dependency name _) = unboxDependency dep
 
 -- | cartesianProduct [[1,2,3], [4,5],[6]] -> [[1,4,6],[1,5,6],[2,4,6],[2,5,6],[3,4,6],[3,5,6]]
 cartesianProduct :: [[a]] -> [[a]]
