@@ -1,3 +1,12 @@
+haskell-debian (3.58-0.1) unstable; urgency=low
+
+  * Add --deb-name option, which sets the part of the package name between
+    the prefix libghc- and the suffix -dev.
+  * Add --epoch
+  * Add --deb-version
+
+ -- David Fox <dsf@seereason.com>  Wed, 24 Aug 2011 20:45:33 -0700
+
 haskell-debian (3.58) unstable; urgency=low
 
   * Add a --ghc-version option to specify what the ghc version is in the
