@@ -892,7 +892,7 @@ debianRelation :: PackageType -> PackageName -> VersionRange -> [D.Relation]
 debianRelation typ name range@AnyVersion =
     [D.Rel (debianName typ name Nothing) Nothing Nothing]
 debianRelation typ name range@(ThisVersion version) =
-    [D.Rel (debianName typ name (Just version)) (Just (D.EEQ (parseDebianVersion (showVersion version)))) Nothing]
+    debianRelation typ name range@(WildcardVersion version) =
 debianRelation typ name (EarlierVersion version) =
     foldr split [D.Rel (debianName typ name (Just version))  (Just (D.SLT (parseDebianVersion (showVersion version)))) Nothing] versionSplits
     where split (n, v, _, _) rels
