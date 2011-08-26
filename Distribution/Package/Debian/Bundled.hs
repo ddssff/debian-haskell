@@ -396,7 +396,6 @@ isLibrary _ _ = True
 data PackageType = Source | Development | Profiling | Documentation | Utilities | Extra deriving (Eq, Show)
 
 debianName :: PackageType -> PackageName -> Maybe Version -> String
-debianName Extra (PackageName name) _ = map fixChar name
 debianName typ (PackageName name) (Just version) =
     prefix typ ++ base ++ suffix typ
     where
