@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 module Debian.Control.PrettyPrint where
 
 import qualified Data.ByteString.Char8 as C
