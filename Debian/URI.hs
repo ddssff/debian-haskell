@@ -18,7 +18,8 @@ import System.Directory (getDirectoryContents)
 --import System.Exit
 --import System.Unix.Process (lazyCommand, collectOutput)
 import System.Unix.Process (collectStdout)
-import System.Unix.Progress (lazyCommandSF {-, quieter-})
+import System.Unix.Progress (lazyCommandF)
+import System.Unix.QIO (quieter, quieter')
 --import System.Unix.ProcessExtra (cmdOutput, cmdOutputStrict)
 import Text.Regex (mkRegex, matchRegex)
 
@@ -36,9 +37,9 @@ fileFromURI uri =
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> try (L.readFile (uriPath uri))
       -- ("ssh:", Just auth) -> cmdOutput ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
-      ("ssh:", Just auth) -> try (lazyCommandSF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri)) L.empty >>=
+      ("ssh:", Just auth) -> try (lazyCommandF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri)) L.empty >>=
                                   return . fst . collectStdout)
-      _ -> try (lazyCommandSF ("curl -s -g '" ++ uriToString' uri ++ "'") L.empty >>=
+      _ -> try (lazyCommandF ("curl -s -g '" ++ uriToString' uri ++ "'") L.empty >>=
                 return . fst . collectStdout)
 
 fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
@@ -46,9 +47,9 @@ fileFromURIStrict uri =
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> try (B.readFile (uriPath uri))
       -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
-      ("ssh:", Just auth) -> try (lazyCommandSF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri)) L.empty >>=
+      ("ssh:", Just auth) -> try (lazyCommandF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri)) L.empty >>=
                                   return . B.concat . L.toChunks . fst . collectStdout)
-      _ -> try (lazyCommandSF ("curl -s -g '" ++ uriToString' uri ++ "'") L.empty >>=
+      _ -> try (lazyCommandF ("curl -s -g '" ++ uriToString' uri ++ "'") L.empty >>=
                 return . B.concat . L.toChunks . fst . collectStdout)
       -- _ -> cmdOutputStrict ("curl -s -g '" ++ uriToString' uri ++ "'")
 
@@ -70,7 +71,7 @@ dirFromURI uri =
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> try (getDirectoryContents (uriPath uri))
       -- ("ssh:", Just auth) -> cmdOutput ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " ls -1 " ++ uriPath uri) >>=
-      ("ssh:", Just auth) -> try (lazyCommandSF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " ls -1 " ++ uriPath uri) L.empty >>=
+      ("ssh:", Just auth) -> try (lazyCommandF ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " ls -1 " ++ uriPath uri) L.empty >>=
                                   return . lines . L.unpack . fst . collectStdout)
       -- _ -> cmdOutput ("curl -s -g '" ++ uriToString' uri ++ "/'") >>= return . either Left (Right . webServerDirectoryContents)
-      _ -> try (lazyCommandSF ("curl -s -g '" ++ uriToString' uri ++ "/'") L.empty >>= return . webServerDirectoryContents . fst . collectStdout)
+      _ -> try (lazyCommandF ("curl -s -g '" ++ uriToString' uri ++ "/'") L.empty >>= return . webServerDirectoryContents . fst . collectStdout)

@@ -22,7 +22,7 @@ Flag cabal19
 Library
  Build-Depends:  base >= 4 && < 5, bytestring, containers, directory,
                  filepath, mtl, network, old-locale, parsec >= 2 && <4, pretty, process,
-                 regex-tdfa, regex-compat, time, unix, bzlib, HaXml >= 1.20, Unixutils >= 1.37, zlib, HUnit,
+                 regex-tdfa, regex-compat, time, unix, bzlib, HaXml >= 1.20, Unixutils >= 1.41, zlib, HUnit,
                  utf8-string
  ghc-options: -W -Wall
  if flag(cabal19)
