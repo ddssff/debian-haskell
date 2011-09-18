@@ -1,3 +1,9 @@
+haskell-debian (3.59) unstable; urgency=low
+
+  * Move the cabal-debian program into a separate pacakge.
+
+ -- David Fox <dsf@seereason.com>  Sun, 18 Sep 2011 06:43:36 -0700
+
 haskell-debian (3.58-0.2) unstable; urgency=low
 
   * Remove the --deb-name option, all the package name special cases need

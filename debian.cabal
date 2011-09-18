@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.58
+Version:        3.59
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>
@@ -62,10 +62,6 @@ Library
         Debian.Util.FakeChanges
  other-modules:
         Debian.Version.Internal,
-        Distribution.Package.Debian.Bundled,
-        Distribution.Package.Debian.Setup,
-        Distribution.Package.Debian.Main,
-        Distribution.Package.Debian,
         Test.Changes,
         Test.Dependencies,
         Test.SourcesList,
@@ -88,18 +84,6 @@ Executable debian-report
  C-Sources:           cbits/gwinsz.c
  Include-Dirs:        cbits
  Install-Includes:    gwinsz.h
- Extensions:           ExistentialQuantification CPP
- if flag(cabal19)
-   build-depends: Cabal >= 1.9
-   cpp-options: -DCABAL19
- else
-   build-depends: Cabal >= 1.8
-   cpp-options: -DCABAL18
-
-Executable cabal-debian
- Main-is: utils/CabalDebian.hs
- ghc-options: -threaded -W
- Build-Depends: Cabal >= 1.6.0.1
  Extensions:           ExistentialQuantification CPP
  if flag(cabal19)
    build-depends: Cabal >= 1.9
