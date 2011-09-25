@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-missing-signatures -fno-warn-name-shadowing #-}
 -- |an interface for using the methods in /var/lib/apt/methods
 module Debian.Apt.Methods
     ( withMethodPath
@@ -24,7 +25,6 @@ import Debian.URI
 
 import Control.Exception
 import Control.Monad.Error
-import Data.List
 import Data.Maybe
 import Data.Time
 import System.Directory
@@ -476,7 +476,7 @@ getLastModified fp =
 {-
 groupOn :: (Ord b) => (a -> b) -> [a] -> [[a]]
 groupOn f = groupBy ((==) `on` f) . sortBy (compare `on` f)
--}
 
 on :: (a -> a -> b) -> (c -> a) -> c -> c -> b
 on f g x y = f (g x) (g y)
+-}

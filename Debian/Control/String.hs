@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, ScopedTypeVariables, TypeSynonymInstances #-}
-{-# OPTIONS -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-name-shadowing #-}
 module Debian.Control.String
     ( -- * Types
       Control'(..)

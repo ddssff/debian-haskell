@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Apt.Index
     ( update
     , Fetcher
@@ -93,7 +94,6 @@ fetchIndex fetcher uri localPath =
     do let localPath' = localPath ++ ".bz2"
        --lm <- getLastModified localPath'
        res <- fetcher (uri { uriPath = (uriPath uri) ++ ".bz2" }) localPath' Nothing
-       return Nothing
        if res
           then return $ Just (localPath', BZ2)
           else do let localPath' = localPath ++ ".gz"

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Debian.Sources where
 
 import Data.List (intercalate)

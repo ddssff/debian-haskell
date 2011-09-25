@@ -8,19 +8,14 @@ module Debian.URI
     , dirFromURI
     ) where
 
-import Control.Exception (SomeException, {-ErrorCall(ErrorCall),-} try)
---import Control.Monad.Trans (MonadIO)
+import Control.Exception (SomeException, try)
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.ByteString as B
 import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
---import System.Exit
---import System.Unix.Process (lazyCommand, collectOutput)
 import System.Unix.Process (collectStdout)
 import System.Unix.Progress (lazyCommandF)
-import System.Unix.QIO (quieter, quieter')
---import System.Unix.ProcessExtra (cmdOutput, cmdOutputStrict)
 import Text.Regex (mkRegex, matchRegex)
 
 uriToString' :: URI -> String

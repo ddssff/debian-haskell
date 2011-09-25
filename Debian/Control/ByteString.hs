@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Control.ByteString
     ( Control'(..)
     , Paragraph'(..)
@@ -25,18 +26,13 @@ import Control.Monad.State
 
 import Data.Char(chr,ord,toLower)
 import Data.List
-import Data.Maybe
 import Data.Word
 
---import Foreign.C.String         (CString, CStringLen)
---import Foreign.C.Types          (CSize)
 import Foreign.ForeignPtr
---import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable         (Storable(..))
 
 import System.IO.Unsafe
---import System.Environment
 
 import Text.ParserCombinators.Parsec.Error
 import Text.ParserCombinators.Parsec.Pos
@@ -85,7 +81,7 @@ pValue = pTakeWhile2 (\a b -> not (endOfValue a b))
 pField :: ControlParser Field
 pField =
     do k <- pKey
-       pChar ':'
+       _ <- pChar ':'
        v <- pValue
 --       pChar '\n'
        (pChar '\n' >> return ()) <|> pEOF

@@ -12,9 +12,7 @@ module Debian.Changes
     , prettyEntry
     ) where
 
-import Data.Char (chr)
 import Data.List (intercalate)
-import Data.Maybe
 import qualified Debian.Control.String as S
 import Debian.Release
 import Debian.URI()

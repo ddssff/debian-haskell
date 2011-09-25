@@ -39,10 +39,17 @@ import qualified Data.ByteString.Char8 as B
 
 packParagraph :: S.Paragraph -> B.Paragraph
 packParagraph (S.Paragraph s) = B.Paragraph (map packField s)
+
+packField :: Field' String -> Field' B.ByteString
 packField (S.Field (name, value)) = B.Field (B.pack name, B.pack value)
 packField (S.Comment s) = B.Comment (B.pack s)
 
+formatControl :: Control' B.ByteString -> [B.ByteString]
 formatControl (B.Control paragraphs) = intersperse (B.pack "\n") . map formatParagraph $ paragraphs
+
+formatParagraph :: Paragraph' B.ByteString -> B.ByteString
 formatParagraph (B.Paragraph fields) = B.concat . map formatField $ fields
+
+formatField :: Field' B.ByteString -> B.ByteString
 formatField (B.Field (name, value)) = B.concat [name, B.pack ":", value, B.pack "\n"]
 formatField (B.Comment s) = s
