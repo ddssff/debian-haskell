@@ -1,3 +1,10 @@
+haskell-debian (3.60) unstable; urgency=low
+
+  * Replace bogus Show instances in Debian.Relation.Common with pretty
+    printing functions.
+
+ -- David Fox <dsf@seereason.com>  Sun, 25 Sep 2011 07:33:25 -0700
+
 haskell-debian (3.59) unstable; urgency=low
 
   * Move the cabal-debian program into a separate pacakge.
