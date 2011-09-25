@@ -6,6 +6,7 @@ module Debian.Relation
     , OrRelation
     , Relations
     , Relation(..)
+    , prettyRelation
     , ArchitectureReq(..)
     , VersionReq(..)
     -- * Helper Functions
@@ -15,4 +16,5 @@ module Debian.Relation
     , ParseRelations(..)
     ) where 
 
+import Debian.Relation.Common (prettyRelation)
 import Debian.Relation.String

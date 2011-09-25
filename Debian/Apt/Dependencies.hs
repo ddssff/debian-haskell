@@ -28,7 +28,7 @@ data Status
     = Remaining AndRelation
     | MissingDep Relation
     | Complete
-      deriving (Show, Eq)
+      deriving (Eq)
 
 type State a = (Status, [a])
 
