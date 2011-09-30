@@ -3,7 +3,7 @@ Version:        3.60
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>
-Category:       System
+Category:       Debian
 Maintainer:     Marco Túlio Gontijo e Silva <marcot@debian.org>
 Homepage:       http://marcot.eti.br/darcs/haskell-debian
 Build-Type:     Simple
