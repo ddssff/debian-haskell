@@ -2,10 +2,10 @@ Name:           debian
 Version:        3.60
 License:        BSD3
 License-File:   debian/copyright
-Author:         David Fox <dsf@seereason.com>
+Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
 Category:       Debian
-Maintainer:     Marco Túlio Gontijo e Silva <marcot@debian.org>
-Homepage:       http://marcot.eti.br/darcs/haskell-debian
+Maintainer:     David Fox ,dsf@seereason.com>
+Homepage:       http://src.seereason.com/haskell-debian
 Build-Type:     Simple
 Synopsis:       Modules for working with the Debian package system
 Cabal-Version: >= 1.6
