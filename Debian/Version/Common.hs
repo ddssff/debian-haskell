@@ -3,6 +3,7 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-unused-do-bind #-}
 module Debian.Version.Common
     (DebianVersion -- |Exported abstract because the internal representation is likely to change 
+    , prettyDebianVersion
     , ParseDebianVersion(..)
     , evr		-- DebianVersion -> (Maybe Int, String, Maybe String)
     , epoch
@@ -16,9 +17,10 @@ import Data.Char
 import Text.ParserCombinators.Parsec
 import Text.Regex
 import Debian.Version.Internal
+import Text.PrettyPrint (Doc, text)
 
-instance Show DebianVersion where
-    show (DebianVersion s _) = s
+prettyDebianVersion :: DebianVersion -> Doc
+prettyDebianVersion (DebianVersion s _) = text s
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2
