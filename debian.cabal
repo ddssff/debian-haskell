@@ -32,7 +32,6 @@ Library
    build-depends: Cabal >= 1.8
    cpp-options: -DCABAL18
  Extensions: ExistentialQuantification CPP
- Extra-libraries: crypto++
  Exposed-modules:
         Debian.Apt.Dependencies,
         Debian.Apt.Index,
