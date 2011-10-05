@@ -2,6 +2,10 @@ haskell-debian (3.60) unstable; urgency=low
 
   * Replace bogus Show instances in Debian.Relation.Common with pretty
     printing functions.
+  * Change cabal category from System to Debian (to join the dpkg package)
+  * Fix some of the compiler warnings.
+  * Change the Show instances in Debian.Version into pretty printing
+    functions too.
 
  -- David Fox <dsf@seereason.com>  Sun, 25 Sep 2011 07:33:25 -0700
 

@@ -5,7 +5,11 @@ import Test.HUnit
 import Data.List (intercalate)
 import Debian.Changes
 import Debian.Release (ReleaseName(ReleaseName, relName))
-import Debian.Version (parseDebianVersion)
+import Debian.Version (DebianVersion, prettyDebianVersion, parseDebianVersion)
+
+instance Show DebianVersion where
+    show = show . prettyDebianVersion
+deriving instance Show ChangeLogEntry
 
 s3 = intercalate "\n" 
      ["name (version) dist; urgency=urgency",

@@ -82,6 +82,6 @@ trumpedXML trumpedMap' =
       mkTrumpedPackage (package, (oldVersion, newVersion)) =
           mkElem "trumpedPackage"
                      [ mkElem "package" [ cdata (B.unpack package) ]
-                     , mkElem "oldVersion" [ cdata (show oldVersion) ]
-                     , mkElem "newVersion" [ cdata (show newVersion) ]
+                     , mkElem "oldVersion" [ cdata (show (prettyDebianVersion oldVersion)) ]
+                     , mkElem "newVersion" [ cdata (show (prettyDebianVersion newVersion)) ]
                      ]

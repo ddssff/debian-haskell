@@ -33,11 +33,6 @@ class ParseRelations a where
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
     text (name ++ maybe "" (show . prettyVersionReq) ver ++ maybe "" (show . prettyArchitectureReq) arch)
-{-
-instance Show Relation where
-    show (Rel name ver arch) =
-        name ++ maybe "" show ver ++ maybe "" show arch
--}
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
@@ -54,11 +49,6 @@ data ArchitectureReq
 prettyArchitectureReq :: ArchitectureReq -> Doc
 prettyArchitectureReq (ArchOnly arch) = text $ " [" ++ intercalate " " arch ++ "]"
 prettyArchitectureReq (ArchExcept arch) = text $ " [!" ++ intercalate " !" arch ++ "]"
-{-
-instance Show ArchitectureReq where
-    show (ArchOnly arch) = " [" ++ intercalate " " arch ++ "]"
-    show (ArchExcept arch) = " [!" ++ intercalate " !" arch ++ "]"
--}
 
 data VersionReq
     = SLT DebianVersion
@@ -69,19 +59,11 @@ data VersionReq
       deriving Eq
 
 prettyVersionReq :: VersionReq -> Doc
-prettyVersionReq (SLT v) = text $ " (<< " ++ show v ++ ")"
-prettyVersionReq (LTE v) = text $ " (<= " ++ show v ++ ")"
-prettyVersionReq (EEQ v) = text $ " (= " ++ show v ++ ")"
-prettyVersionReq (GRE v) = text $ " (>= " ++ show v ++ ")"
-prettyVersionReq (SGR v) = text $ " (>> " ++ show v ++ ")"
-{-
-instance Show VersionReq where
-    show (SLT v) = " (<< " ++ show v ++ ")"
-    show (LTE v) = " (<= " ++ show v ++ ")"
-    show (EEQ v) = " (= " ++ show v ++ ")"
-    show (GRE v) = " (>= " ++ show v ++ ")"
-    show (SGR v) = " (>> " ++ show v ++ ")"
--}
+prettyVersionReq (SLT v) = text $ " (<< " ++ show (prettyDebianVersion v) ++ ")"
+prettyVersionReq (LTE v) = text $ " (<= " ++ show (prettyDebianVersion v) ++ ")"
+prettyVersionReq (EEQ v) = text $ " (= " ++ show (prettyDebianVersion v) ++ ")"
+prettyVersionReq (GRE v) = text $ " (>= " ++ show (prettyDebianVersion v) ++ ")"
+prettyVersionReq (SGR v) = text $ " (>> " ++ show (prettyDebianVersion v) ++ ")"
 
 -- |The sort order is based on version number first, then on the kind of
 -- relation, sorting in the order <<, <= , ==, >= , >>

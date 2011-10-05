@@ -12,6 +12,7 @@ module Debian.Apt.Dependencies
 
 -- test gutsyPackages "libc6" (\csp -> bt csp)
 
+import Control.Arrow (second)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as C
 import Data.List((++), foldr, concat, filter, map, any, elem, null, reverse, take, zipWith, find, union)
@@ -20,7 +21,7 @@ import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
 import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile), Field'(Field), Control'(Control), Paragraph, Control)
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
-import Debian.Version(DebianVersion, parseDebianVersion)
+import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
 
 -- * Basic CSP Types and Functions
 
@@ -94,7 +95,7 @@ sidPackages = "/var/lib/apt/lists/ftp.debian.org_debian_dists_unstable_main_bina
 gutsyPackages = "/var/lib/apt/lists/mirror.anl.gov_pub_ubuntu_dists_gutsy_main_binary-i386_Packages"
 
 test controlFP rel labeler =
-    testCSP controlFP depF rel (mapM_ (\ (_,p) -> mapM_ (print . packageVersionParagraph) p ) . take 1 . search labeler)
+    testCSP controlFP depF rel (mapM_ (\ (_,p) -> mapM_ (print . second prettyDebianVersion . packageVersionParagraph) p ) . take 1 . search labeler)
 
 -- TODO: add better errors
 packageVersionParagraph :: Paragraph -> (String, DebianVersion)
