@@ -39,8 +39,6 @@ Build-Depends-Indep: ghc-doc
   , libghc-zlib-doc
   , libghc-network-doc
   , libghc-utf8-string-doc
-Build-Conflicts:
-  libghc-parsec2-dev
 Standards-Version: 3.9.2
 Homepage: http://hackage.haskell.org/package/debian
 Vcs-Darcs: http://darcs.debian.org/pkg-haskell/haskell-debian
