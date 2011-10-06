@@ -1,3 +1,12 @@
+haskell-debian (3.61) unstable; urgency=low
+
+  * Uploading to hackage.
+  * Remove crypto++ dependency (it was a mistake.)
+  * Add optimization flag to ghc-options
+  * Reference seereason darcs repo
+
+ -- David Fox <dsf@seereason.com>  Thu, 06 Oct 2011 09:04:38 -0700
+
 haskell-debian (3.60) unstable; urgency=low
 
   * Replace bogus Show instances in Debian.Relation.Common with pretty

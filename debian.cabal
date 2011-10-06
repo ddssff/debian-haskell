@@ -5,7 +5,7 @@ License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
 Category:       Debian
 Maintainer:     David Fox ,dsf@seereason.com>
-Homepage:       http://src.seereason.com/haskell-debian
+Homepage:       http://src.seereason.com/haskell-debian-new
 Build-Type:     Simple
 Synopsis:       Modules for working with the Debian package system
 Cabal-Version: >= 1.6
@@ -24,7 +24,7 @@ Library
                  filepath, mtl, network, old-locale, parsec >= 2 && <4, pretty, process,
                  regex-tdfa, regex-compat, time, unix, bzlib, HaXml >= 1.20, Unixutils >= 1.41, zlib, HUnit,
                  utf8-string
- ghc-options: -W -Wall
+ ghc-options: -W -Wall -O2
  if flag(cabal19)
    build-depends: Cabal >= 1.9
    cpp-options: -DCABAL19
@@ -69,7 +69,7 @@ Library
 
 Executable fakechanges
  Main-is: utils/FakeChanges.hs
- ghc-options: -threaded -W
+ ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
  if flag(cabal19)
    build-depends: Cabal >= 1.9
@@ -80,7 +80,7 @@ Executable fakechanges
 
 Executable debian-report
  Main-is: utils/Report.hs
- ghc-options: -threaded -W
+ ghc-options: -threaded -W -O2
  C-Sources:           cbits/gwinsz.c
  Include-Dirs:        cbits
  Install-Includes:    gwinsz.h
@@ -94,7 +94,7 @@ Executable debian-report
 
 Executable apt-get-build-depends
  Main-is: utils/AptGetBuildDeps.hs
- ghc-options: -threaded -W
+ ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
  if flag(cabal19)
    build-depends: Cabal >= 1.9
@@ -105,4 +105,4 @@ Executable apt-get-build-depends
 
 source-repository head
   type:     darcs
-  location: http://marcot.eti.br/darcs/haskell-debian
+  location: http://src.seereason.com/darcs/haskell-debian-new
