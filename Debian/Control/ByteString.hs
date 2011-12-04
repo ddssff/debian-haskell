@@ -1,4 +1,4 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE PackageImports, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Control.ByteString
     ( Control'(..)
@@ -22,7 +22,7 @@ module Debian.Control.ByteString
 -- Standard GHC modules
 
 import qualified Control.Exception as E
-import Control.Monad.State
+import "mtl" Control.Monad.State
 
 import Data.Char(chr,ord,toLower)
 import Data.List
