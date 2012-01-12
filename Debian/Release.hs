@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module Debian.Release
     ( ReleaseName(..)
     , parseReleaseName
@@ -13,12 +14,14 @@ module Debian.Release
     , parseSection'
     ) where
 
+import Data.Data (Data)
+import Data.Typeable (Typeable)
 import Debian.URI
 
 -- |A distribution (aka release) name.  This type is expected to refer
 -- to a subdirectory of the dists directory which is at the top level
 -- of a repository.
-data ReleaseName = ReleaseName { relName :: String } deriving (Eq, Ord, Read, Show)
+data ReleaseName = ReleaseName { relName :: String } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 parseReleaseName :: String -> ReleaseName
 parseReleaseName name = ReleaseName {relName = unEscapeString name}
@@ -28,7 +31,7 @@ releaseName' (ReleaseName {relName = s}) = escapeURIString isAllowedInURI s
 
 -- |The types of architecture that a package can have, either Source
 -- or some type of binary architecture.
-data Arch = Source | Binary String deriving (Read, Show, Eq, Ord)
+data Arch = Source | Binary String deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 archName :: Arch -> String
 archName Source = "source"
