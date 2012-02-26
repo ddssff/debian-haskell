@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
@@ -32,8 +33,8 @@ import		 Debian.Relation
 import		 System.Directory (getDirectoryContents, doesFileExist)
 import		 System.IO
 
-newtype SrcPkgName = SrcPkgName PkgName deriving (Show, Eq)
-newtype BinPkgName = BinPkgName PkgName deriving (Show, Eq)
+newtype SrcPkgName = SrcPkgName PkgName deriving (Show, Eq, Ord)
+newtype BinPkgName = BinPkgName PkgName deriving (Show, Eq, Ord)
 
 -- |This type describes the build dependencies of a source package.
 type DepInfo = (SrcPkgName,	-- source package name
@@ -76,15 +77,33 @@ buildDependencies (Control (source:binaries)) =
 -- BINARY should always be ignored when deciding whether to build.  If the
 -- pair is (BINARY, Just SOURCE) it means that binary package BINARY should
 -- be ignored when deiciding whether to build package SOURCE.
-newtype RelaxInfo = RelaxInfo [(BinPkgName, Maybe SrcPkgName)] deriving Show
+newtype OldRelaxInfo = RelaxInfo [(BinPkgName, Maybe SrcPkgName)] deriving Show
+
+-- | Given a source package name and a binary package name, return
+-- False if the binary package should be ignored hwen deciding whether
+-- to build the source package.  This is used to prevent build
+-- dependency cycles from triggering unnecessary rebuilds.  (This is a
+-- replacement for the RelaxInfo type, which we temporarily rename
+-- OldRelaxInfo.)
+type RelaxInfo = SrcPkgName -> BinPkgName -> Bool
+
+makeRelaxInfo :: OldRelaxInfo -> RelaxInfo
+makeRelaxInfo (RelaxInfo xs) srcPkgName binPkgName =
+    Set.member binPkgName global || maybe False (Set.member binPkgName) (Map.lookup srcPkgName mp)
+    where
+      (global :: Set.Set BinPkgName, mp :: Map.Map SrcPkgName (Set.Set BinPkgName)) =
+          foldr (\ entry (global', mp') ->
+                     case entry of
+                       (b, Just s) -> (global', Map.insertWith Set.union s (Set.singleton b) mp')
+                       (b, Nothing) -> (Set.insert b global', mp')) (Set.empty, Map.empty) xs
 
 -- |Remove any dependencies that are designated \"relaxed\" by relaxInfo.
 relaxDeps :: RelaxInfo -> [DepInfo] -> [DepInfo]
 relaxDeps relaxInfo deps =
-    map (relaxDep relaxInfo) deps
+    map relaxDep deps
     where
-      relaxDep :: RelaxInfo -> DepInfo -> DepInfo
-      relaxDep relaxInfo (sourceName, relations, binaryNames) =
+      relaxDep :: DepInfo -> DepInfo
+      relaxDep (sourceName, relations, binaryNames) =
           (sourceName, filteredDependencies, binaryNames)
           where
             -- Discard any dependencies not on the filtered package name list.  If
@@ -93,15 +112,7 @@ relaxDeps relaxInfo deps =
             filteredDependencies :: Relations
             filteredDependencies = filter (/= []) (map (filter keepDep) relations)
             keepDep :: Relation -> Bool
-            keepDep (Rel name _ _) = not (elem (BinPkgName name) ignored)
-            -- Binary packages to be ignored wrt this source package's build decision
-            ignored = ignoredForSourcePackage sourceName relaxInfo
-            -- Return a list of binary packages which should be ignored for this
-            -- source package.
-            ignoredForSourcePackage :: SrcPkgName -> RelaxInfo -> [BinPkgName]
-            ignoredForSourcePackage source (RelaxInfo pairs) =
-                map fst . filter (maybe True (== source) . snd) $ pairs
-                -- concat . map binaries . catMaybes . map snd . filter (\ (_, x) -> maybe True (== source) x) $ pairs
+            keepDep (Rel name _ _) = not (relaxInfo sourceName (BinPkgName name))
 
 data BuildableInfo a
     = BuildableInfo 
