@@ -10,6 +10,8 @@ module Debian.GenBuildDeps
     , buildDependencies
     , RelaxInfo(..)
     , relaxDeps
+    , OldRelaxInfo(..)
+    , oldRelaxDeps
     -- * Using dependency info
     , BuildableInfo(..)
     , buildable
@@ -113,6 +115,31 @@ relaxDeps relaxInfo deps =
             filteredDependencies = filter (/= []) (map (filter keepDep) relations)
             keepDep :: Relation -> Bool
             keepDep (Rel name _ _) = not (relaxInfo sourceName (BinPkgName name))
+
+-- |Remove any dependencies that are designated \"relaxed\" by relaxInfo.
+oldRelaxDeps :: OldRelaxInfo -> [DepInfo] -> [DepInfo]
+oldRelaxDeps relaxInfo deps =
+    map relaxDep deps
+    where
+      relaxDep :: DepInfo -> DepInfo
+      relaxDep (sourceName, relations, binaryNames) =
+          (sourceName, filteredDependencies, binaryNames)
+          where
+            -- Discard any dependencies not on the filtered package name list.  If
+            -- this results in an empty list in an or-dep the entire dependency can
+            -- be discarded.
+            filteredDependencies :: Relations
+            filteredDependencies = filter (/= []) (map (filter keepDep) relations)
+            keepDep :: Relation -> Bool
+            keepDep (Rel name _ _) = not (elem (BinPkgName name) ignored)
+            -- Binary packages to be ignored wrt this source package's build decision
+            ignored = ignoredForSourcePackage sourceName relaxInfo
+            -- Return a list of binary packages which should be ignored for this
+            -- source package.
+            ignoredForSourcePackage :: SrcPkgName -> OldRelaxInfo -> [BinPkgName]
+            ignoredForSourcePackage source (RelaxInfo pairs) =
+                map fst . filter (maybe True (== source) . snd) $ pairs
+                -- concat . map binaries . catMaybes . map snd . filter (\ (_, x) -> maybe True (== source) x) $ pairs
 
 data BuildableInfo a
     = BuildableInfo 

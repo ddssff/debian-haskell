@@ -1,3 +1,10 @@
+haskell-debian (3.62.1) unstable; urgency=low
+
+  * Export old relaxinfo functions and data structures for diagnosing
+    performance problems.
+
+ -- David Fox <dsf@seereason.com>  Thu, 01 Mar 2012 13:14:53 -0800
+
 haskell-debian (3.62) unstable; urgency=low
 
   * New type for RelaxInfo, was RelaxInfo [(BinPkgName, Maybe SrcPkgName)]
