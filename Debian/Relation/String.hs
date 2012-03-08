@@ -30,10 +30,16 @@ import Debian.Version
 -- * ParseRelations
 
 instance ParseRelations String where
-    parseRelations str = 
-        case parse pRelations str str of
+    parseRelations str =
+        let str' = scrub str in
+        case parse pRelations str' str' of
           Right relations -> Right (filter (/= []) relations)
           x -> x
+        where
+          scrub = unlines . filter (not . comment) . lines
+          comment s = case dropWhile (`elem` " \t") s of
+                           ('#' : _) -> True
+                           _ -> False
 
 -- * Relation Parser
 

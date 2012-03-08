@@ -34,8 +34,4 @@ import Debian.Relation.String
 
 -- For now we just wrap the string version
 instance ParseRelations C.ByteString where
-    parseRelations byteStr = 
-        let str = C.unpack byteStr in
-        case parse pRelations str str of
-          Right relations -> Right (filter (/= []) relations)
-          x -> x
+    parseRelations byteStr = parseRelations (C.unpack byteStr)
