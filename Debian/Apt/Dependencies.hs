@@ -20,6 +20,7 @@ import Data.Maybe(Maybe(..))
 import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
 import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile), Field'(Field), Control'(Control), Paragraph, Control)
+import Debian.Relation (BinPkgName(..), PkgName(..))
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
 import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
 
@@ -42,7 +43,7 @@ data CSP a
           , relations :: Relations
           , depFunction :: (a -> Relations)
           , conflicts :: a -> Relations
-          , packageVersion :: a -> (String, DebianVersion)
+          , packageVersion :: a -> (BinPkgName, DebianVersion)
           }
 
 -- * Test CSP
@@ -57,10 +58,10 @@ controlCSP (Control paragraphs) rels depF =
         , packageVersion = packageVersionParagraph
         }
     where
-      getName :: Paragraph -> String
-      getName p = case lookupP "Package" p of Nothing -> error "Missing Package field" ; (Just (Field (_,n))) -> C.unpack (stripWS n)
+      getName :: Paragraph -> BinPkgName
+      getName p = case lookupP "Package" p of Nothing -> error "Missing Package field" ; (Just (Field (_,n))) -> BinPkgName (PkgName (C.unpack (stripWS n)))
       conflicts' :: Paragraph -> Relations
-      conflicts' p = 
+      conflicts' p =
           case lookupP "Conflicts" p of
             Nothing -> []
             Just (Field (_, c)) -> either (error . show) id (parseRelations c)
@@ -98,14 +99,14 @@ test controlFP rel labeler =
     testCSP controlFP depF rel (mapM_ (\ (_,p) -> mapM_ (print . second prettyDebianVersion . packageVersionParagraph) p ) . take 1 . search labeler)
 
 -- TODO: add better errors
-packageVersionParagraph :: Paragraph -> (String, DebianVersion)
+packageVersionParagraph :: Paragraph -> (BinPkgName, DebianVersion)
 packageVersionParagraph p =
     case lookupP "Package" p of
       Nothing -> error $ "Paragraph missing Package field"
       (Just (Field (_, name))) ->
           case lookupP "Version" p of
             Nothing -> error $ "Paragraph missing Version field"
-            (Just (Field (_, version))) -> (C.unpack (stripWS name), parseDebianVersion (C.unpack version))
+            (Just (Field (_, version))) -> (BinPkgName (PkgName (C.unpack (stripWS name))), parseDebianVersion (C.unpack version))
 
 
 
@@ -117,11 +118,11 @@ conflict csp p1 p2 =
       if name1 == name2
       then version1 /= version2
       else
-        any (conflict' (name1, version1)) (concat $ (conflicts csp) p2) || 
+        any (conflict' (name1, version1)) (concat $ (conflicts csp) p2) ||
         any (conflict' (name2, version2)) (concat $ (conflicts csp) p1)
-        
+
 -- |JAS: deal with 'Provides' (can a package provide more than one package?)
-conflict' :: (String, DebianVersion) -> Relation -> Bool
+conflict' :: (BinPkgName, DebianVersion) -> Relation -> Bool
 conflict' (pName, pVersion) (Rel pkgName mVersionReq _) =
     (pName == pkgName) && (checkVersionReq mVersionReq (Just pVersion))
 
@@ -198,7 +199,7 @@ mkSearchTree csp =
 -- the 'reverse as' is because the vars are order high to low, but we
 -- want to find the lowest numbered (aka, eariest) inconsistency ??
 -- 
-earliestInconsistency :: CSP a -> State a -> Maybe ((String, DebianVersion), (String, DebianVersion))
+earliestInconsistency :: CSP a -> State a -> Maybe ((BinPkgName, DebianVersion), (BinPkgName, DebianVersion))
 earliestInconsistency _ (_,[]) = Nothing
 earliestInconsistency _ (_,[_p]) = Nothing
 earliestInconsistency csp (_,(p:ps)) =
@@ -209,7 +210,7 @@ earliestInconsistency csp (_,(p:ps)) =
 -- * Conflict Set
 
 -- | conflicting packages and relations that require non-existant packages
-type ConflictSet = ([(String, DebianVersion)],[Relation])
+type ConflictSet = ([(BinPkgName, DebianVersion)],[Relation])
 
 isConflict :: ConflictSet -> Bool
 isConflict ([],[]) = False
@@ -231,7 +232,7 @@ bt csp = mapTree f
       f s@(status,_) =
               case status of
                 (MissingDep rel) -> (s, ([], [rel]))
-                _ ->                      
+                _ ->
                     (s,
                       case (earliestInconsistency csp) s of
                         Nothing -> ([],[])

@@ -1,14 +1,12 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
 module Debian.GenBuildDeps 
-    ( DepInfo
-    , SrcPkgName(..)
-    , BinPkgName(..)
+    ( DepInfo(..)
     -- * Preparing dependency info
     , buildDependencies
-    , RelaxInfo(..)
+    , RelaxInfo
     , relaxDeps
     , OldRelaxInfo(..)
     , oldRelaxDeps
@@ -33,15 +31,13 @@ import		 Data.Maybe
 import qualified Data.Set as Set
 import		 Debian.Relation
 import		 System.Directory (getDirectoryContents, doesFileExist)
-import		 System.IO
 
-newtype SrcPkgName = SrcPkgName PkgName deriving (Show, Eq, Ord)
-newtype BinPkgName = BinPkgName PkgName deriving (Show, Eq, Ord)
-
--- |This type describes the build dependencies of a source package.
-type DepInfo = (SrcPkgName,	-- source package name
-                Relations,	-- dependency relations
-                [BinPkgName])	-- binary package names
+-- | This type describes the build dependencies of a source package.
+data DepInfo = DepInfo {
+      sourceName :: SrcPkgName		-- ^ source package name
+    , relations :: Relations		-- ^ dependency relations
+    , binaryNames :: [BinPkgName]	-- ^ binary dependency names (is this a function of relations?)
+    }
 
 -- |Turn a list of eithers into an either of lists
 -- copied from Extra.Either
@@ -57,9 +53,9 @@ concatEithers xs =
 buildDependencies :: Control -> Either String DepInfo
 buildDependencies (Control []) = error "Control file seems to be empty"
 buildDependencies (Control (source:binaries)) =
-    either (Left . concat) (\ deps -> Right (sourcePackage, deps, bins)) deps
+    either (Left . concat) (\ deps -> Right (DepInfo {sourceName = sourcePackage, relations = deps, binaryNames = bins})) deps
     where
-      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") SrcPkgName $ assoc "Source" source
+      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") (SrcPkgName . PkgName) $ assoc "Source" source
       -- The raw list of build dependencies for this package
       deps = either Left (Right . concat) (concatEithers [buildDeps, buildDepsIndep])
       buildDeps =
@@ -72,7 +68,7 @@ buildDependencies (Control (source:binaries)) =
             _ -> Right []
       bins = mapMaybe lookupPkgName binaries
       lookupPkgName :: Paragraph -> Maybe BinPkgName
-      lookupPkgName p = maybe Nothing (Just . BinPkgName) (assoc "Package" p)
+      lookupPkgName p = maybe Nothing (Just . BinPkgName . PkgName) (assoc "Package" p)
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package
@@ -105,16 +101,15 @@ relaxDeps relaxInfo deps =
     map relaxDep deps
     where
       relaxDep :: DepInfo -> DepInfo
-      relaxDep (sourceName, relations, binaryNames) =
-          (sourceName, filteredDependencies, binaryNames)
+      relaxDep info = info {relations = filteredDependencies}
           where
             -- Discard any dependencies not on the filtered package name list.  If
             -- this results in an empty list in an or-dep the entire dependency can
             -- be discarded.
             filteredDependencies :: Relations
-            filteredDependencies = filter (/= []) (map (filter keepDep) relations)
+            filteredDependencies = filter (/= []) (map (filter keepDep) (relations info))
             keepDep :: Relation -> Bool
-            keepDep (Rel name _ _) = not (relaxInfo sourceName (BinPkgName name))
+            keepDep (Rel name _ _) = not (relaxInfo (sourceName info) name)
 
 -- |Remove any dependencies that are designated \"relaxed\" by relaxInfo.
 oldRelaxDeps :: OldRelaxInfo -> [DepInfo] -> [DepInfo]
@@ -122,18 +117,17 @@ oldRelaxDeps relaxInfo deps =
     map relaxDep deps
     where
       relaxDep :: DepInfo -> DepInfo
-      relaxDep (sourceName, relations, binaryNames) =
-          (sourceName, filteredDependencies, binaryNames)
+      relaxDep info = info {relations = filteredDependencies}
           where
             -- Discard any dependencies not on the filtered package name list.  If
             -- this results in an empty list in an or-dep the entire dependency can
             -- be discarded.
             filteredDependencies :: Relations
-            filteredDependencies = filter (/= []) (map (filter keepDep) relations)
+            filteredDependencies = filter (/= []) (map (filter keepDep) (relations info))
             keepDep :: Relation -> Bool
-            keepDep (Rel name _ _) = not (elem (BinPkgName name) ignored)
+            keepDep (Rel name _ _) = not (elem name ignored)
             -- Binary packages to be ignored wrt this source package's build decision
-            ignored = ignoredForSourcePackage sourceName relaxInfo
+            ignored = ignoredForSourcePackage (sourceName info) relaxInfo
             -- Return a list of binary packages which should be ignored for this
             -- source package.
             ignoredForSourcePackage :: SrcPkgName -> OldRelaxInfo -> [BinPkgName]
@@ -245,13 +239,13 @@ buildGraph compare packages =
 -- a pretty simplistic approach to 'or' build depends. However, I
 -- think this should work pretty nicely in practice.
 compareSource :: DepInfo -> DepInfo -> Ordering
-compareSource (_, depends1, bins1) (_, depends2, bins2)
+compareSource (DepInfo {relations = depends1, binaryNames = bins1}) (DepInfo {relations = depends2, binaryNames = bins2})
     | any (\rel -> isJust (find (checkPackageNameReq rel) bins2)) (concat depends1) = GT
     | any (\rel -> isJust (find (checkPackageNameReq rel) bins1)) (concat depends2) = LT
     | otherwise = EQ
     where
       checkPackageNameReq :: Relation -> BinPkgName -> Bool
-      checkPackageNameReq (Rel rPkgName _ _) (BinPkgName bPkgName) = rPkgName == bPkgName 
+      checkPackageNameReq (Rel rPkgName _ _) bPkgName = rPkgName == bPkgName
 
 -- |Return the dependency info for a list of control files.
 genDeps :: [FilePath] -> IO (Either String [DepInfo])
@@ -272,7 +266,7 @@ getSourceOrder :: FilePath -> IO (Either String [SrcPkgName])
 getSourceOrder fp =
     findControlFiles fp >>=
     genDeps >>=
-    return . either Left (Right . map ( \(pkgName,_,_) -> pkgName) . orderSource compareSource)
+    return . either Left (Right . map sourceName . orderSource compareSource)
     where
       -- Return a list of the files that look like debian\/control.
       findControlFiles :: FilePath -> IO [FilePath]

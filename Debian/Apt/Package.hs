@@ -11,13 +11,13 @@ import qualified Data.Map as Map
 import Debian.Version
 import Debian.Relation
 
-type PackageNameMap a = Map.Map String [a]
+type PackageNameMap a = Map.Map BinPkgName [a]
 
 -- |'packageNameMap' creates a map from a package name to all the versions of that package
 -- NOTE: Provides are not included in the map
 -- NOTE: the sort order is random -- this is perhaps a bug
 -- see also: 'addProvides'
-packageNameMap :: (a -> String) -> [a] -> PackageNameMap a
+packageNameMap :: (a -> BinPkgName) -> [a] -> PackageNameMap a
 packageNameMap getName packages = foldl (\m p -> Map.insertWith (++) (getName p) [p] m) Map.empty packages
 
 -- |'addProvides' finds packages that Provide other packages and adds
@@ -25,21 +25,21 @@ packageNameMap getName packages = foldl (\m p -> Map.insertWith (++) (getName p)
 -- list, so that real packages have 'higher priority' than virtual
 -- packages.
 -- NOTE: Does not check for duplication or multiple use
-addProvides :: (p -> [PkgName]) -> [p] -> PackageNameMap p -> PackageNameMap p
+addProvides :: (p -> [BinPkgName]) -> [p] -> PackageNameMap p -> PackageNameMap p
 addProvides providesf ps pnm =
     let provides = findProvides providesf ps in
     foldl (\m (packageName, package) -> Map.insertWith (flip (++)) packageName [package] m) pnm provides
 
 -- |'findProvides'
-findProvides :: forall p. (p -> [PkgName]) -> [p] -> [(PkgName, p)]
+findProvides :: forall p. (p -> [BinPkgName]) -> [p] -> [(BinPkgName, p)]
 findProvides providesf packages = foldl addProvides [] packages
-    where addProvides :: [(PkgName, p)] -> p -> [(PkgName, p)]
+    where addProvides :: [(BinPkgName, p)] -> p -> [(BinPkgName, p)]
           addProvides providesList package =
               foldl (\pl pkgName -> (pkgName, package): pl) providesList (providesf package)
 
 -- |'lookupPackageByRel' returns all the packages that satisfy the specified relation
 -- TODO: Add architecture check
-lookupPackageByRel :: PackageNameMap a -> (a -> (String, DebianVersion)) -> Relation -> [a]
+lookupPackageByRel :: PackageNameMap a -> (a -> (BinPkgName, DebianVersion)) -> Relation -> [a]
 lookupPackageByRel pm packageVersionF (Rel pkgName mVerReq _mArch) =
     case Map.lookup pkgName pm of
       Nothing -> []

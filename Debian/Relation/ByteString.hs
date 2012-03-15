@@ -15,13 +15,6 @@ module Debian.Relation.ByteString
     , ParseRelations(..)
     ) where 
 
--- Standard GHC Modules
-
-import Data.List
-import Text.ParserCombinators.Parsec
-
--- 3rd Party Modules
-
 import qualified Data.ByteString.Char8 as C
 
 -- Local Modules

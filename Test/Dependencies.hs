@@ -101,26 +101,26 @@ mkCSP paragraphs relStr depF =
         , packageVersion = packageVersionParagraph
         }
     where
-      getName :: [(String, String)] -> String
-      getName p = case lookup "Package" p of Nothing -> error "Missing Package field" ; (Just n) -> stripWS n
+      getName :: [(String, String)] -> BinPkgName
+      getName p = case lookup "Package" p of Nothing -> error "Missing Package field" ; (Just n) -> BinPkgName (PkgName (stripWS n))
       conflicts' :: [(String, String)] -> Relations
       conflicts' p = 
           case lookup "Conflicts" p of
             Nothing -> []
             (Just c) -> either (error . show) id (parseRelations c)
 
-      providesF :: [(String, String)] -> [String]
+      providesF :: [(String, String)] -> [BinPkgName]
       providesF p =
           case lookup "Provides" p of
             Nothing -> []
             (Just v) ->
-                 parseCommaList v
+                 map (BinPkgName . PkgName) $ parseCommaList v
 
 parseCommaList :: String -> [String]
 parseCommaList str =
     words $ map (\c -> if c == ',' then ' ' else c) str
 
-packageVersionParagraph :: [(String, String)] -> (String, DebianVersion) 
+packageVersionParagraph :: [(String, String)] -> (BinPkgName, DebianVersion) 
 packageVersionParagraph p =
     case lookup "Package" p of
       Nothing -> error $ "Could not find Package in " ++ show p
@@ -128,7 +128,7 @@ packageVersionParagraph p =
           case lookup "Version" p of
             Nothing -> error $ "Could not find Package in " ++ show p
             (Just v) -> 
-                (stripWS n, parseDebianVersion v)
+                (BinPkgName (PkgName (stripWS n)), parseDebianVersion v)
 
 mapSnd :: (b -> c) -> [(a,b)] -> [(a,c)]
 mapSnd f = map (second f)

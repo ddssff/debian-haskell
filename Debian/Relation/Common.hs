@@ -13,15 +13,25 @@ import Debian.Version
 
 -- Datatype for relations
 
-type PkgName = String
-
 type Relations = AndRelation
 type AndRelation = [OrRelation]
 type OrRelation = [Relation]
 
-data Relation = Rel PkgName (Maybe VersionReq) (Maybe ArchitectureReq)
-		deriving Eq
+data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) deriving Eq
 
+newtype PkgName = PkgName {unPkgName :: String} deriving (Show, Eq, Ord)
+
+newtype SrcPkgName = SrcPkgName {unSrcPkgName :: PkgName} deriving (Show, Eq, Ord)
+newtype BinPkgName = BinPkgName {unBinPkgName :: PkgName} deriving (Show, Eq, Ord)
+
+prettySrcPkgName :: SrcPkgName -> Doc
+prettySrcPkgName = prettyPkgName . unSrcPkgName
+
+prettyBinPkgName :: BinPkgName -> Doc
+prettyBinPkgName = prettyPkgName . unBinPkgName
+
+prettyPkgName :: PkgName -> Doc
+prettyPkgName = text . unPkgName
 
 class ParseRelations a where
     -- |'parseRelations' parse a debian relation (i.e. the value of a
@@ -32,7 +42,7 @@ class ParseRelations a where
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
-    text (name ++ maybe "" (show . prettyVersionReq) ver ++ maybe "" (show . prettyArchitectureReq) arch)
+    text (unPkgName (unBinPkgName name) ++ maybe "" (show . prettyVersionReq) ver ++ maybe "" (show . prettyArchitectureReq) arch)
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =

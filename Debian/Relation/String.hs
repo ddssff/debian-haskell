@@ -19,7 +19,6 @@ module Debian.Relation.String
 
 -- Standard GHC Modules
 
-import Data.List
 import Text.ParserCombinators.Parsec
 
 -- Local Modules
@@ -69,7 +68,7 @@ pRelation =
        mVerReq <- pMaybeVerReq
        skipMany whiteChar
        mArch <- pMaybeArch
-       return $ Rel pkgName mVerReq mArch
+       return $ Rel (BinPkgName (PkgName pkgName)) mVerReq mArch
 
 pMaybeVerReq :: RelParser (Maybe VersionReq)
 pMaybeVerReq =

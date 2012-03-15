@@ -1,7 +1,12 @@
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation
     ( -- * Types
-      PkgName
+      PkgName(..)
+    , SrcPkgName(..)
+    , BinPkgName(..)
+    , prettyPkgName
+    , prettySrcPkgName
+    , prettyBinPkgName
     , AndRelation
     , OrRelation
     , Relations
@@ -16,5 +21,5 @@ module Debian.Relation
     , ParseRelations(..)
     ) where 
 
-import Debian.Relation.Common (prettyRelation)
+import Debian.Relation.Common (prettyRelation, SrcPkgName(..), BinPkgName(..), PkgName(..), prettyPkgName, prettySrcPkgName, prettyBinPkgName)
 import Debian.Relation.String
