@@ -7,7 +7,7 @@ import Data.ByteString.Lazy (empty)
 import Debian.Control.Common
 import System.Unix.Directory
 import System.Unix.FilePath
-import System.Unix.Process
+import System.Unix.LazyProcess
 
 fields :: (ControlFunctions a) => FilePath -> IO (Control' a)
 fields debFP =
