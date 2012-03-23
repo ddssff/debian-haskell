@@ -14,7 +14,7 @@ import qualified Data.ByteString as B
 import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
-import System.Unix.Process (collectStdout)
+import System.Unix.LazyProcess (collectStdout)
 import System.Unix.Progress (lazyCommandF)
 import Text.Regex (mkRegex, matchRegex)
 
