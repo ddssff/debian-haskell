@@ -20,6 +20,7 @@ import qualified Codec.Compression.GZip as GZip
 import qualified Codec.Compression.BZip as BZip
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
+import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Function
 import Data.List
 import qualified Data.Map as M
@@ -35,8 +36,8 @@ import Debian.URI
 import System.Directory
 import System.FilePath ((</>))
 import System.Posix.Files
-import System.Unix.FilePath
-import qualified System.Unix.Misc as Misc
+import System.FilePath (takeBaseName)
+--import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
 
 
@@ -286,11 +287,11 @@ tupleFromFilePath basePath fp =
              if not e
               then return Nothing
               else do size <- getFileStatus (basePath </> fp) >>= return . fromIntegral . fileSize
-                      md5 <- Misc.md5sum (basePath </> fp)
+                      md5 <- L.readFile (basePath </> fp) >>= return . show . MD5.md5
                       return $ Just (CheckSums { md5sum = Just md5, sha1 = Nothing, sha256 = Nothing }, size, fp)
 
 -- |find the Contents-* files. These are not listed in the Release file
 findContentsFiles :: (FilePath -> Bool) -> FilePath -> IO [FilePath]
 findContentsFiles filterP distDir =
           do files <- getDirectoryContents distDir
-             return $ filter filterP $ filter (isPrefixOf "Contents-" . baseName) files
+             return $ filter filterP $ filter (isPrefixOf "Contents-" . takeBaseName) files

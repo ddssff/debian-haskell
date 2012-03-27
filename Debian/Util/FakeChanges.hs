@@ -4,6 +4,8 @@ module Debian.Util.FakeChanges (fakeChanges) where
 --import Control.Arrow
 import Control.Exception
 import Control.Monad hiding (mapM)
+import qualified Data.ByteString.Lazy.Char8 as L
+import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Foldable
 import Data.List hiding (concat, foldr, all)
 import Data.Maybe 
@@ -12,6 +14,7 @@ import Data.Data (Data, Typeable)
 import Data.Traversable
 import Debian.Time
 import System.Environment
+import System.FilePath
 import System.Posix.Files
 import Text.Regex.TDFA
 import Prelude hiding (catch, concat, foldr, all, mapM)
@@ -19,8 +22,8 @@ import Network.BSD
 
 import Debian.Control
 import qualified Debian.Deb as Deb
-import System.Unix.FilePath
-import System.Unix.Misc
+-- import System.Unix.FilePath
+-- import System.Unix.Misc
 
 
 data Error
@@ -166,17 +169,17 @@ getBinArch files =
 mkFileLine :: FilePath -> IO String
 mkFileLine fp
     | ".deb" `isSuffixOf` fp =
-        do sum <- md5sum fp
+        do sum <- L.readFile fp >>= return . show . MD5.md5
            size <- liftM fileSize $ getFileStatus fp 
            (Control (p:_)) <- Deb.fields fp
            return $ concat [ " ", sum, " ", show size, " ", fromMaybe "unknown" (fieldValue "Section" p), " "
-                           , fromMaybe "optional" (fieldValue "Priority" p), " ", (baseName fp)
+                           , fromMaybe "optional" (fieldValue "Priority" p), " ", (takeBaseName fp)
                            ]
     | otherwise =
-        do sum <- md5sum fp 
+        do sum <- L.readFile fp >>= return . show . MD5.md5
            size <- liftM fileSize $ getFileStatus fp
            return $ concat [ " ", sum, " ", show size, " ", "unknown", " "
-                           , "optional"," ", (baseName fp)
+                           , "optional"," ", (takeBaseName fp)
                            ]
        
 -- more implementations can be found at:
@@ -190,7 +193,7 @@ unzipEithers = foldr unzipEither ([],[])
 -- move to different library
 debNameSplit :: String -> Either FilePath (String, String, String)
 debNameSplit fp =
-    case (baseName fp) =~ "^(.*)_(.*)_(.*).deb$" of
+    case (takeBaseName fp) =~ "^(.*)_(.*)_(.*).deb$" of
       [[_, name, version, arch]] -> Right (name, version, arch)
       _ -> Left fp
     

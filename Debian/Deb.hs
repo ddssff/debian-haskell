@@ -6,10 +6,9 @@ import Control.Monad
 import Data.ByteString.Lazy (empty)
 import Debian.Control.Common
 import System.Exit (ExitCode(..))
-import System.Unix.Directory
-import System.Unix.FilePath
+import System.Unix.Directory (withTemporaryDirectory, withWorkingDirectory)
+import System.Unix.FilePath (realpath)
 import System.Unix.Process (readProcessWithExitCode)
-import System.Process ()
 
 fields :: (ControlFunctions a) => FilePath -> IO (Control' a)
 fields debFP =
