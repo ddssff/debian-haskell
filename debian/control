@@ -8,6 +8,8 @@ Build-Depends: debhelper (>= 7)
   , haskell-devscripts (>= 0.7)
   , ghc
   , ghc-prof
+  , libghc-hunit-dev
+  , libghc-hunit-prof
   , libghc-mtl-dev
   , libghc-mtl-prof
   , libghc-parsec3-dev
@@ -29,6 +31,7 @@ Build-Depends: debhelper (>= 7)
   , libghc-utf8-string-prof,
   , libcrypto++-dev
 Build-Depends-Indep: ghc-doc
+  , libghc-hunit-doc
   , libghc-mtl-doc
   , libghc-parsec3-doc
   , libghc-regex-compat-doc
