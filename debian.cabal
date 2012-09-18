@@ -30,7 +30,7 @@ Library
    HaXml >= 1.20,
    HUnit,
    mtl,
-   network,
+   network >= 2.4,
    old-locale,
    parsec >= 2 && <4,
    pretty,

@@ -25,8 +25,8 @@ Build-Depends: debhelper (>= 7)
   , libghc-unixutils-prof (>= 1.50)
   , libghc-zlib-dev
   , libghc-zlib-prof
-  , libghc-network-dev
-  , libghc-network-prof
+  , libghc-network-dev (>= 2.4)
+  , libghc-network-prof (>= 2.4)
   , libghc-utf8-string-dev
   , libghc-utf8-string-prof,
   , libcrypto++-dev
@@ -40,7 +40,7 @@ Build-Depends-Indep: ghc-doc
   , libghc-haxml-doc (>= 1:1.20)
   , libghc-unixutils-doc (>= 1.50)
   , libghc-zlib-doc
-  , libghc-network-doc
+  , libghc-network-doc (>= 2.4)
   , libghc-utf8-string-doc
 Standards-Version: 3.9.2
 Homepage: http://hackage.haskell.org/package/debian

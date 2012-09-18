@@ -24,9 +24,6 @@ import Text.Regex (mkRegex, matchRegex)
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""
 
-instance Ord URI where
-    compare a b = compare (uriToString' a) (uriToString' b)
-
 -- |If the URI type could be read and showed this wouldn't be necessary.
 type URIString = String
 
