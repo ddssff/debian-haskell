@@ -1,3 +1,9 @@
+haskell-debian (3.64.1) unstable; urgency=low
+
+  * Fix typo in maintainer name.
+
+ -- David Fox <dsf@seereason.com>  Mon, 01 Oct 2012 09:19:45 -0700
+
 haskell-debian (3.64) unstable; urgency=low
 
   * Eliminate dependency on progress, eliminate most of the Unixutils

@@ -1,10 +1,10 @@
 Name:           debian
-Version:        3.64
+Version:        3.64.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
 Category:       Debian
-Maintainer:     David Fox ,dsf@seereason.com>
+Maintainer:     David Fox <dsf@seereason.com>
 Homepage:       http://src.seereason.com/haskell-debian-new
 Build-Type:     Simple
 Synopsis:       Modules for working with the Debian package system
