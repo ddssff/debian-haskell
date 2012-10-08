@@ -16,7 +16,7 @@ import Network.URI
 import System.Directory (getDirectoryContents)
 import System.Exit (ExitCode(..))
 import System.Process (showCommandForUser)
-import System.Unix.Process (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 -- import System.Unix.LazyProcess (collectStdout)
 -- import System.Unix.Progress (lazyCommandF)
 import Text.Regex (mkRegex, matchRegex)
@@ -35,14 +35,14 @@ fileFromURI uri = try $
       ("ssh:", Just auth) ->
           do let cmd  = "ssh"
                  args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-             (code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+             (code, out, _err) <- readProcessWithExitCode cmd args L.empty
              case code of
                ExitFailure _ -> error (showCommandForUser cmd args ++ " -> " ++ show code)
                _ -> return out
       _ ->
           do let cmd = "curl"
                  args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
              return out
 
 fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
@@ -53,12 +53,12 @@ fileFromURIStrict uri = try $
       ("ssh:", Just auth) -> do
           let cmd = "ssh"
               args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return . B.concat . L.toChunks $ out
       _ -> do
           let cmd = "curl"
               args = ["-s", "-g", uriToString' uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return . B.concat . L.toChunks $ out
 
 -- | Parse the text returned when a directory is listed by a web
@@ -81,10 +81,10 @@ dirFromURI uri = try $
       ("ssh:", Just auth) ->
           do let cmd = "ssh"
                  args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
              return . lines . L.unpack $ out
       _ ->
           do let cmd = "curl"
                  args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args id L.empty
+             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
              return . webServerDirectoryContents $ out
