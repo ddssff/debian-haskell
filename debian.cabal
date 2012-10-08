@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.64.1
+Version:        3.64.2
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -35,6 +35,7 @@ Library
    parsec >= 2 && <4,
    pretty,
    process,
+   process-extras >= 0.3,
    pureMD5,
    regex-compat,
    regex-tdfa,
