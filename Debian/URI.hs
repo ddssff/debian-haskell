@@ -10,13 +10,13 @@ module Debian.URI
 
 import Control.Exception (SomeException, try)
 import qualified Data.ByteString.Lazy.Char8 as L
+import Data.ByteString.UTF8 as B
 import qualified Data.ByteString as B
 import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
-import System.Exit (ExitCode(..))
-import System.Process (showCommandForUser)
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import System.Process (CmdSpec(RawCommand))
+import System.Process.ByteString (readModifiedProcessWithExitCode)
 -- import System.Unix.LazyProcess (collectStdout)
 -- import System.Unix.Progress (lazyCommandF)
 import Text.Regex (mkRegex, matchRegex)
@@ -28,22 +28,7 @@ uriToString' uri = uriToString id uri ""
 type URIString = String
 
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
-fileFromURI uri = try $
-    case (uriScheme uri, uriAuthority uri) of
-      ("file:", Nothing) -> L.readFile (uriPath uri)
-      -- ("ssh:", Just auth) -> cmdOutput ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
-      ("ssh:", Just auth) ->
-          do let cmd  = "ssh"
-                 args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-             (code, out, _err) <- readProcessWithExitCode cmd args L.empty
-             case code of
-               ExitFailure _ -> error (showCommandForUser cmd args ++ " -> " ++ show code)
-               _ -> return out
-      _ ->
-          do let cmd = "curl"
-                 args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
-             return out
+fileFromURI uri = fileFromURIStrict uri >>= either (return . Left) (return . Right . L.fromChunks . (: []))
 
 fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
 fileFromURIStrict uri = try $
@@ -53,21 +38,21 @@ fileFromURIStrict uri = try $
       ("ssh:", Just auth) -> do
           let cmd = "ssh"
               args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
-          return . B.concat . L.toChunks $ out
+          (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+          return out
       _ -> do
           let cmd = "curl"
               args = ["-s", "-g", uriToString' uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
-          return . B.concat . L.toChunks $ out
+          (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+          return out
 
 -- | Parse the text returned when a directory is listed by a web
 -- server.  This is currently only known to work with Apache.
 -- NOTE: there is a second copy of this function in
 -- Extra:Extra.Net. Please update both locations if you make changes.
-webServerDirectoryContents :: L.ByteString -> [String]
+webServerDirectoryContents :: B.ByteString -> [String]
 webServerDirectoryContents text =
-    catMaybes . map (second . matchRegex re) . lines . L.unpack $ text
+    catMaybes . map (second . matchRegex re) . Prelude.lines . B.toString $ text
     where
       re = mkRegex "( <A HREF|<a href)=\"([^/][^\"]*)/\""
       second (Just [_, b]) = Just b
@@ -81,10 +66,10 @@ dirFromURI uri = try $
       ("ssh:", Just auth) ->
           do let cmd = "ssh"
                  args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
-             return . lines . L.unpack $ out
+             (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+             return . Prelude.lines . B.toString $ out
       _ ->
           do let cmd = "curl"
                  args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
+             (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
              return . webServerDirectoryContents $ out

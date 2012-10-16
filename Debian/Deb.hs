@@ -6,18 +6,19 @@ import Control.Monad
 import Data.ByteString.Lazy (empty)
 import Debian.Control.Common
 import System.Exit (ExitCode(..))
+import System.Process (CmdSpec(RawCommand))
 import System.Unix.Directory (withTemporaryDirectory, withWorkingDirectory)
 import System.Unix.FilePath (realpath)
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readModifiedProcessWithExitCode)
 
 fields :: (ControlFunctions a) => FilePath -> IO (Control' a)
 fields debFP =
     withTemporaryDirectory ("fields.XXXXXX") $ \tmpdir ->
       do debFP <- realpath debFP
          withWorkingDirectory tmpdir $
-           do (res, out, err) <- readProcessWithExitCode "ar" ["x",debFP,"control.tar.gz"] empty
+           do (res, out, err, _exn) <- readModifiedProcessWithExitCode id (RawCommand "ar" ["x",debFP,"control.tar.gz"]) empty
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
-              (res, out, err) <- readProcessWithExitCode "tar" ["xzf", "control.tar.gz", "./control"] empty
+              (res, out, err, _exn) <- readModifiedProcessWithExitCode id (RawCommand "tar" ["xzf", "control.tar.gz", "./control"]) empty
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
               c <- parseControlFromFile "control" 
               case c of
