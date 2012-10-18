@@ -29,17 +29,18 @@ import Data.List
 import Text.ParserCombinators.Parsec
 import System.IO
 import Debian.Control.Common
+import Text.PrettyPrint.Class (Pretty(pretty))
+import Text.PrettyPrint.HughesPJ (text, vcat, ($$))
 
--- |This may have bad performance issues 
-instance Show (Control' String) where
-    show (Control paragraph) = intercalate "\n" (map show paragraph)
+-- |This may have bad performance issues (why?)
+instance Pretty (Control' String) where
+    pretty (Control paragraphs) = vcat (map (\ p -> pretty p $$ text "") paragraphs)
+instance Pretty (Paragraph' String) where
+    pretty (Paragraph fields) = vcat (map pretty fields)
 
-instance Show (Paragraph' String) where
-    show (Paragraph fields) = unlines (map show fields)
-
-instance Show (Field' String) where
-    show (Field (name,value)) = name ++":"++ value
-    show (Comment text) = text
+instance Pretty (Field' String) where
+    pretty (Field (name,value)) = text $ name ++":"++ value
+    pretty (Comment s) = text s
 
 type Field = Field' String
 type Control = Control' String

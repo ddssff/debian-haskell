@@ -4,6 +4,8 @@ module Debian.Sources where
 import Data.List (intercalate)
 import Debian.Release
 import Debian.URI
+import Text.PrettyPrint.HughesPJ (text)
+import Text.PrettyPrint.Class (Pretty(pretty))
 
 data SourceType
     = Deb | DebSrc
@@ -16,13 +18,13 @@ data DebSource
     , sourceDist :: Either String (ReleaseName, [Section])
     } deriving (Eq, Ord)
 
-instance Show SourceType where
-    show Deb = "deb"
-    show DebSrc = "deb-src"
+instance Pretty SourceType where
+    pretty Deb = text "deb"
+    pretty DebSrc = text "deb-src"
 
-instance Show DebSource where
-    show (DebSource thetype theuri thedist) =
-        (show thetype) ++ " "++ uriToString id theuri " " ++
+instance Pretty DebSource where
+    pretty (DebSource thetype theuri thedist) = text $
+        (show (pretty thetype)) ++ " "++ uriToString id theuri " " ++
         (case thedist of
            Left exactPath -> escape exactPath
            Right (dist, sections) ->

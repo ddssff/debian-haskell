@@ -39,6 +39,7 @@ import System.Posix.Files
 import System.FilePath (takeBaseName)
 --import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
+import Text.PrettyPrint.Class (pretty)
 
 
 -- |Package indexes on the server are uncompressed or compressed with
@@ -121,7 +122,7 @@ indexURIs arch debSource =
     where
       baseURI = sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ show debSource) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ show (pretty debSource)) id (sourceDist debSource)
 
 -- |return a tuple for the section 
 --  - the URI to the uncompressed index file

@@ -19,6 +19,7 @@ import System.Posix.Files
 import Text.Regex.TDFA
 import Prelude hiding (catch, concat, foldr, all, mapM)
 import Network.BSD
+import Text.PrettyPrint.Class (pretty)
 
 import Debian.Control
 import qualified Debian.Deb as Deb
@@ -42,8 +43,7 @@ data Files
             , tar :: Maybe FilePath
             , diff :: Maybe FilePath
             }
-      deriving Show
-      
+
 fakeChanges :: [FilePath] -> IO (FilePath, String)
 fakeChanges fps =
     do files <- loadFiles fps
@@ -78,7 +78,7 @@ fakeChanges fps =
                                              ))
                , ("Files", "\n" ++ unlines fileLines)
                ]
-       return $ (concat [ source, "_", version, "_", binArch, ".changes"], show changes)
+       return $ (concat [ source, "_", version, "_", binArch, ".changes"], show (pretty changes))
 --       let (invalid, binaries) = unzipEithers $ map debNameSplit debs
 {-
        when (not . null $ invalid) (throwDyn [MalformedDebFilename invalid])
@@ -102,8 +102,8 @@ getVersion files
     | otherwise =
         case fieldValue "Version" (snd . fromJust $ dsc files) of
           (Just v) -> v
-          Nothing  -> error $ show (dsc files) ++ " does not have a Version field :("
-          
+          Nothing  -> error $ "show (dsc files)" ++ " does not have a Version field :("
+
 
 getSource :: Files -> String
 getSource files =
@@ -223,13 +223,13 @@ loadFiles files =
              case  res of
                (Left e) -> error $ "Error parsing " ++ dsc ++ "\n" ++ show e
                (Right (Control [p])) -> return (dsc, p)
-               (Right c) -> error $ dsc ++ " did not have exactly one paragraph: " ++ show c
+               (Right c) -> error $ dsc ++ " did not have exactly one paragraph: " ++ show (pretty c)
       loadDeb :: FilePath -> IO (FilePath, Paragraph)
       loadDeb deb =
           do res <- Deb.fields deb
              case res of
                (Control [p]) -> return (deb, p)
-               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ show res
+               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ show (pretty res)
 
 
 getUploader :: IO String

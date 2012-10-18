@@ -1,6 +1,7 @@
 module Test.SourcesList where
 
 import Test.HUnit
+import Text.PrettyPrint.Class (pretty)
 
 import Debian.Sources
 --import Data.Maybe
@@ -21,7 +22,7 @@ testQuoteWords =
 
 testSourcesList :: Test
 testSourcesList =
-    test [ assertEqual "valid sources.list" validSourcesListExpected (unlines . map show . parseSourcesList $ validSourcesListStr) ]
+    test [ assertEqual "valid sources.list" validSourcesListExpected (unlines . map (show . pretty) . parseSourcesList $ validSourcesListStr) ]
     where
       validSourcesListStr =
           unlines $ [ " # A comment only line "
@@ -44,16 +45,16 @@ testSourcesList =
 
 testSourcesListParse :: Test
 testSourcesListParse =
-    test [ assertEqual "" text (concat . map (++ "\n") . map show . parseSourcesList $ text) ]
+    test [ assertEqual "" gutsy (concat . map (++ "\n") . map (show . pretty) . parseSourcesList $ gutsy) ]
     where
-      text = (concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
+      gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
 	              "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
                       "deb http://us.archive.ubuntu.com/ubuntu/ gutsy-updates main restricted universe multiverse\n",
                       "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-updates main restricted universe multiverse\n",
                       "deb http://us.archive.ubuntu.com/ubuntu/ gutsy-backports main restricted universe multiverse\n",
                       "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-backports main restricted universe multiverse\n",
                       "deb http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n",
-                      "deb-src http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n"])
+                      "deb-src http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n"]
 
 sourcesListTests :: [Test]
 sourcesListTests =
