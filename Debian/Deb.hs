@@ -9,7 +9,7 @@ import System.Exit (ExitCode(..))
 import System.Process (CmdSpec(RawCommand))
 import System.Unix.Directory (withTemporaryDirectory, withWorkingDirectory)
 import System.Unix.FilePath (realpath)
-import System.Process.ByteString.Lazy (readModifiedProcessWithExitCode)
+import System.Process.Read (readModifiedProcessWithExitCode)
 
 fields :: (ControlFunctions a) => FilePath -> IO (Control' a)
 fields debFP =

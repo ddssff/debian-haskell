@@ -16,7 +16,7 @@ import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
 import System.Process (CmdSpec(RawCommand))
-import System.Process.ByteString (readModifiedProcessWithExitCode)
+import System.Process.Read (readModifiedProcessWithExitCode)
 -- import System.Unix.LazyProcess (collectStdout)
 -- import System.Unix.Progress (lazyCommandF)
 import Text.Regex (mkRegex, matchRegex)
