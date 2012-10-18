@@ -38,12 +38,12 @@ fileFromURIStrict uri = try $
       ("ssh:", Just auth) -> do
           let cmd = "ssh"
               args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-          (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+          (_code, out, _err) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
           return out
       _ -> do
           let cmd = "curl"
               args = ["-s", "-g", uriToString' uri]
-          (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+          (_code, out, _err) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
           return out
 
 -- | Parse the text returned when a directory is listed by a web
@@ -66,10 +66,10 @@ dirFromURI uri = try $
       ("ssh:", Just auth) ->
           do let cmd = "ssh"
                  args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri]
-             (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+             (_code, out, _err) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
              return . Prelude.lines . B.toString $ out
       _ ->
           do let cmd = "curl"
                  args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err, _exn) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
+             (_code, out, _err) <- readModifiedProcessWithExitCode id (RawCommand cmd args) B.empty
              return . webServerDirectoryContents $ out

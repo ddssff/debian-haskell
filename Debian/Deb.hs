@@ -16,9 +16,9 @@ fields debFP =
     withTemporaryDirectory ("fields.XXXXXX") $ \tmpdir ->
       do debFP <- realpath debFP
          withWorkingDirectory tmpdir $
-           do (res, out, err, _exn) <- readModifiedProcessWithExitCode id (RawCommand "ar" ["x",debFP,"control.tar.gz"]) empty
+           do (res, out, err) <- readModifiedProcessWithExitCode id (RawCommand "ar" ["x",debFP,"control.tar.gz"]) empty
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
-              (res, out, err, _exn) <- readModifiedProcessWithExitCode id (RawCommand "tar" ["xzf", "control.tar.gz", "./control"]) empty
+              (res, out, err) <- readModifiedProcessWithExitCode id (RawCommand "tar" ["xzf", "control.tar.gz", "./control"]) empty
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
               c <- parseControlFromFile "control" 
               case c of

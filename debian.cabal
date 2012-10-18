@@ -35,7 +35,7 @@ Library
    parsec >= 2 && <4,
    pretty,
    process,
-   process-extras >= 0.3,
+   process-extras >= 0.3.7,
    pureMD5,
    regex-compat,
    regex-tdfa,

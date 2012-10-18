@@ -14,8 +14,8 @@ Build-Depends: debhelper (>= 7)
   , libghc-mtl-prof
   , libghc-parsec3-dev
   , libghc-parsec3-prof
-  , libghc-process-extras-dev (>= 0.3)
-  , libghc-process-extras-prof (>= 0.3)
+  , libghc-process-extras-dev (>= 0.3.7)
+  , libghc-process-extras-prof (>= 0.3.7)
   , libghc-regex-compat-dev
   , libghc-regex-compat-prof
   , libghc-regex-tdfa-dev (>= 1.1.3)
