@@ -27,17 +27,17 @@ type URIString = String
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
 fileFromURI uri = try $
     case (uriScheme uri, uriAuthority uri) of
-      ("file:", Nothing) -> B.readFile (uriPath uri)
+      ("file:", Nothing) -> L.readFile (uriPath uri)
       -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
       ("ssh:", Just auth) -> do
           let cmd = "ssh"
               args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return out
       _ -> do
           let cmd = "curl"
               args = ["-s", "-g", uriToString' uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return out
 
 -- | Parse the text returned when a directory is listed by a web
