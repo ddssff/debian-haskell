@@ -15,9 +15,7 @@ import qualified Data.ByteString as B
 import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
-import System.Process.Read (readProcessWithExitCode)
--- import System.Unix.LazyProcess (collectStdout)
--- import System.Unix.Progress (lazyCommandF)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
 
 uriToString' :: URI -> String
@@ -27,10 +25,7 @@ uriToString' uri = uriToString id uri ""
 type URIString = String
 
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
-fileFromURI uri = fileFromURIStrict uri >>= either (return . Left) (return . Right . L.fromChunks . (: []))
-
-fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
-fileFromURIStrict uri = try $
+fileFromURI uri = try $
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> B.readFile (uriPath uri)
       -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))

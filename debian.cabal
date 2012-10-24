@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.65
+Version:        3.65.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -36,7 +36,7 @@ Library
    pretty,
    pretty-class,
    process,
-   process-extras >= 0.4,
+   process-extras,
    pureMD5,
    regex-compat,
    regex-tdfa,

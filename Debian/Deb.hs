@@ -6,8 +6,7 @@ import Control.Monad
 import Data.ByteString.Lazy (empty)
 import Debian.Control.Common
 import System.Exit (ExitCode(..))
-import System.Process (CmdSpec(RawCommand))
-import System.Process.Read (readProcessWithExitCode)
+import System.Process (CmdSpec(RawCommand), readProcessWithExitCode)
 import System.Unix.Directory (withTemporaryDirectory, withWorkingDirectory)
 import System.Unix.FilePath (realpath)
 
@@ -20,7 +19,7 @@ fields debFP =
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
               (res, out, err) <- readProcessWithExitCode "tar" ["xzf", "control.tar.gz", "./control"] empty
               when (res /= ExitSuccess) (error $ "Dpkg.fields: " ++ show out ++ "\n" ++ show err ++ "\n" ++ show res)
-              c <- parseControlFromFile "control" 
+              c <- parseControlFromFile "control"
               case c of
                 Left e -> error (show e)
                 (Right c) -> return c -- I don't think we need seq because parsec will force everything from the file
