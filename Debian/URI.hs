@@ -4,7 +4,6 @@ module Debian.URI
     , URIString
     , uriToString'
     , fileFromURI
-    , fileFromURIStrict
     , dirFromURI
     ) where
 
