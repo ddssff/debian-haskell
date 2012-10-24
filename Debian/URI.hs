@@ -27,7 +27,7 @@ type URIString = String
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
 fileFromURI uri = fileFromURIStrict uri >>= either (return . Left) (return . Right . L.fromChunks . (: []))
 
-fileFromURIStrict :: URI -> IO (Either SomeException L.ByteString)
+fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
 fileFromURIStrict uri = try $
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> B.readFile (uriPath uri)
