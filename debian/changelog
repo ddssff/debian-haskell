@@ -1,3 +1,13 @@
+haskell-debian (3.66) unstable; urgency=low
+
+  * Eliminate the use of the tiny pretty-class package, use the Pretty
+    class from ansi-wl-pprint instead.
+  * Improve the pretty printing of control files in terms of terminating
+    newlines and the newlines between paragraphs.
+  * Add some control file unit tests.
+
+ -- David Fox <dsf@seereason.com>  Sun, 11 Nov 2012 08:21:07 -0800
+
 haskell-debian (3.65) unstable; urgency=low
 
   * Replace the Show instances for control files with Pretty instances.
