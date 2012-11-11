@@ -11,13 +11,12 @@ instance Show DebianVersion where
     show = show . prettyDebianVersion
 deriving instance Show ChangeLogEntry
 
-s3 = intercalate "\n" 
+s3 = unlines
      ["name (version) dist; urgency=urgency",
       "  * details",
-      " -- David Fox <dsf@seereason.com>  Wed, 21 Nov 2007 01:26:57 +0000",
-      ""]
+      " -- David Fox <dsf@seereason.com>  Wed, 21 Nov 2007 01:26:57 +0000"]
 
-s4 = intercalate "\n" 
+s4 = unlines
      ["haskell-regex-compat (0.92-3+seereason1~jaunty4) jaunty-seereason; urgency=low",
       "",
       "  [ Joachim Breitner ]",
@@ -26,10 +25,9 @@ s4 = intercalate "\n"
       "",
       "  [ Marco Túlio Gontijo e Silva ]",
       "",
-      " -- David Fox <dsf@seereason.com>  Wed, 21 Nov 2007 01:26:57 +0000",
-      ""]
+      " -- David Fox <dsf@seereason.com>  Wed, 21 Nov 2007 01:26:57 +0000"]
 
-s1 = intercalate "\n" 
+s1 = unlines
      ["haskell-regex-compat (0.92-3+seereason1~jaunty4) jaunty-seereason; urgency=low",
       "",
       "  [ Joachim Breitner ]",
@@ -103,10 +101,9 @@ s1 = intercalate "\n"
       "  * Using \"Generic Haskell cabal library packaging files v9\".",
       "  ",
       " -- Ian Lynagh (wibble) <igloo@debian.org>  Wed, 21 Nov 2007 01:26:57 +0000",
-      "  ",
-      ""]
+      "  "]
 
-s2 = intercalate "\n"
+s2 = unlines
      ["haskell-haskeline (0.6.1.6-1+seereason1~jaunty6) jaunty-seereason; urgency=low",
       "",
       "  * New upstream version.",
@@ -160,7 +157,6 @@ s2 = intercalate "\n"
       "  * Initial Debian package. (Closes: #496961)",
       "",
       " -- Marco Túlio Gontijo e Silva <marcot@holoscopio.com>  Wed, 11 Mar 2009 18:58:06 -0300",
-      "",
       ""]
 
 test3 =

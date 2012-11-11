@@ -51,11 +51,11 @@ main =
 
 helpText :: String -> Doc
 helpText progName =
-    (text "Usage:" <+> text progName <+> text "<old sources.list>" <+> text "<new sources.list>"$+$ 
-     text [] $+$ 
+    (text "Usage:" <+> text progName <+> text "<old sources.list>" <+> text "<new sources.list>"$+$
+     text [] $+$
      (fsep $ map text $ words $ "Find all the packages referenced by the second sources.list which trump packages find in the first sources.list.")
     )
-    
+
 parseArgs :: IO (String, String)
 parseArgs =
     do args <- getArgs
@@ -71,7 +71,7 @@ parseArgs =
              hPutStrLn stderr =<< renderWidth (helpText progName)
              exitFailure
       -- |render a Doc using the current terminal width
-      renderWidth :: Doc -> IO String       
+      renderWidth :: Doc -> IO String
       renderWidth doc =
           do columns <- return . fromMaybe 80 =<< getWidth
              return $ renderStyle (Style PageMode columns 1.0) doc

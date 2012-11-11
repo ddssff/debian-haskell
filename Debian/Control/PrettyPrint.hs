@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 module Debian.Control.PrettyPrint where
 
+import Data.List (intersperse)
 import qualified Data.ByteString.Char8 as C
 import Text.PrettyPrint.HughesPJ
 
@@ -8,11 +9,11 @@ import Debian.Control.Common
 
 ppControl :: (ToText a) => Control' a -> Doc
 ppControl (Control paragraph) =
-    fsep (map ppParagraph paragraph)
+    vcat (map ppParagraph paragraph)
 
 ppParagraph :: (ToText a) => Paragraph' a -> Doc
 ppParagraph (Paragraph fields) =
-    fsep (map ppField fields)
+    vcat (map ppField fields ++ [sizedText 1 ""])
 
 ppField :: (ToText a) => Field' a -> Doc
 ppField (Field (n,v)) = totext n <> text ":" <> totext v

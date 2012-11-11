@@ -23,20 +23,20 @@ module Debian.Control.String
     , raiseFields
     ) where
 
-import qualified Control.Exception as E    
+import qualified Control.Exception as E
 import Data.Char (toLower)
 import Data.List
 import Text.ParserCombinators.Parsec
 import System.IO
 import Debian.Control.Common
 import Text.PrettyPrint.Class (Pretty(pretty))
-import Text.PrettyPrint.HughesPJ (text, vcat, ($$))
+import Text.PrettyPrint.HughesPJ (text, vcat, empty, sizedText)
 
 -- |This may have bad performance issues (why?)
 instance Pretty (Control' String) where
-    pretty (Control paragraphs) = vcat (map (\ p -> pretty p $$ text "") paragraphs)
+    pretty (Control paragraphs) = vcat (map (\ p -> pretty p) paragraphs)
 instance Pretty (Paragraph' String) where
-    pretty (Paragraph fields) = vcat (map pretty fields)
+    pretty (Paragraph fields) = vcat (map pretty fields ++ [sizedText 1 ""])
 
 instance Pretty (Field' String) where
     pretty (Field (name,value)) = text $ name ++":"++ value

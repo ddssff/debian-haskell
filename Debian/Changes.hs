@@ -78,6 +78,7 @@ prettyChanges file =
           changedFilePriority file ++ " " ++
           changedFileName file)
 
+prettyEntry :: ChangeLogEntry -> Doc
 prettyEntry (Entry package version dists urgency details who date) =
     text (package ++ " (" ++ show (prettyDebianVersion version) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency ++ "\n\n" ++
           details ++ " -- " ++ who ++ "  " ++ date ++ "\n\n")
@@ -219,7 +220,7 @@ parseChanges text =
     case text =~ changesRE :: MatchResult String of
       MR {mrSubList = []} -> Nothing
       MR {mrSubList = [_, name, version, dists, urgency, _, details]} ->
-          Just $ Entry name 
+          Just $ Entry name
                        (parseDebianVersion version)
                        (map parseReleaseName . words $ dists)
                        urgency

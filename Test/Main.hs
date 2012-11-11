@@ -3,15 +3,38 @@ module Main where
 import Test.HUnit
 import System.Exit
 import Test.Changes
+import Test.Control
 import Test.Versions
 --import Test.VersionPolicy
 import Test.SourcesList
 import Test.Dependencies
+import Text.PrettyPrint
 
 main =
-    do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ sourcesListTests ++ dependencyTests ++ changesTests))
+    do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ sourcesListTests ++ dependencyTests ++ changesTests ++ controlTests ++ prettyTests))
        putStrLn (st "")
        case (failures c) + (errors c) of
          0 -> return ()
          n -> exitFailure
-                                            
+
+-- | I was converting from one pretty printing package to another and
+-- was unclear how this should work.
+prettyTests =
+    [ TestCase (assertEqual
+                "pretty0"
+                (unlines
+                 ["Usage: debian-report <old sources.list> <new sources.list>",
+                  "",
+                  "Find all the packages referenced by the",
+                  "second sources.list which trump packages",
+                  "find in the first sources.list."])
+                (renderStyle (Style PageMode 40 1.0) (helpText "debian-report"))
+               ) ]
+
+helpText :: String -> Doc
+helpText progName =
+    (text "Usage:" <+> text progName <+> text "<old sources.list>" <+> text "<new sources.list>" $+$
+     text [] $+$
+     (fsep $ map text $ words $ "Find all the packages referenced by the second sources.list which trump packages find in the first sources.list.") $+$
+     text []
+    )
