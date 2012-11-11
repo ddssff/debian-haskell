@@ -1,63 +1,112 @@
 Source: haskell-debian
+Priority: optional
 Section: haskell
-Priority: extra
 Maintainer: Debian Haskell Group <pkg-haskell-maintainers@lists.alioth.debian.org>
 Uploaders: Joachim Breitner <nomeata@debian.org>
-Build-Depends: debhelper (>= 7)
-  , cdbs
-  , haskell-devscripts (>= 0.7)
-  , ghc
-  , ghc-prof
-  , libghc-hunit-dev
-  , libghc-hunit-prof
-  , libghc-mtl-dev
-  , libghc-mtl-prof
-  , libghc-parsec3-dev
-  , libghc-parsec3-prof
-  , libghc-pretty-class-dev
-  , libghc-pretty-class-prof
-  , libghc-process-extras-dev (>= 0.4)
-  , libghc-process-extras-prof (>= 0.4)
-  , libghc-regex-compat-dev
-  , libghc-regex-compat-prof
-  , libghc-regex-tdfa-dev (>= 1.1.3)
-  , libghc-regex-tdfa-prof
-  , libghc-bzlib-dev (>= 0.5.0.0-4)
-  , libghc-bzlib-prof
-  , libghc-haxml-prof (>= 1:1.20)
-  , libghc-unixutils-dev (>= 1.50)
-  , libghc-unixutils-prof (>= 1.50)
-  , libghc-zlib-dev
-  , libghc-zlib-prof
-  , libghc-network-dev (>= 2.4)
-  , libghc-network-prof (>= 2.4)
-  , libghc-utf8-string-dev
-  , libghc-utf8-string-prof,
-  , libcrypto++-dev
+Build-Depends: debhelper (>= 7.0)
+               , haskell-devscripts (>= 0.8)
+               , cdbs
+               , ghc
+               , ghc-prof
+               , libghc-cabal-dev (>= 1.9) | ghc
+               , libghc-cabal-prof (>= 1.9) | ghc-prof
+               , libghc-hunit-dev
+               , libghc-hunit-prof
+               , libghc-haxml-dev (>= 1.20)
+               , libghc-haxml-prof (>= 1.20)
+               , libghc-unixutils-dev (>= 1.50)
+               , libghc-unixutils-prof (>= 1.50)
+               , libghc-ansi-wl-pprint-dev
+               , libghc-ansi-wl-pprint-prof
+               , libghc-base-dev (>= 4) | ghc
+               , libghc-base-dev (<< 5) | ghc
+               , libghc-base-prof (>= 4) | ghc-prof
+               , libghc-base-prof (<< 5) | ghc-prof
+               , libghc-bytestring-dev | ghc
+               , libghc-bytestring-prof | ghc-prof
+               , libghc-bzlib-dev
+               , libghc-bzlib-prof
+               , libghc-containers-dev | ghc
+               , libghc-containers-prof | ghc-prof
+               , libghc-directory-dev | ghc
+               , libghc-directory-prof | ghc-prof
+               , libghc-filepath-dev | ghc
+               , libghc-filepath-prof | ghc-prof
+               , libghc-mtl-dev
+               , libghc-mtl-prof
+               , libghc-network-dev (>= 2.4)
+               , libghc-network-prof (>= 2.4)
+               , libghc-old-locale-dev | ghc
+               , libghc-old-locale-prof | ghc-prof
+               , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (>= 2)
+               , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (<< 3)
+               , libghc-parsec3-dev (<< 4) | libghc-parsec2-dev (>= 2)
+               , libghc-parsec3-dev (<< 4) | libghc-parsec2-dev (<< 3)
+               , libghc-parsec3-prof (>= 3) | libghc-parsec2-prof (>= 2)
+               , libghc-parsec3-prof (>= 3) | libghc-parsec2-prof (<< 3)
+               , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (>= 2)
+               , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (<< 3)
+               , libghc-pretty-dev | ghc
+               , libghc-pretty-prof | ghc-prof
+               , libghc-process-dev | ghc
+               , libghc-process-prof | ghc-prof
+               , libghc-process-extras-dev
+               , libghc-process-extras-prof
+               , libghc-puremd5-dev
+               , libghc-puremd5-prof
+               , libghc-regex-compat-dev
+               , libghc-regex-compat-prof
+               , libghc-regex-tdfa-dev
+               , libghc-regex-tdfa-prof
+               , libghc-time-dev | ghc
+               , libghc-time-prof | ghc-prof
+               , libghc-unix-dev | ghc
+               , libghc-unix-prof | ghc-prof
+               , libghc-utf8-string-dev
+               , libghc-utf8-string-prof
+               , libghc-zlib-dev
+               , libghc-zlib-prof
+               , libcrypto++-dev
 Build-Depends-Indep: ghc-doc
-  , libghc-hunit-doc
-  , libghc-mtl-doc
-  , libghc-parsec3-doc
-  , libghc-pretty-class-doc
-  , libghc-process-extras-doc (>= 0.4)
-  , libghc-regex-compat-doc
-  , libghc-regex-tdfa-doc
-  , libghc-bzlib-doc
-  , libghc-haxml-doc (>= 1:1.20)
-  , libghc-unixutils-doc (>= 1.50)
-  , libghc-zlib-doc
-  , libghc-network-doc (>= 2.4)
-  , libghc-utf8-string-doc
-Standards-Version: 3.9.2
+                     , libghc-cabal-doc (>= 1.9) | ghc-doc
+                     , libghc-hunit-doc
+                     , libghc-haxml-doc (>= 1.20)
+                     , libghc-unixutils-doc (>= 1.50)
+                     , libghc-ansi-wl-pprint-doc
+                     , libghc-base-doc (>= 4) | ghc-doc
+                     , libghc-base-doc (<< 5) | ghc-doc
+                     , libghc-bytestring-doc | ghc-doc
+                     , libghc-bzlib-doc
+                     , libghc-containers-doc | ghc-doc
+                     , libghc-directory-doc | ghc-doc
+                     , libghc-filepath-doc | ghc-doc
+                     , libghc-mtl-doc
+                     , libghc-network-doc (>= 2.4)
+                     , libghc-old-locale-doc | ghc-doc
+                     , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (>= 2)
+                     , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (<< 3)
+                     , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (>= 2)
+                     , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (<< 3)
+                     , libghc-pretty-doc | ghc-doc
+                     , libghc-process-doc | ghc-doc
+                     , libghc-process-extras-doc
+                     , libghc-puremd5-doc
+                     , libghc-regex-compat-doc
+                     , libghc-regex-tdfa-doc
+                     , libghc-time-doc | ghc-doc
+                     , libghc-unix-doc | ghc-doc
+                     , libghc-utf8-string-doc
+                     , libghc-zlib-doc
+Standards-Version: 3.9.3
 Homepage: http://hackage.haskell.org/package/debian
 Vcs-Darcs: http://darcs.debian.org/pkg-haskell/haskell-debian
 Vcs-Browser: http://darcs.debian.org/cgi-bin/darcsweb.cgi?r=pkg-haskell/haskell-debian
 
 Package: libghc-debian-dev
 Architecture: any
-Depends: ${haskell:Depends}
-  , ${shlibs:Depends}
-  , ${misc:Depends}
+Depends: ${shlibs:Depends}
+         , ${haskell:Depends}
+         , ${misc:Depends}
 Recommends: ${haskell:Recommends}
 Suggests: ${haskell:Suggests}
 Provides: ${haskell:Provides}
@@ -76,7 +125,6 @@ Description: Haskell library for working with the Debian package system
 Package: libghc-debian-prof
 Architecture: any
 Depends: ${haskell:Depends}
-  , ${shlibs:Depends}
   , ${misc:Depends}
 Recommends: ${haskell:Recommends}
 Suggests: ${haskell:Suggests}
@@ -92,12 +140,13 @@ Description: Profiling library for working with the Debian package system
  installing build dependencies, building source and binary packages,
  and inserting them into a repository.
  .
- This package contains the profiling libraries compiled for GHC 6.
+ This package contains the profiling libraries compiled with profiling enabled.
 
 Package: libghc-debian-doc
-Section: doc
 Architecture: all
-Depends: ${misc:Depends}, ${haskell:Depends}
+Section: doc
+Depends: ${haskell:Depends}
+         , ${misc:Depends}
 Recommends: ${haskell:Recommends}
 Suggests: ${haskell:Suggests}
 Description: Documentation for Debian package system library
@@ -114,9 +163,8 @@ Description: Documentation for Debian package system library
  This package contains the library documentation.
 
 Package: haskell-debian-utils
-Section: devel
 Architecture: any
-Depends: ghc, ${misc:Depends}, ${shlibs:Depends}
+Depends: ${shlibs:Depends}, ${haskell:Depends}, ${misc:Depends}
 Recommends: apt-file
 Description: Various helpers to work with Debian packages
  This package contains tools shipped with the Haskell library “debian”:
