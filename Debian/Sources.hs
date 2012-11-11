@@ -4,8 +4,7 @@ module Debian.Sources where
 import Data.List (intercalate)
 import Debian.Release
 import Debian.URI
-import Text.PrettyPrint.HughesPJ (text)
-import Text.PrettyPrint.Class (Pretty(pretty))
+import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text)
 
 data SourceType
     = Deb | DebSrc

@@ -17,7 +17,7 @@ import Data.Char
 import Text.ParserCombinators.Parsec
 import Text.Regex
 import Debian.Version.Internal
-import Text.PrettyPrint (Doc, text)
+import Text.PrettyPrint.ANSI.Leijen (Doc, text)
 
 prettyDebianVersion :: DebianVersion -> Doc
 prettyDebianVersion (DebianVersion s _) = text s

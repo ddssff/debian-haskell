@@ -19,7 +19,7 @@ import System.Posix.Files
 import Text.Regex.TDFA
 import Prelude hiding (catch, concat, foldr, all, mapM)
 import Network.BSD
-import Text.PrettyPrint.Class (pretty)
+import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 import Debian.Control
 import qualified Debian.Deb as Deb

@@ -3,7 +3,7 @@ module Debian.Control.PrettyPrint where
 
 import Data.List (intersperse)
 import qualified Data.ByteString.Char8 as C
-import Text.PrettyPrint.HughesPJ
+import Text.PrettyPrint.ANSI.Leijen
 
 import Debian.Control.Common
 
@@ -13,7 +13,7 @@ ppControl (Control paragraph) =
 
 ppParagraph :: (ToText a) => Paragraph' a -> Doc
 ppParagraph (Paragraph fields) =
-    vcat (map ppField fields ++ [sizedText 1 ""])
+    vcat (map ppField fields ++ [empty])
 
 ppField :: (ToText a) => Field' a -> Doc
 ppField (Field (n,v)) = totext n <> text ":" <> totext v

@@ -1,7 +1,7 @@
 module Test.SourcesList where
 
 import Test.HUnit
-import Text.PrettyPrint.Class (pretty)
+import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 import Debian.Sources
 --import Data.Maybe

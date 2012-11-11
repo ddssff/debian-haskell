@@ -6,7 +6,7 @@ import Data.List (intercalate)
 import Debian.Control
 import Debian.Control.PrettyPrint (ppControl, ppParagraph)
 import Debian.Control.String ({- Pretty instances -})
-import Text.PrettyPrint.Class (pretty)
+import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 deriving instance Eq (Control' String)
 deriving instance Show (Control' String)

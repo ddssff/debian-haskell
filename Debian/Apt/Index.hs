@@ -39,8 +39,7 @@ import System.Posix.Files
 import System.FilePath (takeBaseName)
 --import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
-import Text.PrettyPrint.Class (pretty)
-
+import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 -- |Package indexes on the server are uncompressed or compressed with
 -- gzip or bzip2. We do not know what will exist on the server until we

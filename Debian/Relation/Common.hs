@@ -5,7 +5,7 @@ module Debian.Relation.Common where
 import Data.List
 import Text.ParserCombinators.Parsec
 import Data.Function
-import Text.PrettyPrint (Doc, text)
+import Text.PrettyPrint.ANSI.Leijen (Doc, text)
 
 -- Local Modules
 
