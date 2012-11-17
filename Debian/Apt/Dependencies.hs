@@ -20,7 +20,7 @@ import Data.Maybe(Maybe(..))
 import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
 import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile), Field'(Field), Control'(Control), Paragraph, Control)
-import Debian.Relation (BinPkgName(..), PkgName(..))
+import Debian.Relation (BinPkgName(..))
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
 import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
 
@@ -59,7 +59,7 @@ controlCSP (Control paragraphs) rels depF =
         }
     where
       getName :: Paragraph -> BinPkgName
-      getName p = case lookupP "Package" p of Nothing -> error "Missing Package field" ; (Just (Field (_,n))) -> BinPkgName (PkgName (C.unpack (stripWS n)))
+      getName p = case lookupP "Package" p of Nothing -> error "Missing Package field" ; (Just (Field (_,n))) -> BinPkgName (C.unpack (stripWS n))
       conflicts' :: Paragraph -> Relations
       conflicts' p =
           case lookupP "Conflicts" p of
@@ -106,7 +106,7 @@ packageVersionParagraph p =
       (Just (Field (_, name))) ->
           case lookupP "Version" p of
             Nothing -> error $ "Paragraph missing Version field"
-            (Just (Field (_, version))) -> (BinPkgName (PkgName (C.unpack (stripWS name))), parseDebianVersion (C.unpack version))
+            (Just (Field (_, version))) -> (BinPkgName (C.unpack (stripWS name)), parseDebianVersion (C.unpack version))
 
 
 

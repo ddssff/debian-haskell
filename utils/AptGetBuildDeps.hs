@@ -33,7 +33,7 @@ lookupDepends key paragraph =
 aptGetInstall :: [String] -> [BinPkgName] -> IO ExitCode
 aptGetInstall options pkgnames =
     do (_,_,_,ph)
-         <- createProcess $ proc "apt-get" $ ["install"] ++ options ++ map (unPkgName . unBinPkgName) pkgnames
+         <- createProcess $ proc "apt-get" $ ["install"] ++ options ++ map unBinPkgName pkgnames
        waitForProcess ph
 
 main :: IO ()

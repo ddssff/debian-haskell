@@ -2,8 +2,7 @@
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation.String
     ( -- * Types
-      PkgName
-    , AndRelation
+      AndRelation
     , OrRelation
     , Relations
     , Relation(..)
@@ -68,7 +67,7 @@ pRelation =
        mVerReq <- pMaybeVerReq
        skipMany whiteChar
        mArch <- pMaybeArch
-       return $ Rel (BinPkgName (PkgName pkgName)) mVerReq mArch
+       return $ Rel (BinPkgName pkgName) mVerReq mArch
 
 pMaybeVerReq :: RelParser (Maybe VersionReq)
 pMaybeVerReq =

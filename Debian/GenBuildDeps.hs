@@ -55,7 +55,7 @@ buildDependencies (Control []) = error "Control file seems to be empty"
 buildDependencies (Control (source:binaries)) =
     either (Left . concat) (\ deps -> Right (DepInfo {sourceName = sourcePackage, relations = deps, binaryNames = bins})) deps
     where
-      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") (SrcPkgName . PkgName) $ assoc "Source" source
+      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") SrcPkgName $ assoc "Source" source
       -- The raw list of build dependencies for this package
       deps = either Left (Right . concat) (concatEithers [buildDeps, buildDepsIndep])
       buildDeps =
@@ -68,7 +68,7 @@ buildDependencies (Control (source:binaries)) =
             _ -> Right []
       bins = mapMaybe lookupPkgName binaries
       lookupPkgName :: Paragraph -> Maybe BinPkgName
-      lookupPkgName p = maybe Nothing (Just . BinPkgName . PkgName) (assoc "Package" p)
+      lookupPkgName p = maybe Nothing (Just . BinPkgName) (assoc "Package" p)
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package

@@ -1,8 +1,7 @@
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation.ByteString
     ( -- * Types
-      PkgName
-    , AndRelation
+      AndRelation
     , OrRelation
     , Relations
     , Relation(..)

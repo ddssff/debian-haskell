@@ -1,3 +1,10 @@
+haskell-debian (3.67) unstable; urgency=low
+
+  * Eliminate the PkgName type, instead make BinPkgName and SrcPkgName
+    instances of a class named PkgName.
+
+ -- David Fox <dsf@seereason.com>  Sat, 17 Nov 2012 06:11:06 -0800
+
 haskell-debian (3.66) unstable; urgency=low
 
   * Eliminate the use of the tiny pretty-class package, use the Pretty
