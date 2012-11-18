@@ -1,3 +1,11 @@
+haskell-debian (3.68) unstable; urgency=low
+
+  * Fix the formatting of changelog entries (an extra newline was being
+    appended) and replace the functions prettyChanges, prettyChangesFile,
+    and prettyEntry with instances of Pretty.
+
+ -- David Fox <dsf@seereason.com>  Sun, 18 Nov 2012 07:04:28 -0800
+
 haskell-debian (3.67) unstable; urgency=low
 
   * Eliminate the PkgName type, instead make BinPkgName and SrcPkgName
