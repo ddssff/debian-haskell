@@ -34,7 +34,7 @@ newtype Paragraph' a
 -- name or value
 data Field' a
     = Field (a, a)
-    | Comment a
+    | Comment a     -- ^ Lines beginning with #
       deriving Eq
 
 class ControlFunctions a where

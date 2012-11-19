@@ -3,7 +3,6 @@ module Debian.Deb where
 
 import Control.Monad
 
-import Data.ByteString.Lazy (empty)
 import Debian.Control.Common
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)

@@ -12,4 +12,4 @@ module Debian.Version
     ) where 
 
 import Debian.Version.Common
-import Debian.Version.String
+import Debian.Version.String ()

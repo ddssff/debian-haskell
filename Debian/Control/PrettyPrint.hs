@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 module Debian.Control.PrettyPrint where
 
-import Data.List (intersperse)
 import qualified Data.ByteString.Char8 as C
 import Text.PrettyPrint.ANSI.Leijen
 
@@ -17,7 +16,7 @@ ppParagraph (Paragraph fields) =
 
 ppField :: (ToText a) => Field' a -> Doc
 ppField (Field (n,v)) = totext n <> text ":" <> totext v
-
+ppField (Comment c) = totext c
 
 class ToText a where
     totext :: a -> Doc

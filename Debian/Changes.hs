@@ -1,15 +1,20 @@
+{-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-missing-signatures #-}
 -- |Changelog and changes file support.
 module Debian.Changes
     ( ChangesFile(..)
     , ChangedFileSpec(..)
     , changesFileName
+    , ChangeLog(..)
     , ChangeLogEntry(..)
-    , parseLog
+    , parseChangeLog
+    , parseEntries -- was parseLog
     , parseEntry
     , parseChanges
     ) where
 
-import Data.List (intercalate)
+import Data.Either (partitionEithers)
+import Data.List (intercalate, intersperse)
+import Data.Text (pack, unpack, strip)
 import qualified Debian.Control.String as S
 import Debian.Release
 import Debian.URI()
@@ -52,8 +57,10 @@ data ChangeLogEntry =
           , logWho :: String
           , logDate :: String
           }
-  | WhiteSpace String
-  deriving (Eq)
+  | WhiteSpace String -- ^ The parser here never returns this
+  deriving Eq
+
+newtype ChangeLog = ChangeLog [ChangeLogEntry] deriving Eq
 
 {-
 instance Show ChangesFile where
@@ -76,18 +83,21 @@ instance Pretty ChangedFileSpec where
               changedFileName file)
 
 instance Pretty ChangeLogEntry where
-    pretty (Entry package version dists urgency details who date) =
-        vcat [ text (package ++ " (" ++ show (prettyDebianVersion version) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency)
+    pretty (Entry package ver dists urgency details who date) =
+        vcat [ text (package ++ " (" ++ show (prettyDebianVersion ver) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency)
              , empty
-             , text (S.stripWS details)
+             , text ("  " ++ details)
              , empty
              , text (" -- " ++ who ++ "  " ++ date)
              , empty ]
 
+instance Pretty ChangeLog where
+    pretty (ChangeLog xs) = vcat (intersperse empty (map pretty xs))
+
 -- |Show just the top line of a changelog entry (for debugging output.)
-showHeader :: ChangeLogEntry -> Doc
-showHeader (Entry package version dists urgency _ _ _) =
-    text (package ++ " (" ++ show (prettyDebianVersion version) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency ++ "...")
+_showHeader :: ChangeLogEntry -> Doc
+_showHeader (Entry package ver dists urgency _ _ _) =
+    text (package ++ " (" ++ show (prettyDebianVersion ver) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency ++ "...")
 
 {-
 format is a series of entries like this:
@@ -144,13 +154,21 @@ date must be separated by exactly two spaces.
 The entire changelog must be encoded in UTF-8. 
 -}
 
+-- | Parse the entries of a debian changelog and verify they are all
+-- valid.
+parseChangeLog :: String -> ChangeLog
+parseChangeLog s =
+    case partitionEithers (parseEntries s) of
+      ([], xs) -> ChangeLog xs
+      (ss, _) -> error (intercalate "\n  " ("Error(s) parsing changelog:" : concat ss))
+
 -- |Parse a Debian Changelog and return a lazy list of entries
-parseLog :: String -> [Either [String] ChangeLogEntry]
-parseLog "" = []
-parseLog text =
+parseEntries :: String -> [Either [String] ChangeLogEntry]
+parseEntries "" = []
+parseEntries text =
     case parseEntry text of
       Left messages -> [Left messages]
-      Right (entry, text') -> Right entry : parseLog text'
+      Right (entry, text') -> Right entry : parseEntries text'
 
 -- |Parse a single changelog entry, returning the entry and the remaining text.
 {-
@@ -178,16 +196,16 @@ parseEntry :: String -> Either [String] (ChangeLogEntry, String)
 parseEntry text =
     case text =~ entryRE :: MatchResult String of
       x | mrSubList x == [] -> Left ["Parse error in " ++ show text]
-      x@MR {mrAfter = after, mrSubList = [_, name, version, dists, urgency, _, details, _, _, who, _, date, _]} ->
+      MR {mrAfter = after, mrSubList = [_, name, ver, dists, urgency, _, details, _, _, who, _, date, _]} ->
           Right (Entry name 
-                         (parseDebianVersion version)
+                         (parseDebianVersion ver)
                          (map parseReleaseName . words $ dists)
                          urgency
-			 details
+			 ("  " ++ unpack (strip (pack details)) ++ "\n")
                          (take (length who - 2) who)
                          date,
                    after)
-      x@MR {mrBefore = before, mrMatch = matched, mrAfter = after, mrSubList = matches} ->
+      MR {mrBefore = _before, mrMatch = _matched, mrAfter = after, mrSubList = matches} ->
           Left ["Internal error\n after=" ++ show after ++ "\n " ++ show (length matches) ++ " matches: " ++ show matches]
 {-
 parseREs :: [Regex] -> String -> Failing ([String], String)
@@ -220,9 +238,9 @@ parseChanges :: String -> Maybe ChangeLogEntry
 parseChanges text =
     case text =~ changesRE :: MatchResult String of
       MR {mrSubList = []} -> Nothing
-      MR {mrSubList = [_, name, version, dists, urgency, _, details]} ->
+      MR {mrSubList = [_, name, ver, dists, urgency, _, details]} ->
           Just $ Entry name
-                       (parseDebianVersion version)
+                       (parseDebianVersion ver)
                        (map parseReleaseName . words $ dists)
                        urgency
 		       details
@@ -232,10 +250,10 @@ parseChanges text =
       changesRE = bol ++ blankLines ++ optWhite ++ headerRE ++ "(.*)$"
 
 headerRE =
-    package ++ version ++ dists ++ urgency
+    package ++ ver ++ dists ++ urgency
     where
       package = "([^ \t(]*)" ++ optWhite
-      version = "\\(([^)]*)\\)" ++ optWhite
+      ver = "\\(([^)]*)\\)" ++ optWhite
       dists = "([^;]*);" ++ optWhite
       urgency = "urgency=([^\n]*)\n" ++ blankLines
 
@@ -244,7 +262,8 @@ blankLine = "(" ++ optWhite ++ "\n)"
 optWhite = "[ \t]*"
 bol = "^"
 
-s1 = intercalate "\n" 
+-- This can be used for tests
+_s1 = intercalate "\n" 
      ["haskell-regex-compat (0.92-3+seereason1~jaunty4) jaunty-seereason; urgency=low",
       "",
       "  [ Joachim Breitner ]",

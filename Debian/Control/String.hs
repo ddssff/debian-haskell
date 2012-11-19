@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, ScopedTypeVariables, TypeSynonymInstances #-}
-{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-name-shadowing #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-name-shadowing -fno-warn-unused-do-bind #-}
 module Debian.Control.String
     ( -- * Types
       Control'(..)
@@ -29,7 +29,7 @@ import Data.List
 import Text.ParserCombinators.Parsec
 import System.IO
 import Debian.Control.Common
-import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text, vcat, (<$>), empty)
+import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text, vcat, empty)
 
 -- |This may have bad performance issues (why?)
 instance Pretty (Control' String) where

@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.68
+Version:        3.69
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -40,6 +40,7 @@ Library
    pureMD5,
    regex-compat,
    regex-tdfa,
+   text,
    time,
    unix,
    Unixutils >= 1.50,

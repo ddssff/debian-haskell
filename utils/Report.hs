@@ -2,7 +2,6 @@
 module Main where
 
 import Control.Monad
-import Data.List
 import Data.Maybe (fromMaybe)
 import Debian.Apt.Methods
 import Debian.Report
@@ -43,7 +42,7 @@ main =
       mkDocument styleSheet elem =
           let xmlDecl = XMLDecl "1.0" (Just (EncodingDecl "utf-8")) (Just True)
               prolog   = Prolog (Just xmlDecl)  [] Nothing [PI ("xml-stylesheet","type=\"text/xsl\" href=\""++styleSheet++"\"")]
-              symTable = []
+              -- symTable = []
           in
             Document prolog [] elem []
 
