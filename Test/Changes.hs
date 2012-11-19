@@ -99,12 +99,11 @@ s1 = unlines
       " -- Arjan Oosting <arjan@debian.org>  Sat, 19 Jan 2008 16:48:39 +0100",
       "",
       "haskell-regex-compat (0.71.0.1-1) unstable; urgency=low",
-      " ",
+      "",
       "  * Initial release (used to be part of ghc6).",
       "  * Using \"Generic Haskell cabal library packaging files v9\".",
-      "  ",
-      " -- Ian Lynagh (wibble) <igloo@debian.org>  Wed, 21 Nov 2007 01:26:57 +0000",
-      "  "]
+      "",
+      " -- Ian Lynagh (wibble) <igloo@debian.org>  Wed, 21 Nov 2007 01:26:57 +0000"]
 
 s2 = unlines
      ["haskell-haskeline (0.6.1.6-1+seereason1~jaunty6) jaunty-seereason; urgency=low",
@@ -162,6 +161,8 @@ s2 = unlines
       " -- Marco Túlio Gontijo e Silva <marcot@holoscopio.com>  Wed, 11 Mar 2009 18:58:06 -0300",
       ""]
 
+test5 = TestCase (assertEqual "haskell-regex-compat changelog" s1 (show (pretty (parseChangeLog s1))))
+
 test3 =
     TestCase (assertEqual "haskell-regex-compat changelog" expected (parseEntries s3))
     where expected = [Right (Entry {logPackage = "name", logVersion = parseDebianVersion "version", logDists = [ReleaseName {relName = "dist"}], logUrgency = "urgency", logComments = "  * details\n", logWho = "David Fox <dsf@seereason.com>", logDate = "Wed, 21 Nov 2007 01:26:57 +0000"})]
@@ -210,4 +211,4 @@ test2 =
                                      logWho = "Marco T\250lio Gontijo e Silva <marcot@holoscopio.com>",
                                      logDate = "Wed, 11 Mar 2009 18:58:06 -0300"})]
 
-changesTests = [test3, test4, test1, test2]
+changesTests = [test3, test4, test1, test2, test5]

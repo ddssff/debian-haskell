@@ -86,13 +86,12 @@ instance Pretty ChangeLogEntry where
     pretty (Entry package ver dists urgency details who date) =
         vcat [ text (package ++ " (" ++ show (prettyDebianVersion ver) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency)
              , empty
-             , text ("  " ++ details)
-             , empty
+             , text details
              , text (" -- " ++ who ++ "  " ++ date)
              , empty ]
 
 instance Pretty ChangeLog where
-    pretty (ChangeLog xs) = vcat (intersperse empty (map pretty xs))
+    pretty (ChangeLog xs) = vcat (map pretty xs)
 
 -- |Show just the top line of a changelog entry (for debugging output.)
 _showHeader :: ChangeLogEntry -> Doc
