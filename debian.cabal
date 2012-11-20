@@ -127,4 +127,4 @@ Executable apt-get-build-depends
 
 source-repository head
   type:     darcs
-  location: http://src.seereason.com/darcs/haskell-debian-new
+  location: http://src.seereason.com/darcs/haskell-debian
