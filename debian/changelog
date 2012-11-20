@@ -1,3 +1,9 @@
+haskell-debian (3.69.1) unstable; urgency=low
+
+  * Fix the darcs repo path.
+
+ -- David Fox <dsf@seereason.com>  Mon, 19 Nov 2012 16:35:37 -0800
+
 haskell-debian (3.69) unstable; urgency=low
 
   * Fix changelog formatting by adding a newtype named ChangeLog with
