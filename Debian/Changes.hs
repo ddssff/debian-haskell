@@ -91,7 +91,7 @@ instance Pretty ChangeLogEntry where
              , text (" -- " ++ who ++ "  " ++ date) ]
 
 instance Pretty ChangeLog where
-    pretty (ChangeLog xs) = vcat (intersperse empty (map pretty xs))
+    pretty (ChangeLog xs) = vcat (intersperse empty (map pretty xs)) <> text "\n"
 
 -- |Show just the top line of a changelog entry (for debugging output.)
 _showHeader :: ChangeLogEntry -> Doc
