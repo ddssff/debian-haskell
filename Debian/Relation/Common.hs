@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
 module Debian.Relation.Common where
 
 -- Standard GHC Modules
@@ -6,7 +7,7 @@ import Data.List
 import Data.Monoid (mconcat)
 import Data.Function
 import Text.ParserCombinators.Parsec
-import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<>))
+import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), Doc, text, empty, (<>))
 
 -- Local Modules
 
@@ -23,16 +24,13 @@ data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) derivi
 newtype SrcPkgName = SrcPkgName {unSrcPkgName :: String} deriving (Show, Eq, Ord)
 newtype BinPkgName = BinPkgName {unBinPkgName :: String} deriving (Show, Eq, Ord)
 
-class PkgName a where
-    prettyPkgName :: a -> Doc
+class Pretty a => PkgName a where
     pkgNameFromString :: String -> a
 
 instance PkgName BinPkgName where
-    prettyPkgName = text . unBinPkgName
     pkgNameFromString = BinPkgName
 
 instance PkgName SrcPkgName where
-    prettyPkgName = text . unSrcPkgName
     pkgNameFromString = SrcPkgName
 
 class ParseRelations a where
@@ -50,7 +48,7 @@ prettyOrRelation xs = mconcat . intersperse (text " | ") . map prettyRelation $ 
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
-    prettyPkgName name <> text (maybe "" (show . prettyVersionReq) ver ++ maybe "" (show . prettyArchitectureReq) arch)
+    pretty name <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
@@ -102,3 +100,24 @@ checkVersionReq (Just (LTE v1)) (Just v2) = v2 <= v1
 checkVersionReq (Just (EEQ v1)) (Just v2) = v2 == v1
 checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
+
+instance Pretty BinPkgName where
+    pretty = text . unBinPkgName
+
+instance Pretty SrcPkgName where
+    pretty = text . unSrcPkgName
+
+instance Pretty Relations where
+    pretty = prettyRelations
+
+instance Pretty OrRelation where
+    pretty = prettyOrRelation
+
+instance Pretty Relation where
+    pretty = prettyRelation
+
+instance Pretty VersionReq where
+    pretty = prettyVersionReq
+
+instance Pretty ArchitectureReq where
+    pretty = prettyArchitectureReq

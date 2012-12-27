@@ -1,6 +1,8 @@
 haskell-debian (3.69.4) unstable; urgency=low
 
-  * Add prettyOrRelation and prettyRelations to Debian.Relation.
+  * Make Pretty instances for all the types in Debian.Relation:
+    Relation, Relations, BinPkgName, etc.  Don't export the individual
+    functions like prettyRelation, clients can just call pretty.
 
  -- David Fox <dsf@seereason.com>  Thu, 27 Dec 2012 05:50:56 -0800
 
