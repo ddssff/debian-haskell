@@ -4,9 +4,11 @@ module Debian.Relation
       PkgName(..)
     , SrcPkgName(..)
     , BinPkgName(..)
-    , AndRelation
-    , OrRelation
     , Relations
+    , AndRelation
+    , prettyRelations
+    , OrRelation
+    , prettyOrRelation
     , Relation(..)
     , prettyRelation
     , ArchitectureReq(..)

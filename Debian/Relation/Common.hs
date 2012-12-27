@@ -3,8 +3,9 @@ module Debian.Relation.Common where
 -- Standard GHC Modules
 
 import Data.List
-import Text.ParserCombinators.Parsec
+import Data.Monoid (mconcat)
 import Data.Function
+import Text.ParserCombinators.Parsec
 import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<>))
 
 -- Local Modules
@@ -40,6 +41,12 @@ class ParseRelations a where
     -- 'Relations'
     parseRelations :: a -> Either ParseError Relations
 
+-- | This needs to be indented for use in a control file: intercalate "\n     " . lines . show
+prettyRelations :: [[Relation]] -> Doc
+prettyRelations xss = mconcat . intersperse (text "\n, ") . map prettyOrRelation $ xss
+
+prettyOrRelation :: [Relation] -> Doc
+prettyOrRelation xs = mconcat . intersperse (text " | ") . map prettyRelation $ xs
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
