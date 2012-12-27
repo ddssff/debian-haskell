@@ -7,6 +7,8 @@ module Debian.Relation
     , Relations
     , AndRelation
     , OrRelation
+    , prettyOrRelation
+    , prettyRelations
     , Relation(..)
     , ArchitectureReq(..)
     , VersionReq(..)
@@ -17,5 +19,5 @@ module Debian.Relation
     , ParseRelations(..)
     ) where 
 
-import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString))
+import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString), prettyOrRelation, prettyRelations)
 import Debian.Relation.String

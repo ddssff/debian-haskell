@@ -107,11 +107,15 @@ instance Pretty BinPkgName where
 instance Pretty SrcPkgName where
     pretty = text . unSrcPkgName
 
-instance Pretty Relations where
-    pretty = prettyRelations
+-- Unfortunately, the ansi-wl-pprint package has an instance @Pretty a
+-- => Pretty [a]@, so we can't create an instance for a list of one
+-- particular type.
 
-instance Pretty OrRelation where
-    pretty = prettyOrRelation
+-- instance Pretty Relations where
+--     pretty = prettyRelations
+--
+-- instance Pretty OrRelation where
+--     pretty = prettyOrRelation
 
 instance Pretty Relation where
     pretty = prettyRelation
