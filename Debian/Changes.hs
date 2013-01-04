@@ -265,7 +265,7 @@ optWhite = "[ \t]*"
 bol = "^"
 
 -- This can be used for tests
-_s1 = intercalate "\n" 
+_s1 = unlines
      ["haskell-regex-compat (0.92-3+seereason1~jaunty4) jaunty-seereason; urgency=low",
       "",
       "  [ Joachim Breitner ]",
@@ -338,6 +338,4 @@ _s1 = intercalate "\n"
       "  * Initial release (used to be part of ghc6).",
       "  * Using \"Generic Haskell cabal library packaging files v9\".",
       "  ",
-      " -- Ian Lynagh (wibble) <igloo@debian.org>  Wed, 21 Nov 2007 01:26:57 +0000",
-      "  ",
-      ""]
+      " -- Ian Lynagh (wibble) <igloo@debian.org>  Wed, 21 Nov 2007 01:26:57 +0000"]
