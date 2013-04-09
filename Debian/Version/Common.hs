@@ -13,7 +13,7 @@ module Debian.Version.Common
     , parseDV
     ) where 
 
-import Data.Char
+import Data.Char (ord, isDigit, isAlpha)
 import Text.ParserCombinators.Parsec
 import Text.Regex
 import Debian.Version.Internal
@@ -28,7 +28,8 @@ instance Eq DebianVersion where
 instance Ord DebianVersion where
     compare (DebianVersion _ v1) (DebianVersion _ v2) = compare v1 v2
 
--- * Ord instance
+instance Show DebianVersion where
+    show v = "(Debian.Version.parseDebianVersion (" ++ show (show (prettyDebianVersion v)) ++ " :: String))"
 
 -- make ~ less than everything, and everything else higher that letters
 order :: Char -> Int

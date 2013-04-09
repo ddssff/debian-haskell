@@ -1,3 +1,9 @@
+haskell-debian (3.70.1) unstable; urgency=low
+
+  * Add Show and Read instances for DebianVersion.
+
+ -- David Fox <dsf@seereason.com>  Tue, 09 Apr 2013 08:58:44 -0700
+
 haskell-debian (3.70) unstable; urgency=low
 
   * Make Pretty instances for all the types in Debian.Relation:
