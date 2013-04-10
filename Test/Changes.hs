@@ -8,8 +8,6 @@ import Debian.Release (ReleaseName(ReleaseName, relName))
 import Debian.Version (DebianVersion, prettyDebianVersion, parseDebianVersion)
 import Text.PrettyPrint.ANSI.Leijen
 
-instance Show DebianVersion where
-    show = show . prettyDebianVersion
 deriving instance Show ChangeLogEntry
 instance Show ChangeLog where
     show = show . pretty
