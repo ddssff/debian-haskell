@@ -133,8 +133,6 @@ packageVersionParagraph p =
 mapSnd :: (b -> c) -> [(a,b)] -> [(a,c)]
 mapSnd f = map (second f)
 
-instance Show DebianVersion where
-    show = show . prettyDebianVersion
 deriving instance Show Status
 deriving instance Show Relation
 deriving instance Show VersionReq
