@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.70.1
+Version:        3.71
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -127,4 +127,4 @@ Executable apt-get-build-depends
 
 source-repository head
   type:     darcs
-  location: http://src.seereason.com/darcs/haskell-debian
+  location: http://src.seereason.com/haskell-debian

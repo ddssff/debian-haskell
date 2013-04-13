@@ -134,9 +134,9 @@ mapSnd :: (b -> c) -> [(a,b)] -> [(a,c)]
 mapSnd f = map (second f)
 
 deriving instance Show Status
-deriving instance Show Relation
-deriving instance Show VersionReq
-deriving instance Show ArchitectureReq
+-- deriving instance Show Relation
+-- deriving instance Show VersionReq
+-- deriving instance Show ArchitectureReq
 
 test1 =
     let csp = mkCSP control "a" depends

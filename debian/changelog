@@ -1,3 +1,15 @@
+haskell-debian (3.71) unstable; urgency=low
+
+  * Refine the ArchitectureReq type to parse things like !linux-any.
+
+ -- David Fox <dsf@seereason.com>  Sat, 13 Apr 2013 15:55:27 -0700
+
+haskell-debian (3.70.2) unstable; urgency=low
+
+  * Fix source repository location in cabal file.
+
+ -- David Fox <dsf@seereason.com>  Sat, 13 Apr 2013 11:11:45 -0700
+
 haskell-debian (3.70.1) unstable; urgency=low
 
   * Add Show and Read instances for DebianVersion.

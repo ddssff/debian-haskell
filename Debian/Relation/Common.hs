@@ -19,7 +19,7 @@ type Relations = AndRelation
 type AndRelation = [OrRelation]
 type OrRelation = [Relation]
 
-data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) deriving Eq
+data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) deriving (Eq, Show)
 
 newtype SrcPkgName = SrcPkgName {unSrcPkgName :: String} deriving (Show, Eq, Ord)
 newtype BinPkgName = BinPkgName {unBinPkgName :: String} deriving (Show, Eq, Ord)
@@ -57,14 +57,34 @@ instance Ord Relation where
 	     GT -> GT
 	     EQ -> compare mVerReq1 mVerReq2
 
-data ArchitectureReq
-    = ArchOnly [String]
-    | ArchExcept [String]
-      deriving Eq
+data ArchSpec
+    = ArchOnly (Maybe ArchOS) ArchCPU
+    | ArchExcept  (Maybe ArchOS) ArchCPU
+    deriving (Eq, Show)
+
+prettyArchSpec :: ArchSpec -> Doc
+prettyArchSpec (ArchOnly Nothing cpu) = prettyArchCPU cpu
+prettyArchSpec (ArchOnly (Just os) cpu) = prettyArchOS os <> text "-" <> prettyArchCPU cpu
+prettyArchSpec (ArchExcept os cpu) = text "!" <> prettyArchSpec (ArchOnly os cpu)
+
+data ArchOS = ArchOS String | ArchOSAny deriving (Eq, Show)
+
+prettyArchOS :: ArchOS -> Doc
+prettyArchOS (ArchOS s) = text s
+prettyArchOS ArchOSAny = text "any"
+
+data ArchCPU = ArchCPU String | ArchCPUAny deriving (Eq, Show)
+
+prettyArchCPU :: ArchCPU -> Doc
+prettyArchCPU (ArchCPU s) = text s
+prettyArchCPU ArchCPUAny = text "any"
+
+newtype ArchitectureReq
+    = ArchitectureReq [ArchSpec]
+    deriving (Eq, Show)
 
 prettyArchitectureReq :: ArchitectureReq -> Doc
-prettyArchitectureReq (ArchOnly arch) = text $ " [" ++ intercalate " " arch ++ "]"
-prettyArchitectureReq (ArchExcept arch) = text $ " [!" ++ intercalate " !" arch ++ "]"
+prettyArchitectureReq (ArchitectureReq arch) = text " [" <> mconcat (map prettyArchSpec arch) <> text "]"
 
 data VersionReq
     = SLT DebianVersion
@@ -72,7 +92,7 @@ data VersionReq
     | EEQ  DebianVersion
     | GRE  DebianVersion
     | SGR DebianVersion
-      deriving Eq
+      deriving (Eq, Show)
 
 prettyVersionReq :: VersionReq -> Doc
 prettyVersionReq (SLT v) = text $ " (<< " ++ show (prettyDebianVersion v) ++ ")"

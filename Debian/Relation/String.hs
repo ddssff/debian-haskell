@@ -103,15 +103,15 @@ pVerReq =
 pMaybeArch :: RelParser (Maybe ArchitectureReq)
 pMaybeArch =
     do char '['
-       (do archs <- pArchExcept
+       (do archs <- pArchExcept >>= return . map parseArchExcept
 	   char ']'
            skipMany whiteChar
-	   return (Just (ArchExcept archs))
+	   return (Just (ArchitectureReq archs))
 	<|>
-	do archs <- pArchOnly
+	do archs <- pArchOnly >>= return . map parseArchOnly
 	   char ']'
            skipMany whiteChar
-	   return (Just (ArchOnly archs))
+	   return (Just (ArchitectureReq archs))
 	)
     <|>
     return Nothing
@@ -124,3 +124,22 @@ pArchExcept = sepBy (char '!' >> many1 (noneOf [']',' '])) (skipMany1 whiteChar)
 
 pArchOnly :: RelParser [String]
 pArchOnly = sepBy (many1 (noneOf [']',' '])) (skipMany1 whiteChar)
+
+parseArchExcept :: String -> ArchSpec
+parseArchExcept ('!' : s) =
+    ArchExcept os cpu
+    where ArchOnly os cpu = parseArchOnly s
+
+parseArchOnly :: String -> ArchSpec
+parseArchOnly s =
+    case span (/= '-') s of
+      (cpu, "") -> ArchOnly Nothing (parseCPU cpu)
+      (os, '-' : cpu) -> ArchOnly (Just (parseOS os)) (parseCPU cpu)
+
+parseCPU :: String -> ArchCPU
+parseCPU "any" = ArchCPUAny
+parseCPU s = ArchCPU s
+
+parseOS :: String -> ArchOS
+parseOS "any" = ArchOSAny
+parseOS s = ArchOS s
