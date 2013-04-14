@@ -34,11 +34,13 @@ parseCPU s = ArchCPU s
 
 data Arch
     = Source
+    | All
     | Binary ArchOS ArchCPU
     deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 prettyArch :: Arch -> Doc
 prettyArch Source = text "source"
+prettyArch All = text "all"
 prettyArch (Binary (ArchOS "linux") cpu) = prettyCPU cpu
 prettyArch (Binary os cpu) = prettyOS os <> text "-" <> prettyCPU cpu
 
@@ -46,5 +48,6 @@ parseArch :: String -> Arch
 parseArch s =
     case span (/= '-') s of
       ("source", "") -> Source
+      ("all", "") -> All
       (cpu, "") -> Binary (ArchOS "linux") (parseCPU cpu)
       (os, '-' : cpu) -> Binary (parseOS os) (parseCPU cpu)
