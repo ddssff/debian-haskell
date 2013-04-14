@@ -59,6 +59,7 @@ Library
         Debian.Apt.Index,
         Debian.Apt.Methods,
         Debian.Apt.Package,
+        Debian.Arch,
         Debian.Changes,
         Debian.Control,
         Debian.Control.Common,

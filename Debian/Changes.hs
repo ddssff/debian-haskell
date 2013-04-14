@@ -15,6 +15,7 @@ module Debian.Changes
 import Data.Either (partitionEithers)
 import Data.List (intercalate, intersperse)
 import Data.Text (pack, unpack, strip)
+import Debian.Arch (Arch, prettyArch)
 import qualified Debian.Control.String as S
 import Debian.Release
 import Debian.URI()
@@ -69,7 +70,7 @@ instance Show ChangesFile where
 
 changesFileName :: ChangesFile -> String
 changesFileName changes =
-    changePackage changes ++ "_" ++ show (prettyDebianVersion (changeVersion changes)) ++ "_" ++ archName (changeArch changes) ++ ".changes"
+    changePackage changes ++ "_" ++ show (prettyDebianVersion (changeVersion changes) <> text "_" <> prettyArch (changeArch changes) <> text ".changes")
 
 instance Pretty ChangesFile where
     pretty = text . changesFileName

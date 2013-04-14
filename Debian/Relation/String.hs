@@ -14,14 +14,16 @@ module Debian.Relation.String
     , RelParser
     , ParseRelations(..)
     , pRelations
-    ) where 
+    ) where
 
 -- Standard GHC Modules
 
+import Data.Set (fromList)
 import Text.ParserCombinators.Parsec
 
 -- Local Modules
 
+import Debian.Arch (Arch, parseArch)
 import Debian.Relation.Common
 import Debian.Version
 
@@ -103,15 +105,15 @@ pVerReq =
 pMaybeArch :: RelParser (Maybe ArchitectureReq)
 pMaybeArch =
     do char '['
-       (do archs <- pArchExcept >>= return . map parseArchExcept
+       (do archs <- pArchExcept
 	   char ']'
            skipMany whiteChar
-	   return (Just (ArchitectureReq archs))
+	   return (Just (ArchExcept (fromList . map parseArchExcept $ archs)))
 	<|>
-	do archs <- pArchOnly >>= return . map parseArchOnly
+	do archs <- pArchOnly
 	   char ']'
            skipMany whiteChar
-	   return (Just (ArchitectureReq archs))
+	   return (Just (ArchOnly (fromList . map parseArch $ archs)))
 	)
     <|>
     return Nothing
@@ -125,21 +127,8 @@ pArchExcept = sepBy (char '!' >> many1 (noneOf [']',' '])) (skipMany1 whiteChar)
 pArchOnly :: RelParser [String]
 pArchOnly = sepBy (many1 (noneOf [']',' '])) (skipMany1 whiteChar)
 
-parseArchExcept :: String -> ArchSpec
-parseArchExcept ('!' : s) =
-    ArchExcept os cpu
-    where ArchOnly os cpu = parseArchOnly s
-
-parseArchOnly :: String -> ArchSpec
-parseArchOnly s =
-    case span (/= '-') s of
-      (cpu, "") -> ArchOnly Nothing (parseCPU cpu)
-      (os, '-' : cpu) -> ArchOnly (Just (parseOS os)) (parseCPU cpu)
-
-parseCPU :: String -> ArchCPU
-parseCPU "any" = ArchCPUAny
-parseCPU s = ArchCPU s
-
-parseOS :: String -> ArchOS
-parseOS "any" = ArchOSAny
-parseOS s = ArchOS s
+-- | Ignore the ! if it is present, we already know this list has at
+-- least one, and the rest are implicit.
+parseArchExcept :: String -> Arch
+parseArchExcept ('!' : s) = parseArch s
+parseArchExcept s = parseArch s

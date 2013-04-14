@@ -3,8 +3,6 @@ module Debian.Release
     ( ReleaseName(..)
     , parseReleaseName
     , releaseName'
-    , Arch(..)
-    , archName
     , Section(..)
     , SubSection(..)
     , sectionName
@@ -28,14 +26,6 @@ parseReleaseName name = ReleaseName {relName = unEscapeString name}
 
 releaseName' :: ReleaseName -> String
 releaseName' (ReleaseName {relName = s}) = escapeURIString isAllowedInURI s
-
--- |The types of architecture that a package can have, either Source
--- or some type of binary architecture.
-data Arch = Source | Binary String deriving (Read, Show, Eq, Ord, Data, Typeable)
-
-archName :: Arch -> String
-archName Source = "source"
-archName (Binary arch) = arch
 
 -- |A section of a repository such as main, contrib, non-free,
 -- restricted.  The indexes for a section are located below the

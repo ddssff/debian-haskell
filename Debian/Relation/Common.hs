@@ -3,9 +3,12 @@ module Debian.Relation.Common where
 
 -- Standard GHC Modules
 
-import Data.List
+import Data.List as List (map, intersperse)
 import Data.Monoid (mconcat)
 import Data.Function
+import Data.Set as Set (Set, toList)
+import Debian.Arch (Arch, prettyArch)
+import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), Doc, text, empty, (<>))
 
@@ -41,10 +44,10 @@ class ParseRelations a where
 
 -- | This needs to be indented for use in a control file: intercalate "\n     " . lines . show
 prettyRelations :: [[Relation]] -> Doc
-prettyRelations xss = mconcat . intersperse (text "\n, ") . map prettyOrRelation $ xss
+prettyRelations xss = mconcat . intersperse (text "\n, ") . List.map prettyOrRelation $ xss
 
 prettyOrRelation :: [Relation] -> Doc
-prettyOrRelation xs = mconcat . intersperse (text " | ") . map prettyRelation $ xs
+prettyOrRelation xs = mconcat . intersperse (text " | ") . List.map prettyRelation $ xs
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
@@ -57,34 +60,14 @@ instance Ord Relation where
 	     GT -> GT
 	     EQ -> compare mVerReq1 mVerReq2
 
-data ArchSpec
-    = ArchOnly (Maybe ArchOS) ArchCPU
-    | ArchExcept  (Maybe ArchOS) ArchCPU
-    deriving (Eq, Show)
-
-prettyArchSpec :: ArchSpec -> Doc
-prettyArchSpec (ArchOnly Nothing cpu) = prettyArchCPU cpu
-prettyArchSpec (ArchOnly (Just os) cpu) = prettyArchOS os <> text "-" <> prettyArchCPU cpu
-prettyArchSpec (ArchExcept os cpu) = text "!" <> prettyArchSpec (ArchOnly os cpu)
-
-data ArchOS = ArchOS String | ArchOSAny deriving (Eq, Show)
-
-prettyArchOS :: ArchOS -> Doc
-prettyArchOS (ArchOS s) = text s
-prettyArchOS ArchOSAny = text "any"
-
-data ArchCPU = ArchCPU String | ArchCPUAny deriving (Eq, Show)
-
-prettyArchCPU :: ArchCPU -> Doc
-prettyArchCPU (ArchCPU s) = text s
-prettyArchCPU ArchCPUAny = text "any"
-
-newtype ArchitectureReq
-    = ArchitectureReq [ArchSpec]
-    deriving (Eq, Show)
+data ArchitectureReq
+    = ArchOnly (Set Arch)
+    | ArchExcept (Set Arch)
+    deriving (Eq, Ord, Show)
 
 prettyArchitectureReq :: ArchitectureReq -> Doc
-prettyArchitectureReq (ArchitectureReq arch) = text " [" <> mconcat (map prettyArchSpec arch) <> text "]"
+prettyArchitectureReq (ArchOnly arch) = text " [" <> mconcat (List.map prettyArch (toList arch)) <> text "]"
+prettyArchitectureReq (ArchExcept arch) = text " [" <> mconcat (List.map ((text "!") <>) (List.map prettyArch (toList arch))) <> text "]"
 
 data VersionReq
     = SLT DebianVersion
@@ -105,11 +88,11 @@ prettyVersionReq (SGR v) = text $ " (>> " ++ show (prettyDebianVersion v) ++ ")"
 -- relation, sorting in the order <<, <= , ==, >= , >>
 instance Ord VersionReq where
     compare = compare `on` extr
-      where extr (SLT v) = (v,0)
-            extr (LTE v) = (v,1)
-            extr (EEQ v) = (v,2)
-            extr (GRE v) = (v,3)
-            extr (SGR v) = (v,4)
+      where extr (SLT v) = (v,0 :: Int)
+            extr (LTE v) = (v,1 :: Int)
+            extr (EEQ v) = (v,2 :: Int)
+            extr (GRE v) = (v,3 :: Int)
+            extr (SGR v) = (v,4 :: Int)
 
 -- |Check if a version number satisfies a version requirement.
 checkVersionReq :: Maybe VersionReq -> Maybe DebianVersion -> Bool

@@ -11,6 +11,9 @@ module Debian.Relation
     , prettyRelations
     , Relation(..)
     , ArchitectureReq(..)
+    , Arch(..)
+    , ArchOS(..)
+    , ArchCPU(..)
     , VersionReq(..)
     -- * Helper Functions
     , checkVersionReq
@@ -19,5 +22,6 @@ module Debian.Relation
     , ParseRelations(..)
     ) where 
 
+import Debian.Arch (Arch(..), ArchOS(..), ArchCPU(..))
 import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString), prettyOrRelation, prettyRelations)
 import Debian.Relation.String
