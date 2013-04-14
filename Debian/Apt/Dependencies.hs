@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS -fno-warn-missing-signatures #-}
 module Debian.Apt.Dependencies
 {-
     ( solve
@@ -13,13 +14,12 @@ module Debian.Apt.Dependencies
 -- test gutsyPackages "libc6" (\csp -> bt csp)
 
 import Control.Arrow (second)
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Char8 as C
-import Data.List((++), foldr, concat, filter, map, any, elem, null, reverse, take, zipWith, find, union)
-import Data.Maybe(Maybe(..))
+import Data.List as List (find, union)
 import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
-import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile), Field'(Field), Control'(Control), Paragraph, Control)
+import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile),
+                                 Field'(Field, Comment), Control'(Control), Paragraph, Control)
 import Debian.Relation (BinPkgName(..))
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
 import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
@@ -50,28 +50,32 @@ data CSP a
 
 -- |TODO addProvides -- see DQL.Exec
 controlCSP :: Control -> Relations -> (Paragraph -> Relations) -> CSP Paragraph
-controlCSP (Control paragraphs) rels depF =
+controlCSP (Control paragraphs) rels depF' =
     CSP { pnm = packageNameMap getName paragraphs
         , relations = rels
-        , depFunction = depF
+        , depFunction = depF'
         , conflicts = conflicts'
         , packageVersion = packageVersionParagraph
         }
     where
       getName :: Paragraph -> BinPkgName
-      getName p = case lookupP "Package" p of Nothing -> error "Missing Package field" ; (Just (Field (_,n))) -> BinPkgName (C.unpack (stripWS n))
+      getName p = case lookupP "Package" p of
+                    Nothing -> error "Missing Package field"
+                    Just (Field (_,n)) -> BinPkgName (C.unpack (stripWS n))
+                    Just (Comment _) -> error "controlCSP"
       conflicts' :: Paragraph -> Relations
       conflicts' p =
           case lookupP "Conflicts" p of
             Nothing -> []
             Just (Field (_, c)) -> either (error . show) id (parseRelations c)
+            Just (Comment _) -> error "controlCSP"
 
 testCSP :: FilePath -> (Paragraph -> Relations) -> String -> (CSP Paragraph -> IO a) -> IO a
 testCSP controlFile depf relationStr cspf =
     do c' <- parseControlFromFile controlFile
        case c' of
          Left e -> error (show e)
-         Right control@(Control paragraphs) ->
+         Right control@(Control _) ->
              case parseRelations relationStr of
                Left e -> error (show e)
                Right r ->
@@ -84,11 +88,13 @@ depF p =
               Nothing -> []
               Just (Field (_,pd)) -> 
                   either (error . show) id (parseRelations pd)
+              Just (Comment _) -> error "depF"
         depends =
             case lookupP "Depends" p of
               Nothing -> []
               Just (Field (_,pd)) -> 
                   either (error . show) id (parseRelations pd)
+              Just (Comment _) -> error "depF"
     in
       preDepends ++ depends
 
@@ -107,6 +113,8 @@ packageVersionParagraph p =
           case lookupP "Version" p of
             Nothing -> error $ "Paragraph missing Version field"
             (Just (Field (_, version))) -> (BinPkgName (C.unpack (stripWS name)), parseDebianVersion (C.unpack version))
+            (Just (Comment _)) -> error "packageVersionParagraph"
+      (Just (Comment _)) -> error "packageVersionParagraph"
 
 
 
@@ -175,11 +183,11 @@ mkSearchTree csp =
       andRelation :: ([a],AndRelation) -> AndRelation -> [Tree (State a)]
       andRelation (candidates,[]) [] = [Node (Complete, candidates) []]
       andRelation (candidates,remaining) [] = andRelation (candidates, []) remaining
-      andRelation (candidates, remaining) (or:ors) =
-          orRelation (candidates, ors ++ remaining) or
+      andRelation (candidates, remaining) (x:xs) =
+          orRelation (candidates, xs ++ remaining) x
       orRelation :: ([a],AndRelation) -> OrRelation -> [Tree (State a)]
-      orRelation acc or =
-          concat (fmap (relation acc) or)
+      orRelation acc x =
+          concat (fmap (relation acc) x)
       relation :: ([a],AndRelation) -> Relation -> [Tree (State a)]
       relation acc@(candidates,_) rel =
           let packages = lookupPackageByRel (pnm csp) (packageVersion csp) rel in
@@ -187,12 +195,12 @@ mkSearchTree csp =
             [] -> [Node (MissingDep rel, candidates) []]
             _ -> map (package acc) packages
       package :: ([a],AndRelation) -> a -> Tree (State a)
-      package (candidates, remaining) package =
-          if ((packageVersion csp) package) `elem` (map (packageVersion csp) candidates)
+      package (candidates, remaining) p =
+          if ((packageVersion csp) p) `elem` (map (packageVersion csp) candidates)
           then if null remaining
                then Node (Complete, candidates) []
                else Node (Remaining remaining, candidates) (andRelation (candidates, []) remaining)
-          else Node (Remaining remaining, (package : candidates)) (andRelation ((package : candidates), remaining) ((depFunction csp) package))
+          else Node (Remaining remaining, (p : candidates)) (andRelation ((p : candidates), remaining) ((depFunction csp) p))
 
 
 -- |earliestInconsistency does what it sounds like

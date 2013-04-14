@@ -1,3 +1,4 @@
+{-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
 module Test.Versions where
 
 import Test.HUnit

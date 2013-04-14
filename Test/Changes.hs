@@ -1,11 +1,11 @@
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
 module Test.Changes where
 
 import Test.HUnit
-import Data.List (intercalate)
 import Debian.Changes
 import Debian.Release (ReleaseName(ReleaseName, relName))
-import Debian.Version (DebianVersion, prettyDebianVersion, parseDebianVersion)
+import Debian.Version (parseDebianVersion)
 import Text.PrettyPrint.ANSI.Leijen
 
 deriving instance Show ChangeLogEntry

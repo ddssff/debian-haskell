@@ -71,7 +71,7 @@ data Status
     | MediaFailure Media Drive
       deriving (Show, Eq)
 
-data Hashes 
+data Hashes
     = Hashes { md5 :: Maybe String
              , sha1 :: Maybe String
              , sha256 :: Maybe String
@@ -104,14 +104,14 @@ withMethodPath methodPath f =
 -- |whichMethodBinary - find the method executable associated with a URI
 -- throws an exception on failure
 whichMethodPath :: URI -> IO (Maybe FilePath)
-whichMethodPath uri = 
+whichMethodPath uri =
     let scheme = init (uriScheme uri)
         path = "/usr/lib/apt/methods/" ++ scheme
     in
       doesFileExist path >>= return . bool Nothing (Just path)
 
 {-
-The flow of messages starts with the method sending out a 
+The flow of messages starts with the method sending out a
 100 Capabilities and APT sending out a 601 Configuration.
 
 The flow is largely unsynchronized, but our function may have to
@@ -122,6 +122,7 @@ require a response, so...
 -}
 
 parseStatus :: [String] -> Status
+parseStatus [] = error "parseStatus"
 parseStatus (code' : headers') =
     parseStatus' (take 3 code') (map parseHeader headers')
     where
@@ -138,10 +139,10 @@ parseStatus (code' : headers') =
                         | a == "Needs-Cleanup"   = c { needsCleanup = parseTrueFalse v }
                         | a == "Local-Only"	 = c { localOnly = parseTrueFalse v }
                         | otherwise = error $ "unknown capability: " ++ show (a,v)
-                    defaultCapabilities = 
+                    defaultCapabilities =
                         Capabilities { version = ""
                                      , singleInstance = False
-                                     , preScan 	      = False 
+                                     , preScan 	      = False
                                      , pipeline	      = False
                                      , sendConfig     = False
                                      , needsCleanup   = False
@@ -151,6 +152,7 @@ parseStatus (code' : headers') =
           | code == logMsg =
               case headers of
                 [("Message", msg)] -> LogMsg msg
+                _ -> error "parseStatus'"
           | code == status =
                 Status (fromJust $ parseURI $ fromJust $ lookup "URI" headers) (fromJust $ lookup "Message" headers)
           | code == uriStart =
@@ -161,6 +163,7 @@ parseStatus (code' : headers') =
                         | a == "Size" = u { size = Just (read v) }
                         | a == "Last-Modified" = u { lastModified = parseTimeRFC822 v } -- if the date is unparseable, we silently truncate. Is that bad ?
                         | a == "Resume-Point" = u { resumePoint = Just (read v) }
+                    updateUriStart _ _ = error "updateUriStart"
       parseStatus' code headers
           | code == uriDone =
               foldr updateUriDone (URIDone undefined Nothing Nothing Nothing Nothing emptyHashes False) headers
@@ -182,11 +185,11 @@ parseStatus (code' : headers') =
               URIFailure (fromJust $ parseURI $ fromJust $ lookup "URI" headers) (fromJust $ lookup "Message" headers)
           | code == generalFailure =
               GeneralFailure (fromJust $ lookup "Message" headers)
-          | code == authorizationRequired = 
+          | code == authorizationRequired =
               AuthorizationRequired (fromJust $ lookup "Site" headers)
           | code == mediaFailure =
               MediaFailure (fromJust $ lookup "Media" headers) (fromJust $ lookup "Drive" headers)
-
+      parseStatus' _ _ = error "parseStatus'"
 
 formatCommand :: Command -> [String]
 formatCommand (URIAcquire uri filepath mLastModified) =
@@ -195,7 +198,7 @@ formatCommand (URIAcquire uri filepath mLastModified) =
     , "FileName: " ++ filepath
     ] ++ maybe [] (\lm -> ["Last-Modified: " ++ formatTimeRFC822 lm ]) mLastModified
 formatCommand (Configuration configItems) =
-    (configuration ++ " Configuration") : (map formatConfigItem configItems) 
+    (configuration ++ " Configuration") : (map formatConfigItem configItems)
     where
       formatConfigItem (a,v) = concat ["Config-Item: ", a, "=", v]
 formatCommand (AuthorizationCredentials site user passwd) =
@@ -208,7 +211,7 @@ formatCommand (MediaChanged media mFail) =
     [ mediaChanged ++ " Media Changed"
     , "Media: " ++ media
     ] ++ maybe [] (\b -> ["Fail: " ++ case b of True -> "true" ; False -> "false"]) mFail
-      
+
 
 parseTrueFalse :: String -> Bool
 parseTrueFalse "true" = True
@@ -227,9 +230,9 @@ parseHeader :: String -> Header
 parseHeader str =
     let (a, r) = span (/= ':') str
         v = dropWhile (flip elem ": \t") r
-    in 
+    in
       (a, v)
-       
+
 openMethod :: FilePath -> IO MethodHandle
 openMethod methodBinary =
     do
@@ -245,7 +248,7 @@ sendMethod (pIn, _pOut, _, _) strings =
       hPutStrLn pIn ""
       hFlush pIn
     where
-      put line = 
+      put line =
           do
             -- hPutStrLn stderr ("  " ++ line)
             hPutStrLn pIn line
@@ -270,19 +273,19 @@ recv (_pIn, pOut, _pErr, _pHandle) =
             line <- hGetLine pOut
             case line of
               "" -> return []
-              line -> 
+              line ->
                   do
                     -- hPutStrLn stderr ("  " ++ line)
                     tail <- readTillEmptyLine pOut
                     return $ line : tail
 {-
-The flow of messages starts with the method sending out a 
+The flow of messages starts with the method sending out a
 <em>100 Capabilities</> and APT sending out a <em>601 Configuration</>.
 
 The flow is largely unsynchronized, but our function may have to
 respond to things like authorization requests. Perhaps we do a
 recvContents and then mapM_ over that ? Not all incoming messages
-require a response. 
+require a response.
 
 We probably also need to track state, for example, if we are
 pipelining multiple downloads and want to show seperate progress bars
@@ -336,7 +339,7 @@ that really allow pipelining.
 
 -}
 
-data FetchCallbacks 
+data FetchCallbacks
     = FetchCallbacks { logCB :: Message ->  IO ()
                      , statusCB :: URI -> Message -> IO ()
                      , uriStartCB :: URI -> Maybe Integer -> Maybe UTCTime -> Maybe Integer -> IO ()
@@ -370,24 +373,24 @@ fetch cb configItems uri fp lastModified =
                Capabilities {} ->
                    do unless (null configItems) (sendCommand' mh (Configuration configItems))
                       loop mh
-               LogMsg m -> 
+               LogMsg m ->
                    do logCB cb m
                       loop mh
-               Status uri m -> 
+               Status uri m ->
                    do statusCB cb uri m
                       loop mh
-               URIStart uri size lastModified resumePoint -> 
+               URIStart uri size lastModified resumePoint ->
                    uriStartCB cb uri size lastModified resumePoint >> loop mh
                URIDone uri size lastModified resumePoint filename hashes imsHit ->
                    uriDoneCB cb uri size lastModified resumePoint filename hashes imsHit >> return True
                URIFailure uri message ->
                    uriFailureCB cb uri message >> return False
                GeneralFailure m -> generalFailureCB cb m >> return False
-               AuthorizationRequired site -> 
+               AuthorizationRequired site ->
                    do mCredentials <- authorizationRequiredCB cb site
                       case mCredentials of
                         Nothing -> return False -- FIXME: do we need a force close option for closeMethod ?
-                        Just (user, passwd) -> 
+                        Just (user, passwd) ->
                             do sendCommand' mh (AuthorizationCredentials site user passwd)
                                loop mh
                MediaFailure media drive ->
@@ -430,7 +433,7 @@ cliFetchCallbacks =
 {-
     FetchCallbacks { logCB = \m -> hPutStrLn stderr m
                    , statusCB = \uri m -> putStrLn (show uri ++" : "++ m)
-                   , uriStartCB = \uri 
+                   , uriStartCB = \uri
                    }
 
 defaultAuthenticate site =
@@ -445,8 +448,8 @@ defaultAuthenticate site =
 {-
     let itemsByHost = groupOn (regName . fst) items
     in
-      do totalQSem <- newQSem 16 -- max number of streams allowed for 
-         forkIO 
+      do totalQSem <- newQSem 16 -- max number of streams allowed for
+         forkIO
     where
       regName = fmap uriRegName . uriAuthority
       withQSem :: QSem -> IO a -> IO a
@@ -457,7 +460,7 @@ uris = map (fromJust . parseURI) [ "http://n-heptane.com/whee"
                                  , "ssh://jeremy:aoeu@n-heptane.com"
                                  , "cdrom:/one"
                                  ]
--}    
+-}
 
 -- * Misc Helper Functions
 

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# OPTIONS -fno-warn-unused-do-bind -fno-warn-orphans #-}
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation.String
     ( -- * Types
@@ -18,8 +19,10 @@ module Debian.Relation.String
 
 -- Standard GHC Modules
 
+import Control.Monad.Identity (Identity)
 import Data.Set (fromList)
 import Text.ParserCombinators.Parsec
+import Text.Parsec.Prim (ParsecT)
 
 -- Local Modules
 
@@ -59,6 +62,7 @@ pOrRelation = do skipMany (char ',' <|> whiteChar)
                  skipMany (char ',' <|> whiteChar)
                  return rel
 
+whiteChar :: ParsecT String u Identity Char
 whiteChar = oneOf [' ','\t','\n']
 
 pRelation :: RelParser Relation
@@ -77,13 +81,14 @@ pMaybeVerReq =
        skipMany whiteChar
        op <- pVerReq
        skipMany whiteChar
-       version <- many1 (noneOf [' ',')','\t','\n'])
+       ver <- many1 (noneOf [' ',')','\t','\n'])
        skipMany whiteChar
        char ')'
-       return $ Just (op (parseDebianVersion version))
+       return $ Just (op (parseDebianVersion ver))
     <|>
     do return $ Nothing
 
+pVerReq :: ParsecT [Char] u Identity (DebianVersion -> VersionReq)
 pVerReq =
     do char '<'
        (do char '<' <|> char ' ' <|> char '\t'

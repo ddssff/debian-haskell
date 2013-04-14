@@ -6,8 +6,8 @@ import Control.Exception
 import Control.Monad hiding (mapM)
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Digest.Pure.MD5 as MD5
-import Data.Foldable
-import Data.List hiding (concat, foldr, all)
+import Data.Foldable (concat, all, foldr)
+import Data.List as List (intercalate, nub, partition, isSuffixOf)
 import Data.Maybe 
 --import Data.Typeable
 import Data.Data (Data, Typeable)
@@ -17,7 +17,7 @@ import System.Environment
 import System.FilePath
 import System.Posix.Files
 import Text.Regex.TDFA
-import Prelude hiding (catch, concat, foldr, all, mapM)
+import Prelude hiding (concat, foldr, all, mapM, sum)
 import Network.BSD
 import Text.PrettyPrint.ANSI.Leijen (pretty)
 
@@ -163,7 +163,7 @@ getBinArch files =
       if singleton binArch
          then head binArch
          else case (filter (/= "all") binArch) of
-                [binArch] -> binArch
+                [b] -> b
                 _ -> error $ "Could not uniquely determine binary architecture: " ++ show binArch
 
 mkFileLine :: FilePath -> IO String
@@ -200,30 +200,30 @@ debNameSplit fp =
 
 loadFiles :: [FilePath] -> IO Files
 loadFiles files =
-       let (dscs, files'') = partition (isSuffixOf ".dsc") files'
-           (debs, files') = partition (isSuffixOf ".deb") files
-           (tars, files''') = partition (isSuffixOf ".tar.gz") files''
-           (diffs, rest) = partition (isSuffixOf ".diff.gz") files'''
-           errors = concat [ if (length debs  < 1) then [NoDebs] else []
-                           , if (length dscs  > 1) then [TooManyDscs dscs]   else []
-                           , if (length tars  > 1) then [TooManyTars tars]   else []
-                           , if (length diffs > 1) then [TooManyDiffs diffs] else []
+       let (dscs', files'') = partition (isSuffixOf ".dsc") files'
+           (debs', files') = partition (isSuffixOf ".deb") files
+           (tars', files''') = partition (isSuffixOf ".tar.gz") files''
+           (diffs', rest) = partition (isSuffixOf ".diff.gz") files'''
+           errors = concat [ if (length debs'  < 1) then [NoDebs] else []
+                           , if (length dscs'  > 1) then [TooManyDscs dscs']   else []
+                           , if (length tars'  > 1) then [TooManyTars tars']   else []
+                           , if (length diffs' > 1) then [TooManyDiffs diffs'] else []
                            , if (length rest  > 0) then [UnknownFiles rest]  else []
                            ]
        in
          do when (not . null $ errors) (error $ show errors)
-            dsc <- mapM loadDsc (listToMaybe dscs)
-            debs <- mapM loadDeb debs
-            return $ Files { dsc = dsc, debs = debs, tar = listToMaybe tars, diff = listToMaybe diffs }
+            dsc' <- mapM loadDsc (listToMaybe dscs')
+            debs'' <- mapM loadDeb debs'
+            return $ Files { dsc = dsc', debs = debs'', tar = listToMaybe tars', diff = listToMaybe diffs' }
          -- if (not . null $ errors) then throwDyn errors else return (debs, listToMaybe dscs, listToMaybe tars, listToMaybe diffs)
     where
       loadDsc :: FilePath -> IO (FilePath, Paragraph)
-      loadDsc dsc = 
-          do res <- parseControlFromFile dsc
+      loadDsc dsc' = 
+          do res <- parseControlFromFile dsc'
              case  res of
-               (Left e) -> error $ "Error parsing " ++ dsc ++ "\n" ++ show e
-               (Right (Control [p])) -> return (dsc, p)
-               (Right c) -> error $ dsc ++ " did not have exactly one paragraph: " ++ show (pretty c)
+               (Left e) -> error $ "Error parsing " ++ dsc' ++ "\n" ++ show e
+               (Right (Control [p])) -> return (dsc', p)
+               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ show (pretty c)
       loadDeb :: FilePath -> IO (FilePath, Paragraph)
       loadDeb deb =
           do res <- Deb.fields deb
@@ -239,8 +239,8 @@ getUploader =
               case dfn of
                 (Right n) -> return n
                 (Left (_ :: SomeException)) ->
-                    do dfn <-try (getEnv "USER")
-                       case dfn of
+                    do dfn' <-try (getEnv "USER")
+                       case dfn' of
                          (Right n) -> return n
                          (Left (_ :: SomeException)) -> error $ "Could not determine user name, neither DEBFULLNAME nor USER enviroment variables were set."
        emailAddr <-
@@ -248,8 +248,8 @@ getUploader =
               case eml of 
                 (Right e) -> return e
                 (Left (_ :: SomeException)) ->
-                    do eml <- try (getEnv "EMAIL")
-                       case eml of
+                    do eml' <- try (getEnv "EMAIL")
+                       case eml' of
                          (Right e) -> return e
                          (Left (_ :: SomeException)) -> getHostName -- FIXME: this is not a FQDN
        return $ debFullName ++ " <" ++ emailAddr ++ ">"

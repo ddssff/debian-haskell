@@ -1,3 +1,4 @@
+{-# OPTIONS -fno-warn-orphans #-}
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation.ByteString
     ( -- * Types

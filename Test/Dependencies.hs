@@ -1,4 +1,5 @@
 {-# LANGUAGE StandaloneDeriving #-}
+{-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
 module Test.Dependencies where
 
 import Control.Arrow
@@ -93,10 +94,10 @@ depends p =
       (Just v) -> either (error . show) id (parseRelations v)
 
 mkCSP :: [[(String, String)]] -> String -> ([(String, String)] -> Relations) -> CSP [(String, String)]
-mkCSP paragraphs relStr depF =
+mkCSP paragraphs relStr depF' =
     CSP { pnm = addProvides providesF paragraphs $ packageNameMap getName paragraphs
         , relations = either (error . show) id (parseRelations relStr)
-        , depFunction = depF
+        , depFunction = depF'
         , conflicts = conflicts'
         , packageVersion = packageVersionParagraph
         }

@@ -24,7 +24,7 @@ module Debian.GenBuildDeps
 import		 Control.Monad (filterM)
 import		 Debian.Control
 import           Data.Either
-import		 Data.Graph (Graph,buildG,topSort,reachable, transposeG, vertices, edges)
+import		 Data.Graph (Graph, Edge, buildG, topSort, reachable, transposeG, vertices, edges)
 import		 Data.List
 import qualified Data.Map as Map
 import		 Data.Maybe
@@ -53,7 +53,7 @@ concatEithers xs =
 buildDependencies :: Control -> Either String DepInfo
 buildDependencies (Control []) = error "Control file seems to be empty"
 buildDependencies (Control (source:binaries)) =
-    either (Left . concat) (\ deps -> Right (DepInfo {sourceName = sourcePackage, relations = deps, binaryNames = bins})) deps
+    either (Left . concat) (\ rels -> Right (DepInfo {sourceName = sourcePackage, relations = rels, binaryNames = bins})) deps
     where
       sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") SrcPkgName $ assoc "Source" source
       -- The raw list of build dependencies for this package
@@ -85,8 +85,8 @@ newtype OldRelaxInfo = RelaxInfo [(BinPkgName, Maybe SrcPkgName)] deriving Show
 -- OldRelaxInfo.)
 type RelaxInfo = SrcPkgName -> BinPkgName -> Bool
 
-makeRelaxInfo :: OldRelaxInfo -> RelaxInfo
-makeRelaxInfo (RelaxInfo xs) srcPkgName binPkgName =
+_makeRelaxInfo :: OldRelaxInfo -> RelaxInfo
+_makeRelaxInfo (RelaxInfo xs) srcPkgName binPkgName =
     Set.member binPkgName global || maybe False (Set.member binPkgName) (Map.lookup srcPkgName mp)
     where
       (global :: Set.Set BinPkgName, mp :: Map.Map SrcPkgName (Set.Set BinPkgName)) =
@@ -168,13 +168,13 @@ buildable cmp packages =
           (ofVertex thisReady, map ofVertex directlyBlocked, map ofVertex (otherReady ++ otherBlocked))
       --allDeps x = (ofVertex x, map ofVertex (filter (/= x) (reachable hasDep x)))
       isDep = buildG (0, length packages - 1) edges'
-      edges' = map (\ (a, b) -> (b, a)) edges
-      hasDep = buildG (0, length packages - 1) edges
-      edges :: [(Int, Int)]
-      edges =
+      edges' = map (\ (a, b) -> (b, a)) edges''
+      hasDep = buildG (0, length packages - 1) edges''
+      edges'' :: [(Int, Int)]
+      edges'' =
           nub (foldr f [] (tails vertPairs))
-          where f [] edges = edges
-                f (x : xs) edges = catMaybes (map (toEdge x) xs) ++ edges
+          where f [] es = es
+                f (x : xs) es = catMaybes (map (toEdge x) xs) ++ es
                 toEdge (xv, xa) (yv, ya) =
                     case cmp xa ya of
                       EQ -> Nothing
@@ -186,21 +186,22 @@ buildable cmp packages =
       verts = map fst vertPairs
       vertPairs = zip [0..] packages
 
+cycleEdges :: Graph -> [Edge]
 cycleEdges g =
     filter (`elem` (edges g))
                (Set.toList (Set.intersection
                             (Set.fromList (closure g))
                             (Set.fromList (closure (transposeG g)))))
     where
-      closure g = concat (map (\ v -> (map (\ u -> (v, u)) (reachable g v))) (vertices g))
+      closure g' = concat (map (\ v -> (map (\ u -> (v, u)) (reachable g' v))) (vertices g'))
       --self (a, b) = a == b
       --distrib = concat . map (\ (n, ms) -> map (\ m -> (n, m)) ms) 
       --swap (a, b) = (b, a)
 
 -- | Remove any packages which can't be built given that a package has failed.
 failPackage :: Eq a => (a -> a -> Ordering) -> a -> [a] -> ([a], [a])
-failPackage compare failed packages =
-    let graph = buildGraph compare packages in
+failPackage cmp failed packages =
+    let graph = buildGraph cmp packages in
     let root = elemIndex failed packages in
     let victims = maybe [] (map (fromJust . vertex) . reachable graph) root in
     partition (\ x -> not . elem x $ victims) packages
@@ -212,28 +213,28 @@ failPackage compare failed packages =
 -- build dependencies so that the first element doesn't depend on any
 -- of the other packages.
 orderSource :: (a -> a -> Ordering) -> [a] -> [a]
-orderSource compare packages =
+orderSource cmp packages =
     map (fromJust . vertex) (topSort graph)
     where
-      graph = buildGraph compare packages
+      graph = buildGraph cmp packages
       vertex n = Map.findWithDefault Nothing n vertexMap
       vertexMap = Map.fromList (zip [0..] (map Just packages))
 
 -- | Build a graph with the list of packages as its nodes and the
 -- build dependencies as its edges.
 buildGraph :: (a -> a -> Ordering) -> [a] -> Graph
-buildGraph compare packages =
-    let edges = someEdges (zip packages [0..]) in
-    buildG (0, length packages - 1) edges
+buildGraph cmp packages =
+    let es = someEdges (zip packages [0..]) in
+    buildG (0, length packages - 1) es
     where
       someEdges [] = []
       someEdges (a : etc) = aEdges a etc ++ someEdges etc
       aEdges (ap, an) etc =
           concat (map (\ (bp, bn) ->
-                           case compare ap bp of
-                                       LT -> [(an, bn)]
-                                       GT -> [(bn, an)]
-                                       EQ -> []) etc)
+                           case cmp ap bp of
+                             LT -> [(an, bn)]
+                             GT -> [(bn, an)]
+                             EQ -> []) etc)
 
 -- |This is a nice start. It ignores circular build depends and takes
 -- a pretty simplistic approach to 'or' build depends. However, I

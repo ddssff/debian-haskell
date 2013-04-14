@@ -90,6 +90,7 @@ instance Pretty ChangeLogEntry where
              , text ("  " ++ unpack (strip (pack details)))
              , empty
              , text (" -- " ++ who ++ "  " ++ date) ]
+    pretty (WhiteSpace _) = error "instance Pretty ChangeLogEntry"
 
 instance Pretty ChangeLog where
     pretty (ChangeLog xs) = vcat (intersperse empty (map pretty xs)) <> text "\n"
@@ -98,6 +99,7 @@ instance Pretty ChangeLog where
 _showHeader :: ChangeLogEntry -> Doc
 _showHeader (Entry package ver dists urgency _ _ _) =
     text (package ++ " (" ++ show (prettyDebianVersion ver) ++ ") " ++ intercalate " " (map releaseName' dists) ++ "; urgency=" ++ urgency ++ "...")
+_showHeader (WhiteSpace _) = error "_showHeader"
 
 {-
 format is a series of entries like this:

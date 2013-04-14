@@ -51,3 +51,4 @@ parseArch s =
       ("all", "") -> All
       (cpu, "") -> Binary (ArchOS "linux") (parseCPU cpu)
       (os, '-' : cpu) -> Binary (parseOS os) (parseCPU cpu)
+      _ -> error "parseArch: internal error"

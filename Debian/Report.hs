@@ -8,7 +8,7 @@ import Debian.Version
 import Data.Maybe
 import qualified Data.Map as M
 import qualified Data.ByteString.Char8 as B
-import Text.XML.HaXml
+import Text.XML.HaXml (CFilter, mkElem, cdata)
 import Text.XML.HaXml.Posn
 
 -- * General Package Map Builders

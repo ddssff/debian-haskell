@@ -46,7 +46,7 @@ Library
    Unixutils >= 1.50,
    utf8-string,
    zlib
- ghc-options: -W -Wall -O2
+ ghc-options: -Wall -O2
  if flag(cabal19)
    build-depends: Cabal >= 1.9
    cpp-options: -DCABAL19

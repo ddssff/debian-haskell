@@ -32,9 +32,9 @@ addProvides providesf ps pnm =
 
 -- |'findProvides'
 findProvides :: forall p. (p -> [BinPkgName]) -> [p] -> [(BinPkgName, p)]
-findProvides providesf packages = foldl addProvides [] packages
-    where addProvides :: [(BinPkgName, p)] -> p -> [(BinPkgName, p)]
-          addProvides providesList package =
+findProvides providesf packages = foldl addProvides' [] packages
+    where addProvides' :: [(BinPkgName, p)] -> p -> [(BinPkgName, p)]
+          addProvides' providesList package =
               foldl (\pl pkgName -> (pkgName, package): pl) providesList (providesf package)
 
 -- |'lookupPackageByRel' returns all the packages that satisfy the specified relation
