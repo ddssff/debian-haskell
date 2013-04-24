@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Apt.Index
     ( update
@@ -20,14 +20,16 @@ import qualified Codec.Compression.GZip as GZip
 import qualified Codec.Compression.BZip as BZip
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
+import Data.Char (chr)
 import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Function
 import Data.List
 import qualified Data.Map as M
 import Data.Monoid ((<>))
 import qualified Data.Text as T (Text, unpack, concat, lines, null, words)
-import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Encoding (decodeUtf8With)
 import Data.Time
+import Data.Word (Word8)
 import Debian.Apt.Methods
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
@@ -176,9 +178,17 @@ calcPath srcType arch baseURI release section =
 
 -- |Parse a possibly compressed index file.
 controlFromIndex :: Compression -> FilePath -> L.ByteString -> Either ParseError (Control' T.Text)
-controlFromIndex GZ path s = parseControl path . decodeUtf8 . B.concat . L.toChunks . GZip.decompress $ s
-controlFromIndex BZ2 path s = parseControl path . decodeUtf8 . B.concat . L.toChunks . BZip.decompress $ s
-controlFromIndex Uncompressed path s = parseControl path . decodeUtf8 . B.concat . L.toChunks $ s
+controlFromIndex GZ path s = parseControl path . decode . B.concat . L.toChunks . GZip.decompress $ s
+controlFromIndex BZ2 path s = parseControl path . decode . B.concat . L.toChunks . BZip.decompress $ s
+controlFromIndex Uncompressed path s = parseControl path . decode . B.concat . L.toChunks $ s
+
+decode :: B.ByteString -> T.Text
+decode b = decodeUtf8With e b
+    where
+      e :: String -> Maybe Word8 -> Maybe Char
+      -- If a decoding error occurs, just naitvely turn the word into
+      -- a character.  Its probably an 'ø' or something.
+      e _description w = fmap (chr . fromIntegral) w
 
 -- |parse an index possibly compressed file 
 controlFromIndex' :: Compression -> FilePath -> IO (Either ParseError (Control' T.Text))

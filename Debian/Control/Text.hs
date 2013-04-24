@@ -24,6 +24,7 @@ module Debian.Control.Text
     ) where
 
 import qualified Control.Exception as E
+import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower)
 import Data.List (find)
 import Data.Monoid ((<>))
@@ -51,7 +52,7 @@ import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text, vcat, empty)
 -- >              }
 parseFromFile :: Parser a -> String -> IO (Either ParseError a)
 parseFromFile p fname
-    = do input <- T.readFile fname
+    = do input <- T.readFile fname `E.catch` (\ (_ :: E.SomeException) -> B.readFile fname >>= return . T.pack . B.unpack)
          return (runP p () fname input)
 
 -- |This may have bad performance issues (why?)
