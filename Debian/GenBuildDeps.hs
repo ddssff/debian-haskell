@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
@@ -29,7 +29,9 @@ import		 Data.List
 import qualified Data.Map as Map
 import		 Data.Maybe
 import qualified Data.Set as Set
+import           Data.Text (Text, unpack)
 import		 Debian.Relation
+import		 Debian.Relation.Text ()
 import		 System.Directory (getDirectoryContents, doesFileExist)
 
 -- | This type describes the build dependencies of a source package.
@@ -50,12 +52,12 @@ concatEithers xs =
 -- |Return the dependency info for a source package with the given dependency relaxation.
 -- |According to debian policy, only the first paragraph in debian\/control can be a source package
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
-buildDependencies :: Control -> Either String DepInfo
+buildDependencies :: Control' Text -> Either String DepInfo
 buildDependencies (Control []) = error "Control file seems to be empty"
 buildDependencies (Control (source:binaries)) =
     either (Left . concat) (\ rels -> Right (DepInfo {sourceName = sourcePackage, relations = rels, binaryNames = bins})) deps
     where
-      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") SrcPkgName $ assoc "Source" source
+      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") (SrcPkgName . unpack) $ assoc "Source" source
       -- The raw list of build dependencies for this package
       deps = either Left (Right . concat) (concatEithers [buildDeps, buildDepsIndep])
       buildDeps =
@@ -67,8 +69,8 @@ buildDependencies (Control (source:binaries)) =
             (Just v) -> either (\ e -> Left ("Error parsing Build-Depends-Indep for" ++ show sourcePackage ++ ": " ++ show e)) Right (parseRelations v)
             _ -> Right []
       bins = mapMaybe lookupPkgName binaries
-      lookupPkgName :: Paragraph -> Maybe BinPkgName
-      lookupPkgName p = maybe Nothing (Just . BinPkgName) (assoc "Package" p)
+      lookupPkgName :: Paragraph' Text -> Maybe BinPkgName
+      lookupPkgName p = maybe Nothing (Just . BinPkgName . unpack) (assoc "Package" p)
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package
@@ -277,5 +279,5 @@ getSourceOrder fp =
           filterM doesFileExist
 
 
-assoc :: String -> Paragraph -> Maybe String
+assoc :: String -> Paragraph' Text -> Maybe Text
 assoc name fields = maybe Nothing (\ (Field (_, v)) -> Just (stripWS v)) (lookupP name fields)
