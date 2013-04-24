@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.71
+Version:        3.72
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -66,6 +66,7 @@ Library
         Debian.Control.PrettyPrint,
         Debian.Control.ByteString,
         Debian.Control.String,
+        Debian.Control.Text,
         Debian.Deb,
         Debian.Extra.Files,
         Debian.GenBuildDeps,

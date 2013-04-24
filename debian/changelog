@@ -1,3 +1,9 @@
+haskell-debian (3.72) unstable; urgency=low
+
+  * Add Debian.Control.Text, Data.Text support for control files.
+
+ -- David Fox <dsf@seereason.com>  Tue, 23 Apr 2013 17:19:22 -0700
+
 haskell-debian (3.71) unstable; urgency=low
 
   * Refine the ArchitectureReq type to parse things like !linux-any.

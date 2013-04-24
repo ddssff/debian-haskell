@@ -2,6 +2,7 @@
 module Debian.Control.PrettyPrint where
 
 import qualified Data.ByteString.Char8 as C
+import Data.Text as T (Text, unpack)
 import Text.PrettyPrint.ANSI.Leijen
 
 import Debian.Control.Common
@@ -26,3 +27,6 @@ instance ToText String where
 
 instance ToText C.ByteString where
     totext = text . C.unpack
+
+instance ToText Text where
+    totext = text . T.unpack
