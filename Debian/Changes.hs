@@ -14,7 +14,7 @@ module Debian.Changes
 
 import Data.Either (partitionEithers)
 import Data.List (intercalate, intersperse)
-import Data.Text (pack, unpack, strip)
+import Data.Text (Text, pack, unpack, strip)
 import Debian.Arch (Arch, prettyArch)
 import qualified Debian.Control.String as S
 import Debian.Release
@@ -32,7 +32,7 @@ data ChangesFile =
             , changeVersion :: DebianVersion	-- ^ The version number parsed from the .changes file name
             , changeRelease :: ReleaseName	-- ^ The Distribution field of the .changes file
             , changeArch :: Arch		-- ^ The architecture parsed from the .changes file name
-            , changeInfo :: S.Paragraph		-- ^ The contents of the .changes file
+            , changeInfo :: S.Paragraph' Text	-- ^ The contents of the .changes file
             , changeEntry :: ChangeLogEntry	-- ^ The value of the Changes field of the .changes file
             , changeFiles :: [ChangedFileSpec]	-- ^ The parsed value of the Files attribute
             } deriving (Eq)
@@ -236,9 +236,9 @@ signature = "( -- ([^\n]*)  (..., ? ?.. ... .... ........ .....))[ \t]*\n"
 
 -- |Parse the changelog information that shows up in the .changes
 -- file, i.e. a changelog entry with no signature.
-parseChanges :: String -> Maybe ChangeLogEntry
+parseChanges :: Text -> Maybe ChangeLogEntry
 parseChanges text =
-    case text =~ changesRE :: MatchResult String of
+    case unpack text =~ changesRE :: MatchResult String of
       MR {mrSubList = []} -> Nothing
       MR {mrSubList = [_, name, ver, dists, urgency, _, details]} ->
           Just $ Entry name

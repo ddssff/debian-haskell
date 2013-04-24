@@ -1,3 +1,9 @@
+haskell-debian (3.74) unstable; urgency=low
+
+  * Add Debian.Relation.Text and Debian.Version.Text.
+
+ -- David Fox <dsf@seereason.com>  Tue, 23 Apr 2013 18:11:00 -0700
+
 haskell-debian (3.73) unstable; urgency=low
 
   * Use Text instead of ByteString in the functions exported

@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.73
+Version:        3.74
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -74,12 +74,14 @@ Library
         Debian.Relation.ByteString,
         Debian.Relation.Common,
         Debian.Relation.String,
+        Debian.Relation.Text,
         Debian.Release,
         Debian.Sources,
         Debian.Version,
+        Debian.Version.ByteString,
         Debian.Version.Common,
         Debian.Version.String,
-        Debian.Version.ByteString,
+        Debian.Version.Text,
         Debian.Report,
         Debian.Time,
         Debian.URI,
