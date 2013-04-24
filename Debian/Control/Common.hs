@@ -17,11 +17,11 @@ module Debian.Control.Common
     )
     where
 
-import Text.ParserCombinators.Parsec
-import System.Exit
-import System.IO
-import System.Process
-import Data.List
+import Text.ParserCombinators.Parsec (ParseError)
+import System.Exit (ExitCode(ExitSuccess, ExitFailure))
+import System.IO (Handle)
+import System.Process (runInteractiveCommand, waitForProcess)
+import Data.List (partition)
 
 newtype Control' a
     = Control { unControl :: [Paragraph' a] }

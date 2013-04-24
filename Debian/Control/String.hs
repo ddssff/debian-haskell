@@ -25,10 +25,13 @@ module Debian.Control.String
 
 import qualified Control.Exception as E
 import Data.Char (toLower)
-import Data.List
-import Text.ParserCombinators.Parsec
-import System.IO
-import Debian.Control.Common
+import Data.List (find)
+import Text.ParserCombinators.Parsec (CharParser, parse, parseFromFile, sepEndBy, satisfy, oneOf, string, lookAhead, try, many, many1, (<|>), noneOf, char, eof)
+import System.IO (hGetContents)
+import Debian.Control.Common (ControlFunctions(parseControlFromFile, parseControlFromHandle, parseControl, lookupP, stripWS, asString),
+                              Control'(Control), Paragraph'(Paragraph), Field'(Field, Comment),
+                              mergeControls, fieldValue, removeField, prependFields, appendFields,
+                              renameField, modifyField, raiseFields)
 import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text, vcat, empty)
 
 -- |This may have bad performance issues (why?)

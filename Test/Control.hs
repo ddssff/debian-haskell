@@ -6,6 +6,7 @@ import Data.List (intercalate)
 import Data.Monoid ((<>))
 import Data.Text as T (Text, pack, intercalate)
 import Debian.Control
+import Debian.Control.Common (unControl)
 import Debian.Control.PrettyPrint (ppControl, ppParagraph)
 import Debian.Control.Text ({- Pretty instances -})
 import Text.PrettyPrint.ANSI.Leijen (pretty)

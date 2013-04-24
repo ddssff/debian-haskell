@@ -1,3 +1,10 @@
+haskell-debian (3.73) unstable; urgency=low
+
+  * Use Text instead of ByteString in the functions exported
+    by Debian.Control.
+
+ -- David Fox <dsf@seereason.com>  Tue, 23 Apr 2013 17:59:21 -0700
+
 haskell-debian (3.72) unstable; urgency=low
 
   * Add Debian.Control.Text, Data.Text support for control files.

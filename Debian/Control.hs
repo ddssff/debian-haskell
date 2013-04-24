@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 -- |A module for working with Debian control files <http://www.debian.org/doc/debian-policy/ch-controlfields.html>
 module Debian.Control 
     ( -- * Types
@@ -33,23 +34,23 @@ module Debian.Control
 --import System.IO
 import Debian.Control.String
 import Data.List
-import qualified Debian.Control.ByteString as B
+import Data.Text as T (Text, pack, concat)
+import qualified Debian.Control.Text as T
 import qualified Debian.Control.String as S
-import qualified Data.ByteString.Char8 as B
 
-packParagraph :: S.Paragraph -> B.Paragraph
-packParagraph (S.Paragraph s) = B.Paragraph (map packField s)
+packParagraph :: S.Paragraph -> T.Paragraph
+packParagraph (S.Paragraph s) = T.Paragraph (map packField s)
 
-packField :: Field' String -> Field' B.ByteString
-packField (S.Field (name, value)) = B.Field (B.pack name, B.pack value)
-packField (S.Comment s) = B.Comment (B.pack s)
+packField :: Field' String -> Field' Text
+packField (S.Field (name, value)) = T.Field (T.pack name, T.pack value)
+packField (S.Comment s) = T.Comment (T.pack s)
 
-formatControl :: Control' B.ByteString -> [B.ByteString]
-formatControl (B.Control paragraphs) = intersperse (B.pack "\n") . map formatParagraph $ paragraphs
+formatControl :: Control' Text -> [Text]
+formatControl (T.Control paragraphs) = intersperse (T.pack "\n") . map formatParagraph $ paragraphs
 
-formatParagraph :: Paragraph' B.ByteString -> B.ByteString
-formatParagraph (B.Paragraph fields) = B.concat . map formatField $ fields
+formatParagraph :: Paragraph' Text -> Text
+formatParagraph (T.Paragraph fields) = T.concat . map formatField $ fields
 
-formatField :: Field' B.ByteString -> B.ByteString
-formatField (B.Field (name, value)) = B.concat [name, B.pack ":", value, B.pack "\n"]
-formatField (B.Comment s) = s
+formatField :: Field' Text -> Text
+formatField (T.Field (name, value)) = T.concat [name, T.pack ":", value, T.pack "\n"]
+formatField (T.Comment s) = s

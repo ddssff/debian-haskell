@@ -1,13 +1,14 @@
 module Debian.Report where
 
 import Debian.Apt.Index (Fetcher, Compression(..), update, controlFromIndex')
-import Debian.Control.ByteString
+import Debian.Control.Common (unControl)
+import Debian.Control.Text
 import Debian.Sources
 import Debian.Version
 
 import Data.Maybe
 import qualified Data.Map as M
-import qualified Data.ByteString.Char8 as B
+import qualified Data.Text as T
 import Text.XML.HaXml (CFilter, mkElem, cdata)
 import Text.XML.HaXml.Posn
 
@@ -20,7 +21,7 @@ import Text.XML.HaXml.Posn
 -- time to avoid having all the control files loaded in memory at
 -- once. However, I am not sure that property is actually occuring
 -- anyway. So, this should be revisited.
-makePackageMap :: (Paragraph -> a) -> (a -> a -> a) -> [(FilePath, Compression)] -> IO (M.Map B.ByteString a)
+makePackageMap :: (Paragraph -> a) -> (a -> a -> a) -> [(FilePath, Compression)] -> IO (M.Map T.Text a)
 makePackageMap _ _ [] = return M.empty
 makePackageMap extractValue resolveConflict ((path, compression):is) =
     do r <- controlFromIndex' compression path
@@ -32,7 +33,7 @@ makePackageMap extractValue resolveConflict ((path, compression):is) =
                 return $ M.unionWith resolveConflict pm pms
 
 -- |create a map of (package name, max version) from a single control file
-packageMap :: (Paragraph -> a) -> (a -> a -> a) -> Control -> M.Map B.ByteString a
+packageMap :: (Paragraph -> a) -> (a -> a -> a) -> Control' T.Text -> M.Map T.Text a
 packageMap extractValue resolveConflict control =
     M.fromListWith resolveConflict (map packageTuple (unControl control))
     where
@@ -40,7 +41,7 @@ packageMap extractValue resolveConflict control =
 
 -- |extract the version number from a control paragraph
 extractVersion :: Paragraph -> Maybe DebianVersion
-extractVersion paragraph = fmap (parseDebianVersion . B.unpack)  $ fieldValue "Version" paragraph
+extractVersion paragraph = fmap (parseDebianVersion . T.unpack)  $ fieldValue "Version" paragraph
 
 -- * Trump Report
 
@@ -51,7 +52,7 @@ trumped :: Fetcher -- ^ function for downloading package indexes
         -> String -- ^ binary architecture 
         -> [DebSource] -- ^ sources.list a
         -> [DebSource] -- ^ sources.list b
-        -> IO (M.Map B.ByteString (DebianVersion, DebianVersion)) -- ^ a map of trumped package names to (version a, version b)
+        -> IO (M.Map T.Text (DebianVersion, DebianVersion)) -- ^ a map of trumped package names to (version a, version b)
 trumped fetcher cacheDir arch sourcesA sourcesB =
     do indexesA <- update fetcher cacheDir arch (filter isDebSrc sourcesA)
        pmA <- makePackageMap (fromJust . extractVersion) max (map fromJust indexesA)
@@ -62,9 +63,9 @@ trumped fetcher cacheDir arch sourcesA sourcesB =
       isDebSrc ds = sourceType ds == DebSrc
 
 -- |calculate all the trumped packages
-trumpedMap :: M.Map B.ByteString DebianVersion -- ^ package map a
-           -> M.Map B.ByteString DebianVersion -- ^ package map b
-           -> M.Map B.ByteString (DebianVersion, DebianVersion) -- ^ trumped packages (version a, version b)
+trumpedMap :: M.Map T.Text DebianVersion -- ^ package map a
+           -> M.Map T.Text DebianVersion -- ^ package map b
+           -> M.Map T.Text (DebianVersion, DebianVersion) -- ^ trumped packages (version a, version b)
 trumpedMap pmA pmB =
     M.foldWithKey (checkTrumped pmB) M.empty pmA
     where
@@ -75,13 +76,13 @@ trumpedMap pmA pmB =
             _ -> trumpedPM
 
 -- |create <trumped /> XML element and children from a trumped Map
-trumpedXML :: M.Map B.ByteString (DebianVersion, DebianVersion) -> CFilter Posn
+trumpedXML :: M.Map T.Text (DebianVersion, DebianVersion) -> CFilter Posn
 trumpedXML trumpedMap' =
     mkElem "trumped" (map mkTrumpedPackage (M.toAscList trumpedMap' ))
     where
       mkTrumpedPackage (package, (oldVersion, newVersion)) =
           mkElem "trumpedPackage"
-                     [ mkElem "package" [ cdata (B.unpack package) ]
+                     [ mkElem "package" [ cdata (T.unpack package) ]
                      , mkElem "oldVersion" [ cdata (show (prettyDebianVersion oldVersion)) ]
                      , mkElem "newVersion" [ cdata (show (prettyDebianVersion newVersion)) ]
                      ]
