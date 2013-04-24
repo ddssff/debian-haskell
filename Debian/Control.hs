@@ -32,6 +32,7 @@ module Debian.Control
 --import Data.List
 --import Text.ParserCombinators.Parsec
 --import System.IO
+import Debian.Control.Common
 import Debian.Control.String
 import Data.List
 import Data.Text as T (Text, pack, concat)
