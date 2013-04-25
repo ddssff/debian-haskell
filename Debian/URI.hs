@@ -9,13 +9,14 @@ module Debian.URI
     ) where
 
 import Control.Exception (SomeException, try)
-import qualified Data.ByteString.Lazy.Char8 as L
 import Data.ByteString.UTF8 as B
 import qualified Data.ByteString as B
+import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
-import System.Process.ByteString (readProcessWithExitCode)
+-- import System.Process.ByteString (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
 
 uriToString' :: URI -> String
@@ -25,22 +26,22 @@ uriToString' uri = uriToString id uri ""
 type URIString = String
 
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
-fileFromURI uri = fileFromURIStrict uri >>= either (return . Left) (return . Right . L.fromChunks . (: []))
+fileFromURI uri = fileFromURIStrict uri
 
-fileFromURIStrict :: URI -> IO (Either SomeException B.ByteString)
+fileFromURIStrict :: URI -> IO (Either SomeException L.ByteString)
 fileFromURIStrict uri = try $
     case (uriScheme uri, uriAuthority uri) of
-      ("file:", Nothing) -> B.readFile (uriPath uri)
+      ("file:", Nothing) -> L.readFile (uriPath uri)
       -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
       ("ssh:", Just auth) -> do
           let cmd = "ssh"
               args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return out
       _ -> do
           let cmd = "curl"
               args = ["-s", "-g", uriToString' uri]
-          (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
+          (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
           return out
 
 -- | Parse the text returned when a directory is listed by a web

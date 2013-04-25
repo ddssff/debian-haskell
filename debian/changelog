@@ -1,3 +1,9 @@
+haskell-debian (3.76) unstable; urgency=low
+
+  * Add Debian.UTF, with support for reading and decoding "almost-utf8" files
+
+ -- David Fox <dsf@seereason.com>  Thu, 25 Apr 2013 07:56:45 -0700
+
 haskell-debian (3.75) unstable; urgency=low
 
   * If we get a UTF8 decoding error just insert the offending character

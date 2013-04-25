@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.75
+Version:        3.76
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -85,6 +85,7 @@ Library
         Debian.Report,
         Debian.Time,
         Debian.URI,
+        Debian.UTF8,
         Debian.Util.FakeChanges
  other-modules:
         Debian.Version.Internal,

@@ -18,18 +18,14 @@ module Debian.Apt.Index
 import Control.Monad
 import qualified Codec.Compression.GZip as GZip
 import qualified Codec.Compression.BZip as BZip
-import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
-import Data.Char (chr)
 import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Function
 import Data.List
 import qualified Data.Map as M
 import Data.Monoid ((<>))
 import qualified Data.Text as T (Text, unpack, concat, lines, null, words)
-import Data.Text.Encoding (decodeUtf8With)
 import Data.Time
-import Data.Word (Word8)
 import Debian.Apt.Methods
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
@@ -38,6 +34,7 @@ import Debian.Control.Common
 import Debian.Release
 import Debian.Sources
 import Debian.URI
+import Debian.UTF8 as Deb (decode)
 import System.Directory
 import System.FilePath ((</>))
 import System.Posix.Files
@@ -178,24 +175,16 @@ calcPath srcType arch baseURI release section =
 
 -- |Parse a possibly compressed index file.
 controlFromIndex :: Compression -> FilePath -> L.ByteString -> Either ParseError (Control' T.Text)
-controlFromIndex GZ path s = parseControl path . decode . B.concat . L.toChunks . GZip.decompress $ s
-controlFromIndex BZ2 path s = parseControl path . decode . B.concat . L.toChunks . BZip.decompress $ s
-controlFromIndex Uncompressed path s = parseControl path . decode . B.concat . L.toChunks $ s
+controlFromIndex GZ path s = parseControl path . Deb.decode . GZip.decompress $ s
+controlFromIndex BZ2 path s = parseControl path . Deb.decode . BZip.decompress $ s
+controlFromIndex Uncompressed path s = parseControl path . Deb.decode $ s
 
-decode :: B.ByteString -> T.Text
-decode b = decodeUtf8With e b
-    where
-      e :: String -> Maybe Word8 -> Maybe Char
-      -- If a decoding error occurs, just naitvely turn the word into
-      -- a character.  Its probably an 'ø' or something.
-      e _description w = fmap (chr . fromIntegral) w
-
--- |parse an index possibly compressed file 
+-- |parse an index possibly compressed file
 controlFromIndex' :: Compression -> FilePath -> IO (Either ParseError (Control' T.Text))
 controlFromIndex' compression path = L.readFile path >>= return . controlFromIndex compression path
 
 type Size = Integer
-type FileTuple = (CheckSums, Size, FilePath) 
+type FileTuple = (CheckSums, Size, FilePath)
 
 -- |A release file contains a list of indexes (Packages\/Sources). Each
 -- Package or Source index may appear multiple times because it may be
