@@ -1,6 +1,7 @@
 {-# OPTIONS -fno-warn-orphans #-}
 module Debian.URI
     ( module Network.URI
+    , URI'(..)
     , URIString
     , uriToString'
     , fileFromURI
@@ -12,12 +13,21 @@ import Control.Exception (SomeException, try)
 import Data.ByteString.UTF8 as B
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy.Char8 as L
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromJust)
 import Network.URI
 import System.Directory (getDirectoryContents)
 -- import System.Process.ByteString (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
+
+-- | A wrapper around URI with a working Show instance.
+newtype URI' = URI' {unURI :: URI}
+
+instance Show URI' where
+    show (URI' x) = "(URI' . fromJust . parseURI $ " ++ show (show x) ++ ")"
+
+instance Read URI' where
+    readsPrec _ s = [((URI' . fromJust . parseURI $ s), "")]
 
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""

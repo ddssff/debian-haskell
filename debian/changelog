@@ -1,3 +1,10 @@
+haskell-debian (3.77) unstable; urgency=low
+
+  * Add a URI' type that is a wrapper around URI with working Read and
+    Show instances.
+
+ -- David Fox <dsf@seereason.com>  Fri, 26 Apr 2013 11:00:10 -0700
+
 haskell-debian (3.76) unstable; urgency=low
 
   * Add Debian.UTF, with support for reading and decoding "almost-utf8" files
