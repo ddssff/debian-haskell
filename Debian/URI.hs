@@ -1,8 +1,8 @@
 {-# OPTIONS -fno-warn-orphans #-}
 module Debian.URI
     ( module Network.URI
-    , URI'(..)
-    , URIString
+    , URI'(unURI)
+    , makeURI'
     , uriToString'
     , fileFromURI
     , fileFromURIStrict
@@ -13,27 +13,23 @@ import Control.Exception (SomeException, try)
 import Data.ByteString.UTF8 as B
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy.Char8 as L
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (catMaybes)
 import Network.URI
 import System.Directory (getDirectoryContents)
 -- import System.Process.ByteString (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
 
--- | A wrapper around URI with a working Show instance.
-newtype URI' = URI' {unURI :: URI}
+-- | A wrapper around a String containing a known parsable URI.  Not
+-- absolutely safe, because you could say read "URI' \"bogus string\""
+-- :: URI'.  But enough to save me from myself.
+newtype URI' = URI' {unURI :: String} deriving (Read, Show, Eq, Ord)
 
-instance Show URI' where
-    show (URI' x) = "(URI' . fromJust . parseURI $ " ++ show (show x) ++ ")"
-
-instance Read URI' where
-    readsPrec _ s = [((URI' . fromJust . parseURI $ s), "")]
+makeURI' :: String -> Maybe URI'
+makeURI' s = maybe Nothing (const (Just (URI' s))) (parseURI s)
 
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""
-
--- |If the URI type could be read and showed this wouldn't be necessary.
-type URIString = String
 
 fileFromURI :: URI -> IO (Either SomeException L.ByteString)
 fileFromURI uri = fileFromURIStrict uri

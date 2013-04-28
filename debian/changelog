@@ -1,3 +1,12 @@
+haskell-debian (3.78) unstable; urgency=low
+
+  * Change URI' to simplify its Read and Show instances, it is now just a
+    private constructor applied to a string for which parseURI was known
+    to succeed.
+  * Add changelog.pre-debian to the source file list
+
+ -- David Fox <dsf@seereason.com>  Sun, 28 Apr 2013 12:51:11 -0700
+
 haskell-debian (3.77) unstable; urgency=low
 
   * Add a URI' type that is a wrapper around URI with working Read and
