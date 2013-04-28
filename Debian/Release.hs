@@ -14,7 +14,8 @@ module Debian.Release
 
 import Data.Data (Data)
 import Data.Typeable (Typeable)
-import Debian.URI
+import Debian.URI ()
+import Network.URI (unEscapeString, escapeURIString, isAllowedInURI)
 
 -- |A distribution (aka release) name.  This type is expected to refer
 -- to a subdirectory of the dists directory which is at the top level

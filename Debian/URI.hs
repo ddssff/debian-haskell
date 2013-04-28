@@ -1,8 +1,10 @@
 {-# OPTIONS -fno-warn-orphans #-}
 module Debian.URI
     ( module Network.URI
-    , URI'(unURI)
-    , makeURI'
+    , URI'
+    , toURI'
+    , fromURI'
+    , readURI'
     , uriToString'
     , fileFromURI
     , fileFromURIStrict
@@ -13,8 +15,8 @@ import Control.Exception (SomeException, try)
 import Data.ByteString.UTF8 as B
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy.Char8 as L
-import Data.Maybe (catMaybes)
-import Network.URI
+import Data.Maybe (catMaybes, fromJust)
+import Network.URI (URI(..), URIAuth(..), parseURI, uriToString)
 import System.Directory (getDirectoryContents)
 -- import System.Process.ByteString (readProcessWithExitCode)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -23,10 +25,19 @@ import Text.Regex (mkRegex, matchRegex)
 -- | A wrapper around a String containing a known parsable URI.  Not
 -- absolutely safe, because you could say read "URI' \"bogus string\""
 -- :: URI'.  But enough to save me from myself.
-newtype URI' = URI' {unURI :: String} deriving (Read, Show, Eq, Ord)
+newtype URI' = URI' String deriving (Read, Show, Eq, Ord)
 
-makeURI' :: String -> Maybe URI'
-makeURI' s = maybe Nothing (const (Just (URI' s))) (parseURI s)
+readURI' :: String -> Maybe URI'
+readURI' s = maybe Nothing (const (Just (URI' s))) (parseURI s)
+
+fromURI' :: URI' -> URI
+fromURI' (URI' s) = fromJust (parseURI s)
+
+-- | Using the bogus Show instance of URI here.  If it ever gets fixed
+-- this will stop working.  Worth noting that show will obscure any
+-- password info embedded in the URI, so that's good.
+toURI' :: URI -> URI'
+toURI' = URI' . show
 
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""

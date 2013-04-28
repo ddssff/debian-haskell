@@ -3,7 +3,7 @@ module Debian.Sources where
 
 import Data.List (intercalate)
 import Debian.Release
-import Debian.URI
+import Network.URI (URI, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
 import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text)
 
 data SourceType
