@@ -35,7 +35,7 @@ fromURI' (URI' s) = fromJust (parseURI s)
 
 -- | Using the bogus Show instance of URI here.  If it ever gets fixed
 -- this will stop working.  Worth noting that show will obscure any
--- password info embedded in the URI, so that's good.
+-- password info embedded in the URI, so that's nice.
 toURI' :: URI -> URI'
 toURI' = URI' . show
 

@@ -1,3 +1,11 @@
+haskell-debian (3.79) unstable; urgency=low
+
+  * Efficiency fix for the Text instance of Debian.Control.
+  * Get rid of the Data.Text parser, instead parse the ByteString and
+    then decode the resulting control file.  Much faster I think.
+
+ -- David Fox <dsf@seereason.com>  Mon, 29 Apr 2013 21:33:55 -0700
+
 haskell-debian (3.78) unstable; urgency=low
 
   * Change URI' to simplify its Read and Show instances, it is now just a

@@ -18,6 +18,7 @@ module Debian.Apt.Index
 import Control.Monad
 import qualified Codec.Compression.GZip as GZip
 import qualified Codec.Compression.BZip as BZip
+import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Function
@@ -30,11 +31,11 @@ import Debian.Apt.Methods
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
 import Debian.Control.Common
+import Debian.Control.Text (decodeControl)
 --import Debian.Repo.Types
 import Debian.Release
 import Debian.Sources
 import Debian.URI
-import Debian.UTF8 as Deb (decode)
 import System.Directory
 import System.FilePath ((</>))
 import System.Posix.Files
@@ -168,16 +169,16 @@ calcPath srcType arch baseURI release section =
             maybeOfString s = Just s
 
             wordsBy :: Eq a => (a -> Bool) -> [a] -> [[a]]
-            wordsBy p s = 
+            wordsBy p s =
                 case (break p s) of
                   (s, []) -> [s]
                   (h, t) -> h : wordsBy p (drop 1 t)
 
 -- |Parse a possibly compressed index file.
 controlFromIndex :: Compression -> FilePath -> L.ByteString -> Either ParseError (Control' T.Text)
-controlFromIndex GZ path s = parseControl path . Deb.decode . GZip.decompress $ s
-controlFromIndex BZ2 path s = parseControl path . Deb.decode . BZip.decompress $ s
-controlFromIndex Uncompressed path s = parseControl path . Deb.decode $ s
+controlFromIndex GZ path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks . GZip.decompress $ s
+controlFromIndex BZ2 path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks . BZip.decompress $ s
+controlFromIndex Uncompressed path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks $ s
 
 -- |parse an index possibly compressed file
 controlFromIndex' :: Compression -> FilePath -> IO (Either ParseError (Control' T.Text))

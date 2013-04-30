@@ -37,6 +37,7 @@ import Debian.Control.String
 import Data.List
 import Data.Text as T (Text, pack, concat)
 import qualified Debian.Control.Text as T
+import qualified Debian.Control.ByteString as B ()
 import qualified Debian.Control.String as S
 
 packParagraph :: S.Paragraph -> T.Paragraph
