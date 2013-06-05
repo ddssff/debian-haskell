@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 {-# OPTIONS -fno-warn-orphans #-}
 module Debian.URI
     ( module Network.URI
@@ -12,14 +13,13 @@ module Debian.URI
     ) where
 
 import Control.Exception (SomeException, try)
-import Data.ByteString.UTF8 as B
-import qualified Data.ByteString as B
+import Data.ByteString.Lazy.UTF8 as L
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Maybe (catMaybes, fromJust)
 import Network.URI (URI(..), URIAuth(..), parseURI, uriToString)
 import System.Directory (getDirectoryContents)
 -- import System.Process.ByteString (readProcessWithExitCode)
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import "process-listlike" System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
 
 -- | A wrapper around a String containing a known parsable URI.  Not
@@ -65,9 +65,9 @@ fileFromURIStrict uri = try $
 -- server.  This is currently only known to work with Apache.
 -- NOTE: there is a second copy of this function in
 -- Extra:Extra.Net. Please update both locations if you make changes.
-webServerDirectoryContents :: B.ByteString -> [String]
+webServerDirectoryContents :: L.ByteString -> [String]
 webServerDirectoryContents text =
-    catMaybes . map (second . matchRegex re) . Prelude.lines . B.toString $ text
+    catMaybes . map (second . matchRegex re) . Prelude.lines . L.toString $ text
     where
       re = mkRegex "( <A HREF|<a href)=\"([^/][^\"]*)/\""
       second (Just [_, b]) = Just b
@@ -81,10 +81,10 @@ dirFromURI uri = try $
       ("ssh:", Just auth) ->
           do let cmd = "ssh"
                  args = [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
-             return . Prelude.lines . B.toString $ out
+             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
+             return . Prelude.lines . L.toString $ out
       _ ->
           do let cmd = "curl"
                  args = ["-s", "-g", uriToString' uri]
-             (_code, out, _err) <- readProcessWithExitCode cmd args B.empty
+             (_code, out, _err) <- readProcessWithExitCode cmd args L.empty
              return . webServerDirectoryContents $ out

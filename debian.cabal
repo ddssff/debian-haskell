@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.79
+Version:        3.79.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -36,7 +36,7 @@ Library
    parsec >= 2 && <4,
    pretty,
    process,
-   process-extras,
+   process-listlike,
    pureMD5,
    regex-compat,
    regex-tdfa,

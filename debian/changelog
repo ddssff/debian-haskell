@@ -1,3 +1,9 @@
+haskell-debian (3.79.1) unstable; urgency=low
+
+  * Switch from using package process-extras to process-listlike.
+
+ -- David Fox <dsf@seereason.com>  Wed, 05 Jun 2013 06:22:26 -0700
+
 haskell-debian (3.79) unstable; urgency=low
 
   * Efficiency fix for the Text instance of Debian.Control.
