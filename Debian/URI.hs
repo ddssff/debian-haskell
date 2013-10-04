@@ -19,7 +19,7 @@ import Data.Maybe (catMaybes, fromJust)
 import Network.URI (URI(..), URIAuth(..), parseURI, uriToString)
 import System.Directory (getDirectoryContents)
 -- import System.Process.ByteString (readProcessWithExitCode)
-import "process-listlike" System.Process.ByteString.Lazy (readProcessWithExitCode)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.Regex (mkRegex, matchRegex)
 
 -- | A wrapper around a String containing a known parsable URI.  Not

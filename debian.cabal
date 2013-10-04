@@ -52,7 +52,7 @@ Library
  if flag(listlike)
    build-depends: process-listlike
  else
-   build-depends: process-extra
+   build-depends: process-extras
  ghc-options: -Wall -O2
  if flag(cabal19)
    build-depends: Cabal >= 1.9
