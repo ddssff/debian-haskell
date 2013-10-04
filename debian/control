@@ -50,8 +50,7 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-pretty-prof | ghc-prof
                , libghc-process-dev | ghc
                , libghc-process-prof | ghc-prof
-               , libghc-process-listlike-dev
-               , libghc-process-listlike-prof
+               , libghc-process-listlike-prof | libghc-process-extra-prof
                , libghc-puremd5-dev
                , libghc-puremd5-prof
                , libghc-regex-compat-dev

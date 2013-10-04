@@ -1,3 +1,9 @@
+haskell-debian (3.79.2) unstable; urgency=low
+
+  * Allow package to build with either process-listlike or process-extra.
+
+ -- David Fox <dsf@seereason.com>  Fri, 04 Oct 2013 09:02:48 -0700
+
 haskell-debian (3.79.1) unstable; urgency=low
 
   * Switch from using package process-extras to process-listlike.

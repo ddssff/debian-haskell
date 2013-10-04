@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.79.1
+Version:        3.79.2
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -19,6 +19,10 @@ extra-source-files:
 Flag cabal19
  Description: True if Cabal >= 1.9 is available
 
+Flag listlike
+ Description: Use process-listlike instead of process-extra
+ Default: True
+
 Library
  Build-Depends:
    ansi-wl-pprint,
@@ -36,7 +40,6 @@ Library
    parsec >= 2 && <4,
    pretty,
    process,
-   process-listlike,
    pureMD5,
    regex-compat,
    regex-tdfa,
@@ -46,6 +49,10 @@ Library
    Unixutils >= 1.50,
    utf8-string,
    zlib
+ if flag(listlike)
+   build-depends: process-listlike
+ else
+   build-depends: process-extra
  ghc-options: -Wall -O2
  if flag(cabal19)
    build-depends: Cabal >= 1.9
