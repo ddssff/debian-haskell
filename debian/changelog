@@ -1,3 +1,10 @@
+haskell-debian (3.79.4) unstable; urgency=low
+
+  * Add changelog to list of extra source files so it is added to
+    the tarball.
+
+ -- David Fox <dsf@seereason.com>  Tue, 15 Oct 2013 07:36:41 -0700
+
 haskell-debian (3.79.3) unstable; urgency=low
 
   * Make the changelog visible in hackage2.
