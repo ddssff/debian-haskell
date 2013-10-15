@@ -3,9 +3,11 @@
 import Distribution.Simple
 import Distribution.Simple.Program
 import System.Cmd
+import System.Directory
 import System.Exit
 
-main = defaultMainWithHooks simpleUserHooks {
+main = copyFile "debian/changelog" "changelog" >>
+       defaultMainWithHooks simpleUserHooks {
          postBuild = \ _ _ _ _ -> runTestScript
        , runTests = \ _ _ _ _ -> runTestScript
        }
