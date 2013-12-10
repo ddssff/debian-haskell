@@ -99,6 +99,8 @@ Build-Depends-Indep: ghc-doc
                      , libghc-unix-doc | ghc-doc
                      , libghc-utf8-string-doc
                      , libghc-zlib-doc
+Build-Conflicts: libghc-monads-tf-dev, libghc-monads-tf-prof
+Build-Conflicts-Indep: libghc-monads-tf-doc
 Standards-Version: 3.9.3
 Homepage: http://hackage.haskell.org/package/debian
 Vcs-Darcs: http://darcs.debian.org/pkg-haskell/haskell-debian
