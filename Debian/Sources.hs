@@ -32,7 +32,8 @@ instance Pretty DebSource where
 
 -- |This is a name given to a combination of parts of one or more
 -- releases that can be specified by a sources.list file.
-data SliceName = SliceName { sliceName :: String } deriving (Eq, Ord, Show)
+type SliceName = ReleaseName
+-- data SliceName = SliceName { sliceName :: String } deriving (Eq, Ord, Show)
 
 {-
 
