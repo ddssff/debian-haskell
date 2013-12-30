@@ -193,7 +193,7 @@ unzipEithers = foldr unzipEither ([],[])
 -- move to different library
 debNameSplit :: String -> Either FilePath (String, String, String)
 debNameSplit fp =
-    case (takeBaseName fp) =~ "^(.*)_(.*)_(.*).deb$" of
+    case (takeFileName fp) =~ "^(.*)_(.*)_(.*).deb$" of
       [[_, name, version, arch]] -> Right (name, version, arch)
       _ -> Left fp
     
