@@ -1,9 +1,10 @@
+{-# LANGUAGE PackageImports #-}
 -- |Domain independent functions used by the haskell-debian package.
 module Debian.Extra.Files
     ( withTemporaryFile
     ) where
 
-import Control.Monad.Trans (MonadIO, liftIO)
+import "mtl" Control.Monad.Trans (MonadIO, liftIO)
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (hPutStr, hClose, openBinaryTempFile)
 

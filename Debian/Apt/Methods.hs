@@ -1,3 +1,4 @@
+{-# LANGUAGE PackageImports #-}
 {-# OPTIONS_GHC -fno-warn-missing-signatures -fno-warn-name-shadowing #-}
 -- |an interface for using the methods in /var/lib/apt/methods
 module Debian.Apt.Methods
@@ -24,7 +25,7 @@ import Debian.Time
 import Debian.URI
 
 import Control.Exception
-import Control.Monad.Error
+import "mtl" Control.Monad.Error
 import Data.Maybe
 import Data.Time
 import System.Directory

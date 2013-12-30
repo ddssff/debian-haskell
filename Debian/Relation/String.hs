@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances, PackageImports, TypeSynonymInstances #-}
 {-# OPTIONS -fno-warn-unused-do-bind -fno-warn-orphans #-}
 -- |A module for working with debian relationships <http://www.debian.org/doc/debian-policy/ch-relationships.html>
 module Debian.Relation.String
@@ -19,7 +19,7 @@ module Debian.Relation.String
 
 -- Standard GHC Modules
 
-import Control.Monad.Identity (Identity)
+import "mtl" Control.Monad.Identity (Identity)
 import Data.Set (fromList)
 import Text.ParserCombinators.Parsec
 import Text.Parsec.Prim (ParsecT)
