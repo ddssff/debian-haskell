@@ -39,9 +39,6 @@ import Text.ParserCombinators.Parsec.Pos
 
 -- Third Party Modules
 
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Unsafe as BB
-import qualified Data.ByteString.Internal as BB
 import qualified Data.ByteString.Char8 as C
 
 import Debian.Control.Common
@@ -68,15 +65,12 @@ pKey :: ControlParser C.ByteString
 pKey = notEmpty $ pTakeWhile (\c -> (c /= ':') && (c /= '\n'))
 
 pValue :: ControlParser C.ByteString
-pValue = pTakeWhile2 (\a b -> not (endOfValue a b))
-    where
-      endOfValue :: Char -> Maybe Char -> Bool
-      endOfValue '\n' Nothing = True
-      endOfValue '\n' (Just ' ') = False
-      endOfValue '\n' (Just '\t') = False
-      endOfValue '\n' (Just '#') = False
-      endOfValue '\n' _ = True
-      endOfValue _ _ = False
+pValue = Parser $ \bs ->
+    let newlines = C.elemIndices '\n' bs
+        rest = dropWhile continuedAfter newlines ++ [C.length bs]
+        continuedAfter i = bs `safeIndex` (i+1) `elem` map Just " \t#"
+        (text, bs') = C.splitAt (head rest) bs
+    in Ok (text, bs')
 
 pField :: ControlParser Field
 pField =
@@ -88,15 +82,15 @@ pField =
        return (Field (k,v))
 
 pComment :: ControlParser Field
-pComment =
-    do c1 <- pChar '#'
-       text <- pTakeWhile2 (\ a b -> not (endOfComment a b))
-       return . Comment $ (B.append (B.singleton . c2w $ c1) text)
-    where
-      endOfComment '\n' Nothing = True
-      endOfComment '\n' (Just '#') = False
-      endOfComment '\n' _ = True
-      endOfComment _ _ = False
+pComment = Parser $ \bs ->
+    let newlines = C.elemIndices '\n' bs
+        linestarts = 0 : map (+1) newlines
+        rest = dropWhile commentAt linestarts ++ [C.length bs]
+        commentAt i = bs `safeIndex` i == Just '#'
+        (text, bs') = C.splitAt (head rest) bs
+    in if C.null text
+       then Empty
+       else Ok (Comment text, bs')
 
 pParagraph :: ControlParser Paragraph
 pParagraph = 
@@ -141,82 +135,7 @@ main =
 -}
 -- * Helper Functions
 
--- | 'takeWhile', applied to a predicate @p@ and a ByteString @xs@,
--- returns the longest prefix (possibly empty) of @xs@ of elements that
--- satisfy @p@.
-_takeWhile2 :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> B.ByteString
-_takeWhile2 f ps = BB.unsafeTake (findIndex2OrEnd (\w1 w2 -> not (f w1 w2)) ps) ps
-{-# INLINE _takeWhile2 #-}
-
-break2 :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> Maybe (B.ByteString, B.ByteString)
-break2 p ps = case findIndex2OrEnd p ps of n -> Just (BB.unsafeTake n ps, BB.unsafeDrop n ps)
-
-span2 :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> Maybe (B.ByteString, B.ByteString)
-span2 p ps = break2 (\a b -> not (p a b)) ps
-
-
--- | 'findIndexOrEnd' is a variant of findIndex, that returns the length
--- of the string if no element is found, rather than Nothing.
-
-findIndex2OrEnd :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> Int
-findIndex2OrEnd k (BB.PS x s l) = unsafePerformIO $ withForeignPtr x $ \f -> go (f `plusPtr` s) 0
-  where
-    go a b | a `seq` b `seq` False = undefined
-    go ptr n | n >= l    = return l
-             | otherwise = do w1 <- peek ptr
-                              w2 <- if (n + 1 < l) then (peek (ptr `plusPtr` 1) >>= return . Just) else return Nothing
-                              if k w1 w2
-                                then return n
-                                else go (ptr `plusPtr` 1) (n+1)
-
-
-{-
-findIndex2OrEnd :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> Int
-findIndex2OrEnd k (B.PS x s l) = unsafePerformIO $ withForeignPtr x $ \f -> go (f `plusPtr` s) 0
-  where
-    go a b | a `seq` b `seq` False = undefined
-    go ptr n | n >= l    = return l
-             | otherwise = do w1 <- peek ptr
-                              case (w2c w1) of
-                                '\n' ->
-                                    if (n + 1 < l)
-                                    then do w2 <- peek (ptr `plusPtr` 1)
-                                            case (w2c w2) of
-                                              ' ' -> go (ptr `plusPtr` 2) (n + 2)
-                                              _ -> return n
-                                    else return l -- go (ptr `plusPtr` 1) (n + 1)
-                                _ -> go (ptr `plusPtr` 1) (n + 1)
--}
-{-
-                              w2 <- if (n + 1 < l) then (peek (ptr `plusPtr` 1) >>= return . Just) else return Nothing
-                              if k w1 w2
-                                then return n
-                                else go (ptr `plusPtr` 1) (n+1)
--}
-{-# INLINE findIndex2OrEnd #-}
-
--- | The 'findIndex' function takes a predicate and a 'ByteString' and
--- returns the index of the first element in the ByteString
--- satisfying the predicate.
-_findIndex2 :: (Word8 -> Maybe Word8 -> Bool) -> B.ByteString -> Maybe Int
-_findIndex2 k (BB.PS x s l) = unsafePerformIO $ withForeignPtr x $ \f -> go (f `plusPtr` s) 0
-  where
-    go a b | a `seq` b `seq` False = undefined
-    go ptr n | n >= l    = return Nothing
-             | otherwise = do w1 <- peek ptr
-                              w2 <- if (n + 1 < l) then (peek (ptr `plusPtr` 1) >>= return . Just) else return Nothing
-                              if k w1 w2
-                                then return (Just n)
-                                else go (ptr `plusPtr` 1) (n+1)
-{-# INLINE _findIndex2 #-}
-
--- Copied from ByteStream because they are not exported
-
-w2c :: Word8 -> Char
-w2c = chr . fromIntegral
-
-c2w :: Char -> Word8
-c2w = fromIntegral . ord
+bs `safeIndex` i = if i < C.length bs then Just (bs `C.index` i) else Nothing
 
 -- * Parser
 
@@ -295,13 +214,9 @@ pEOF :: Parser C.ByteString ()
 pEOF =
     Parser $ \bs -> if C.null bs then Ok ((),bs) else Empty
 
-pTakeWhile2 :: (Char -> Maybe Char -> Bool) -> Parser C.ByteString C.ByteString
-pTakeWhile2 f =
-    Parser $ \bs -> m2r (span2 (\w1 w2 -> f (w2c w1) (fmap w2c w2)) bs)
-
 pTakeWhile :: (Char -> Bool) -> Parser C.ByteString C.ByteString
 pTakeWhile f =
-    Parser $ \bs -> Ok (B.span (\w -> f (w2c w)) bs)
+    Parser $ \bs -> Ok (C.span f bs)
 
 _pSkipWhile :: (Char -> Bool) -> Parser C.ByteString ()
 _pSkipWhile p =
