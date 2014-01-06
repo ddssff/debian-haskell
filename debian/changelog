@@ -1,3 +1,9 @@
+haskell-debian (3.80.2) unstable; urgency=low
+
+  * Neil Mayhew's patch to greatly speed parsing of control files.
+
+ -- David Fox <dsf@seereason.com>  Mon, 06 Jan 2014 04:36:37 -0800
+
 haskell-debian (3.80.1) unstable; urgency=low
 
   * Fix for fakechanges from Neil Mayhew - don't reject all .deb files.
