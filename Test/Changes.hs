@@ -3,14 +3,15 @@
 module Test.Changes where
 
 import Test.HUnit
+import Data.Text (unpack)
 import Debian.Changes
+import Debian.Pretty (pretty, render)
 import Debian.Release (ReleaseName(ReleaseName, relName))
 import Debian.Version (parseDebianVersion)
-import Text.PrettyPrint.ANSI.Leijen
 
 deriving instance Show ChangeLogEntry
 instance Show ChangeLog where
-    show = show . pretty
+    show = unpack . render . pretty
 
 s3 = unlines
      ["name (version) dist; urgency=urgency",
@@ -159,7 +160,7 @@ s2 = unlines
       " -- Marco Túlio Gontijo e Silva <marcot@holoscopio.com>  Wed, 11 Mar 2009 18:58:06 -0300",
       ""]
 
-test5 = TestCase (assertEqual "haskell-regex-compat changelog" s1 (show (pretty (parseChangeLog s1))))
+test5 = TestCase (assertEqual "haskell-regex-compat changelog" s1 (unpack . render . pretty . parseChangeLog $ s1))
 
 test3 =
     TestCase (assertEqual "haskell-regex-compat changelog" expected (parseEntries s3))

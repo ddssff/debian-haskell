@@ -20,6 +20,7 @@ import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
 import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile),
                                  Field'(Field, Comment), Control'(Control), Paragraph, Control)
+import Debian.Pretty (render)
 import Debian.Relation (BinPkgName(..))
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
 import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
@@ -102,7 +103,7 @@ sidPackages = "/var/lib/apt/lists/ftp.debian.org_debian_dists_unstable_main_bina
 gutsyPackages = "/var/lib/apt/lists/mirror.anl.gov_pub_ubuntu_dists_gutsy_main_binary-i386_Packages"
 
 test controlFP rel labeler =
-    testCSP controlFP depF rel (mapM_ (\ (_,p) -> mapM_ (print . second prettyDebianVersion . packageVersionParagraph) p ) . take 1 . search labeler)
+    testCSP controlFP depF rel (mapM_ (\ (_,p) -> mapM_ (print . second (render . prettyDebianVersion) . packageVersionParagraph) p ) . take 1 . search labeler)
 
 -- TODO: add better errors
 packageVersionParagraph :: Paragraph -> (BinPkgName, DebianVersion)

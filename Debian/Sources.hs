@@ -1,10 +1,13 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Debian.Sources where
 
 import Data.List (intercalate)
+import Data.Monoid ((<>))
+import Data.Text (pack)
+import Debian.Pretty (Pretty(pretty), text)
 import Debian.Release
 import Network.URI (URI, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
-import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text)
 
 data SourceType
     = Deb | DebSrc
@@ -22,13 +25,13 @@ instance Pretty SourceType where
     pretty DebSrc = text "deb-src"
 
 instance Pretty DebSource where
-    pretty (DebSource thetype theuri thedist) = text $
-        (show (pretty thetype)) ++ " "++ uriToString id theuri " " ++
-        (case thedist of
-           Left exactPath -> escape exactPath
-           Right (dist, sections) ->
-               releaseName' dist ++ " " ++ intercalate " " (map sectionName' sections))
-        where escape = escapeURIString isAllowedInURI
+    pretty (DebSource thetype theuri thedist) =
+        pretty thetype <>
+        text (" " <> pack (uriToString id theuri " ") <>
+              case thedist of
+                Left exactPath -> escape exactPath
+                Right (dist, sections) -> pack (releaseName' dist <> " " <> intercalate " " (map sectionName' sections)))
+            where escape = pack . escapeURIString isAllowedInURI
 
 -- |This is a name given to a combination of parts of one or more
 -- releases that can be specified by a sources.list file.

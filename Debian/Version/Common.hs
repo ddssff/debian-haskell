@@ -14,13 +14,13 @@ module Debian.Version.Common
     ) where 
 
 import Data.Char (ord, isDigit, isAlpha)
+import Debian.Pretty (Doc, pretty, render)
+import Debian.Version.Internal
 import Text.ParserCombinators.Parsec
 import Text.Regex
-import Debian.Version.Internal
-import Text.PrettyPrint.ANSI.Leijen (Doc, text)
 
 prettyDebianVersion :: DebianVersion -> Doc
-prettyDebianVersion (DebianVersion s _) = text s
+prettyDebianVersion (DebianVersion s _) = pretty s
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2
@@ -29,7 +29,7 @@ instance Ord DebianVersion where
     compare (DebianVersion _ v1) (DebianVersion _ v2) = compare v1 v2
 
 instance Show DebianVersion where
-    show v = "(Debian.Version.parseDebianVersion (" ++ show (show (prettyDebianVersion v)) ++ " :: String))"
+    show v = "(Debian.Version.parseDebianVersion (" ++ show (render (prettyDebianVersion v)) ++ " :: String))"
 
 -- make ~ less than everything, and everything else higher that letters
 order :: Char -> Int

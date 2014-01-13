@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Debian.Control.Common
     ( -- * Types
       Control'(..)
@@ -17,11 +18,13 @@ module Debian.Control.Common
     )
     where
 
-import Text.ParserCombinators.Parsec (ParseError)
+import Data.List (partition, intersperse)
+import Data.Monoid ((<>))
+import Debian.Pretty (Doc, text, Pretty(pretty), cat, vcat)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (Handle)
 import System.Process (runInteractiveCommand, waitForProcess)
-import Data.List (partition)
+import Text.ParserCombinators.Parsec (ParseError)
 
 newtype Control' a
     = Control { unControl :: [Paragraph' a] }
@@ -53,6 +56,31 @@ class ControlFunctions a where
     -- be moved to someplace more general purpose.
     stripWS :: a -> a
     asString :: a -> String
+
+-- |This may have bad performance issues (why?)
+instance Pretty a => Pretty (Control' a) where
+    pretty = ppControl
+    -- pretty (Control paragraphs) = vcat (map pretty paragraphs)
+instance Pretty a => Pretty (Paragraph' a) where
+    pretty = ppParagraph
+    -- pretty (Paragraph fields) = vcat (map pretty fields ++ [empty])
+
+instance Pretty a => Pretty (Field' a) where
+    pretty = ppField
+    -- pretty (Field (name,value)) = pretty name <> text ":" <> pretty value
+    -- pretty (Comment s) = pretty s
+
+ppControl :: (Pretty a) => Control' a -> Doc
+ppControl (Control paragraph) =
+    cat (intersperse (text "\n") (map ppParagraph paragraph))
+
+ppParagraph :: (Pretty a) => Paragraph' a -> Doc
+ppParagraph (Paragraph fields) =
+    vcat (map ppField fields)
+
+ppField :: (Pretty a) => Field' a -> Doc
+ppField (Field (n,v)) = pretty n <> text ":" <> pretty v
+ppField (Comment c) = pretty c
 
 mergeControls :: [Control' a] -> Control' a
 mergeControls controls =

@@ -1,3 +1,10 @@
+haskell-debian (3.81) unstable; urgency=low
+
+  * Replace library pretty and library ansi-wl-pprint with an ultra-simple
+    custom pretty printing library in Debian.Pretty.
+
+ -- David Fox <dsf@seereason.com>  Sun, 12 Jan 2014 07:34:21 -0800
+
 haskell-debian (3.80.2) unstable; urgency=low
 
   * Neil Mayhew's patch to greatly speed parsing of control files.

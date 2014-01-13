@@ -7,8 +7,6 @@ module Debian.Relation
     , Relations
     , AndRelation
     , OrRelation
-    , prettyOrRelation
-    , prettyRelations
     , Relation(..)
     , ArchitectureReq(..)
     , Arch(..)
@@ -23,5 +21,5 @@ module Debian.Relation
     ) where 
 
 import Debian.Arch (Arch(..), ArchOS(..), ArchCPU(..))
-import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString), prettyOrRelation, prettyRelations)
+import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString))
 import Debian.Relation.String

@@ -1,7 +1,10 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Test.SourcesList where
 
+import Data.Text (Text, unpack)
+import Data.Monoid (mconcat, (<>))
+import Debian.Pretty (vcat, pretty, render)
 import Test.HUnit
-import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 import Debian.Sources
 --import Data.Maybe
@@ -22,7 +25,7 @@ testQuoteWords =
 
 testSourcesList :: Test
 testSourcesList =
-    test [ assertEqual "valid sources.list" validSourcesListExpected (unlines . map (show . pretty) . parseSourcesList $ validSourcesListStr) ]
+    test [ assertEqual "valid sources.list" validSourcesListExpected (unpack . render . vcat . map pretty . parseSourcesList $ validSourcesListStr) ]
     where
       validSourcesListStr =
           unlines $ [ " # A comment only line "
@@ -41,11 +44,11 @@ testSourcesList =
                     , "deb http://ftp.debian.org/whee space%20dist main"
                     , "deb http://ftp.debian.org/whee dist space%20section"
                     ]
-      _invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ main contrib non-free # exact path with sections"
+      _invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ main contrib non-free # exact path with sections" :: Text
 
 testSourcesListParse :: Test
 testSourcesListParse =
-    test [ assertEqual "" gutsy (concat . map (++ "\n") . map (show . pretty) . parseSourcesList $ gutsy) ]
+    test [ assertEqual "" gutsy (unpack . mconcat . map (<> "\n") . map (render . pretty) . parseSourcesList $ gutsy) ]
     where
       gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
 	              "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",

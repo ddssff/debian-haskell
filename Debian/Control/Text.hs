@@ -29,7 +29,6 @@ module Debian.Control.Text
 import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower, chr)
 import Data.List (find)
-import Data.Monoid ((<>))
 import qualified Data.Text as T (Text, pack, unpack, map, strip, reverse)
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 --import Data.Text.IO as T (readFile)
@@ -41,7 +40,6 @@ import Debian.Control.Common (ControlFunctions(parseControlFromFile, parseContro
                               Control'(Control), Paragraph'(Paragraph), Field'(Field, Comment),
                               mergeControls, fieldValue, removeField, prependFields, appendFields,
                               renameField, modifyField, raiseFields)
-import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), text, vcat, empty)
 
 -- | @parseFromFile p filePath@ runs a string parser @p@ on the
 -- input read from @filePath@ using 'Prelude.readFile'. Returns either a 'ParseError'
@@ -58,16 +56,6 @@ parseFromFile p fname
     = do input <- T.readFile fname `E.catch` (\ (_ :: E.SomeException) -> B.readFile fname >>= return . decode)
          return (runP p () fname input)
 -}
-
--- |This may have bad performance issues (why?)
-instance Pretty (Control' T.Text) where
-    pretty (Control paragraphs) = vcat (map (\ p -> pretty p) paragraphs)
-instance Pretty (Paragraph' T.Text) where
-    pretty (Paragraph fields) = vcat (map pretty fields ++ [empty])
-
-instance Pretty (Field' T.Text) where
-    pretty (Field (name,value)) = text . T.unpack $ name <>":"<> value
-    pretty (Comment s) = text (T.unpack s)
 
 type Field = Field' T.Text
 type Control = Control' T.Text

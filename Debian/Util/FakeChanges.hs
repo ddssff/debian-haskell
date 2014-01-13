@@ -5,24 +5,24 @@ module Debian.Util.FakeChanges (fakeChanges) where
 import Control.Exception
 import Control.Monad hiding (mapM)
 import qualified Data.ByteString.Lazy.Char8 as L
+import Data.Data (Data, Typeable)
 import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Foldable (concat, all, foldr)
 import Data.List as List (intercalate, nub, partition, isSuffixOf)
-import Data.Maybe 
---import Data.Typeable
-import Data.Data (Data, Typeable)
+import Data.Maybe
+import Data.Text (unpack)
 import Data.Traversable
-import Debian.Time
 import System.Environment
 import System.FilePath
 import System.Posix.Files
 import Text.Regex.TDFA
 import Prelude hiding (concat, foldr, all, mapM, sum)
 import Network.BSD
-import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 import Debian.Control
 import qualified Debian.Deb as Deb
+import Debian.Pretty (pretty, render)
+import Debian.Time
 -- import System.Unix.FilePath
 -- import System.Unix.Misc
 
@@ -78,7 +78,7 @@ fakeChanges fps =
                                              ))
                , ("Files", "\n" ++ unlines fileLines)
                ]
-       return $ (concat [ source, "_", version, "_", binArch, ".changes"], show (pretty changes))
+       return $ (concat [ source, "_", version, "_", binArch, ".changes"], unpack (render (pretty changes)))
 --       let (invalid, binaries) = unzipEithers $ map debNameSplit debs
 {-
        when (not . null $ invalid) (throwDyn [MalformedDebFilename invalid])
@@ -223,13 +223,13 @@ loadFiles files =
              case  res of
                (Left e) -> error $ "Error parsing " ++ dsc' ++ "\n" ++ show e
                (Right (Control [p])) -> return (dsc', p)
-               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ show (pretty c)
+               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ unpack (render (pretty c))
       loadDeb :: FilePath -> IO (FilePath, Paragraph)
       loadDeb deb =
           do res <- Deb.fields deb
              case res of
                (Control [p]) -> return (deb, p)
-               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ show (pretty res)
+               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ unpack (render (pretty res))
 
 
 getUploader :: IO String

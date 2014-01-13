@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, OverloadedStrings #-}
 module Debian.Arch
     ( Arch(..)
     , ArchOS(..)
@@ -10,12 +10,12 @@ module Debian.Arch
 import Data.Data (Data)
 import Data.Monoid ((<>))
 import Data.Typeable (Typeable)
-import Text.PrettyPrint.ANSI.Leijen (Doc, text)
+import Debian.Pretty (Doc, Pretty(pretty), text)
 
 data ArchOS = ArchOS String | ArchOSAny deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 prettyOS :: ArchOS -> Doc
-prettyOS (ArchOS s) = text s
+prettyOS (ArchOS s) = pretty s
 prettyOS ArchOSAny = text "any"
 
 parseOS :: String -> ArchOS
@@ -25,7 +25,7 @@ parseOS s = ArchOS s
 data ArchCPU = ArchCPU String | ArchCPUAny deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 prettyCPU :: ArchCPU -> Doc
-prettyCPU (ArchCPU s) = text s
+prettyCPU (ArchCPU s) = pretty s
 prettyCPU ArchCPUAny = text "any"
 
 parseCPU :: String -> ArchCPU

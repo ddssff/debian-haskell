@@ -7,27 +7,26 @@ import Data.Monoid ((<>))
 import Data.Text as T (Text, pack, intercalate)
 import Debian.Control
 import Debian.Control.Common (unControl)
-import Debian.Control.PrettyPrint (ppControl, ppParagraph)
 import Debian.Control.Text ({- Pretty instances -})
-import Text.PrettyPrint.ANSI.Leijen (pretty)
+import Debian.Pretty (pretty, render)
 
 deriving instance Eq (Control' Text)
-deriving instance Show (Control' Text)
-deriving instance Show (Paragraph' Text)
-deriving instance Show (Field' Text)
+-- deriving instance Show (Control' Text)
+-- deriving instance Show (Paragraph' Text)
+-- deriving instance Show (Field' Text)
 
 -- Additional tests of the results of parsing additional
 -- inter-paragraph newlines, or missing terminating newlines, would be
 -- good.
 controlTests =
-    [ TestCase (assertEqual "pretty1" control (either (error "parser failed") id (parseControl "debian/control" sample)))
-    , TestCase (assertEqual "pretty2" sample (pack (show (ppControl control))))
-    , TestCase (assertEqual "pretty3" (head paragraphs <> "\n") (pack (show (ppParagraph (head (unControl control))))))
+    [ TestCase (assertEqual "pretty1" (show . pretty $ control) (either (error "parser failed") (show . pretty) (parseControl "debian/control" sample)))
+    , TestCase (assertEqual "pretty2" sample (render (pretty control)))
+    , TestCase (assertEqual "pretty3" (head paragraphs <> "\n") (render (pretty (head (unControl control)))))
     -- The Pretty class instances are distinct implementations from
     -- those in Debian.Control.PrettyPrint.  Not sure why, there is a
     -- terse note about performance concerns.
-    , TestCase (assertEqual "pretty4" sample (pack (show (pretty control))))
-    , TestCase (assertEqual "pretty5" (head paragraphs <> "\n") (pack (show (pretty (head (unControl control))))))  ]
+    , TestCase (assertEqual "pretty4" sample (render (pretty control)))
+    , TestCase (assertEqual "pretty5" (head paragraphs <> "\n") (render (pretty (head (unControl control)))))  ]
 
 -- | These paragraphs have no terminating newlines.  They are added
 -- where appropriate to the expected test results.
@@ -43,6 +42,7 @@ sample :: Text
 sample = T.intercalate "\n\n" paragraphs <> "\n"
 
 -- | The expecte result of parsing the sample control file.
+control :: Control' Text
 control =
     Control
       { unControl = [Paragraph [Field ("Source"," haskell-debian")

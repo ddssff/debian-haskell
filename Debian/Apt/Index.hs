@@ -22,17 +22,17 @@ import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Function
-import Data.List
+import Data.List as List (null, intercalate, sortBy, isSuffixOf, isPrefixOf)
 import qualified Data.Map as M
 import Data.Monoid ((<>))
-import qualified Data.Text as T (Text, unpack, concat, lines, null, words)
+import Data.Text as Text (Text, unpack, concat, lines, null, words)
 import Data.Time
 import Debian.Apt.Methods
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
 import Debian.Control.Common
 import Debian.Control.Text (decodeControl)
---import Debian.Repo.Types
+import Debian.Pretty (pretty, render)
 import Debian.Release
 import Debian.Sources
 import Debian.URI
@@ -42,7 +42,6 @@ import System.Posix.Files
 import System.FilePath (takeBaseName)
 --import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
-import Text.PrettyPrint.ANSI.Leijen (pretty)
 
 -- |Package indexes on the server are uncompressed or compressed with
 -- gzip or bzip2. We do not know what will exist on the server until we
@@ -124,7 +123,7 @@ indexURIs arch debSource =
     where
       baseURI = sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ show (pretty debSource)) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ unpack (render (pretty debSource))) id (sourceDist debSource)
 
 -- |return a tuple for the section 
 --  - the URI to the uncompressed index file
@@ -175,13 +174,13 @@ calcPath srcType arch baseURI release section =
                   (h, t) -> h : wordsBy p (drop 1 t)
 
 -- |Parse a possibly compressed index file.
-controlFromIndex :: Compression -> FilePath -> L.ByteString -> Either ParseError (Control' T.Text)
+controlFromIndex :: Compression -> FilePath -> L.ByteString -> Either ParseError (Control' Text)
 controlFromIndex GZ path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks . GZip.decompress $ s
 controlFromIndex BZ2 path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks . BZip.decompress $ s
 controlFromIndex Uncompressed path s = either Left (Right . decodeControl) . parseControl path . B.concat . L.toChunks $ s
 
 -- |parse an index possibly compressed file
-controlFromIndex' :: Compression -> FilePath -> IO (Either ParseError (Control' T.Text))
+controlFromIndex' :: Compression -> FilePath -> IO (Either ParseError (Control' Text))
 controlFromIndex' compression path = L.readFile path >>= return . controlFromIndex compression path
 
 type Size = Integer
@@ -236,7 +235,7 @@ findIndexes distDir iType controlFiles =
     let indexes = groupIndexes controlFiles
     in
       do indexes' <- mapM (filterExists distDir) (filter (isType iType) indexes)
-         return $ map (head . snd) (filter (not . null . snd) indexes')
+         return $ map (head . snd) (filter (not . List.null . snd) indexes')
     where
       isType iType (fp, _) = iType `isSuffixOf` fp 
 
@@ -267,7 +266,7 @@ uncompressedName fp
           | otherwise            = (fp, Uncompressed)
 
 indexesInRelease :: (FilePath -> Bool)
-                 -> Control' T.Text -- ^ A release file
+                 -> Control' Text -- ^ A release file
                  -> [(CheckSums, Integer, FilePath)] -- ^ 
 indexesInRelease filterp (Control [p]) =
     let md5sums =
@@ -275,12 +274,12 @@ indexesInRelease filterp (Control [p]) =
               (Just md5) -> md5
               Nothing -> error $ "Did not find MD5Sum field."
     in
-      filter (\(_,_,fp) -> filterp fp) $ map (makeTuple . T.words) $ filter (not . T.null) (T.lines md5sums)
+      filter (\(_,_,fp) -> filterp fp) $ map (makeTuple . Text.words) $ filter (not . Text.null) (Text.lines md5sums)
     where
-      makeTuple :: [T.Text] -> (CheckSums, Integer, FilePath)
-      makeTuple [md5sum, size, fp] = (CheckSums { md5sum = Just (T.unpack md5sum), sha1 = Nothing, sha256 = Nothing }, read (T.unpack size), T.unpack fp)
+      makeTuple :: [Text] -> (CheckSums, Integer, FilePath)
+      makeTuple [md5sum, size, fp] = (CheckSums { md5sum = Just (Text.unpack md5sum), sha1 = Nothing, sha256 = Nothing }, read (Text.unpack size), Text.unpack fp)
       makeTuple x = error $ "Invalid line in release file: " ++ show x
-indexesInRelease _ x = error $ "Invalid release file: " <> T.unpack (T.concat (formatControl x))
+indexesInRelease _ x = error $ "Invalid release file: " <> Text.unpack (Text.concat (formatControl x))
 
 -- |make a FileTuple for a file found on the local disk
 -- returns 'Nothing' if the file does not exist.

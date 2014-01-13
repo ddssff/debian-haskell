@@ -1,16 +1,16 @@
-{-# LANGUAGE FlexibleInstances, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
 module Debian.Relation.Common where
 
 -- Standard GHC Modules
 
 import Data.List as List (map, intersperse)
-import Data.Monoid (mconcat)
+import Data.Monoid (mconcat, (<>))
 import Data.Function
 import Data.Set as Set (Set, toList)
 import Debian.Arch (Arch, prettyArch)
+import Debian.Pretty (Pretty(pretty), Doc, text, empty)
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
-import Text.PrettyPrint.ANSI.Leijen (Pretty(pretty), Doc, text, empty, (<>))
 
 -- Local Modules
 
@@ -78,11 +78,11 @@ data VersionReq
       deriving (Eq, Show)
 
 prettyVersionReq :: VersionReq -> Doc
-prettyVersionReq (SLT v) = text $ " (<< " ++ show (prettyDebianVersion v) ++ ")"
-prettyVersionReq (LTE v) = text $ " (<= " ++ show (prettyDebianVersion v) ++ ")"
-prettyVersionReq (EEQ v) = text $ " (= " ++ show (prettyDebianVersion v) ++ ")"
-prettyVersionReq (GRE v) = text $ " (>= " ++ show (prettyDebianVersion v) ++ ")"
-prettyVersionReq (SGR v) = text $ " (>> " ++ show (prettyDebianVersion v) ++ ")"
+prettyVersionReq (SLT v) = text " (<< " <> prettyDebianVersion v <> text ")"
+prettyVersionReq (LTE v) = text " (<= " <> prettyDebianVersion v <> text ")"
+prettyVersionReq (EEQ v) = text " (= " <> prettyDebianVersion v <> text ")"
+prettyVersionReq (GRE v) = text " (>= " <> prettyDebianVersion v <> text ")"
+prettyVersionReq (SGR v) = text " (>> " <> prettyDebianVersion v <> text ")"
 
 -- |The sort order is based on version number first, then on the kind of
 -- relation, sorting in the order <<, <= , ==, >= , >>
@@ -105,20 +105,16 @@ checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
 
 instance Pretty BinPkgName where
-    pretty = text . unBinPkgName
+    pretty = pretty . unBinPkgName
 
 instance Pretty SrcPkgName where
-    pretty = text . unSrcPkgName
+    pretty = pretty . unSrcPkgName
 
--- Unfortunately, the ansi-wl-pprint package has an instance @Pretty a
--- => Pretty [a]@, so we can't create an instance for a list of one
--- particular type.
+instance Pretty Relations where
+    pretty = prettyRelations
 
--- instance Pretty Relations where
---     pretty = prettyRelations
---
--- instance Pretty OrRelation where
---     pretty = prettyOrRelation
+instance Pretty OrRelation where
+    pretty = prettyOrRelation
 
 instance Pretty Relation where
     pretty = prettyRelation
