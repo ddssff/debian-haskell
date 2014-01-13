@@ -24,15 +24,8 @@ module Debian.Control.ByteString
 import qualified Control.Exception as E
 import "mtl" Control.Monad.State
 
-import Data.Char(chr,ord,toLower)
+import Data.Char(toLower)
 import Data.List
-import Data.Word
-
-import Foreign.ForeignPtr
-import Foreign.Ptr
-import Foreign.Storable         (Storable(..))
-
-import System.IO.Unsafe
 
 import Text.ParserCombinators.Parsec.Error
 import Text.ParserCombinators.Parsec.Pos
@@ -135,6 +128,7 @@ main =
 -}
 -- * Helper Functions
 
+safeIndex :: C.ByteString -> Int -> Maybe Char
 bs `safeIndex` i = if i < C.length bs then Just (bs `C.index` i) else Nothing
 
 -- * Parser
@@ -145,9 +139,9 @@ data Result a
     | Empty
       deriving Show
 
-m2r :: Maybe a -> Result a
-m2r (Just a) = Ok a
-m2r Nothing = Empty            
+-- m2r :: Maybe a -> Result a
+-- m2r (Just a) = Ok a
+-- m2r Nothing = Empty
 
 r2m :: Result a -> Maybe a
 r2m (Ok a) = Just a

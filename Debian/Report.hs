@@ -1,7 +1,6 @@
 module Debian.Report where
 
 import Debian.Apt.Index (Fetcher, Compression(..), update, controlFromIndex')
-import Debian.Control.Common (unControl)
 import Debian.Control.Text
 import Debian.Pretty (render)
 import Debian.Sources
