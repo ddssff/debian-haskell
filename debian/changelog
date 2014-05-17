@@ -1,3 +1,9 @@
+haskell-debian (3.81.1) unstable; urgency=low
+
+  * Modernize cabal file.
+
+ -- David Fox <dsf@seereason.com>  Sat, 17 May 2014 06:36:43 -0700
+
 haskell-debian (3.81) unstable; urgency=low
 
   * Replace library pretty and library ansi-wl-pprint with an ultra-simple

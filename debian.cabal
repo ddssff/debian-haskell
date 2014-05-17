@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.81
+Version:        3.81.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -8,7 +8,7 @@ Maintainer:     David Fox <dsf@seereason.com>
 Homepage:       http://src.seereason.com/haskell-debian
 Build-Type:     Simple
 Synopsis:       Modules for working with the Debian package system
-Cabal-Version: >= 1.6
+Cabal-Version: >= 1.9
 Description:
   This library includes modules covering some basic data types defined by
   the Debian policy manual - version numbers, control file syntax, etc.
@@ -100,7 +100,9 @@ Library
         Test.Versions
 
 Executable fakechanges
- Main-is: utils/FakeChanges.hs
+ Hs-Source-Dirs: utils
+ Main-is: FakeChanges.hs
+ Build-Depends: base, debian, filepath, Unixutils
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
  if flag(cabal19)
@@ -111,7 +113,9 @@ Executable fakechanges
    cpp-options: -DCABAL18
 
 Executable debian-report
- Main-is: utils/Report.hs
+ Hs-Source-Dirs: utils
+ Main-is: Report.hs
+ Build-Depends: base, debian, HaXml, unix
  ghc-options: -threaded -W -O2
  C-Sources:           cbits/gwinsz.c
  Include-Dirs:        cbits
@@ -126,7 +130,9 @@ Executable debian-report
    cpp-options: -DCABAL18
 
 Executable apt-get-build-depends
- Main-is: utils/AptGetBuildDeps.hs
+ Hs-Source-Dirs: utils
+ Main-is: AptGetBuildDeps.hs
+ Build-Depends: base, debian, process
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
  if flag(cabal19)
