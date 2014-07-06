@@ -8,36 +8,20 @@ Build-Depends: debhelper (>= 7.0)
                , cdbs
                , ghc
                , ghc-prof
-               , libghc-cabal-dev (>= 1.9) | ghc
-               , libghc-cabal-prof (>= 1.9) | ghc-prof
+               , ghc | libghc-cabal-dev (>= 1.9)
+               , ghc-prof | libghc-cabal-prof (>= 1.9)
                , libghc-hunit-dev
                , libghc-hunit-prof
-               , libghc-haxml-dev (>= 1.20)
-               , libghc-haxml-prof (>= 1.20)
+               , libghc-haxml-dev (>= 1:1.20)
+               , libghc-haxml-prof (>= 1:1.20)
                , libghc-unixutils-dev (>= 1.50)
                , libghc-unixutils-prof (>= 1.50)
-               , libghc-ansi-wl-pprint-dev
-               , libghc-ansi-wl-pprint-prof
-               , libghc-base-dev (>= 4) | ghc
-               , libghc-base-dev (<< 5) | ghc
-               , libghc-base-prof (>= 4) | ghc-prof
-               , libghc-base-prof (<< 5) | ghc-prof
-               , libghc-bytestring-dev | ghc
-               , libghc-bytestring-prof | ghc-prof
                , libghc-bzlib-dev
                , libghc-bzlib-prof
-               , libghc-containers-dev | ghc
-               , libghc-containers-prof | ghc-prof
-               , libghc-directory-dev | ghc
-               , libghc-directory-prof | ghc-prof
-               , libghc-filepath-dev | ghc
-               , libghc-filepath-prof | ghc-prof
                , libghc-mtl-dev
                , libghc-mtl-prof
                , libghc-network-dev (>= 2.4)
                , libghc-network-prof (>= 2.4)
-               , libghc-old-locale-dev | ghc
-               , libghc-old-locale-prof | ghc-prof
                , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (>= 2)
                , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (<< 3)
                , libghc-parsec3-dev (<< 4) | libghc-parsec2-dev (>= 2)
@@ -46,10 +30,6 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-parsec3-prof (>= 3) | libghc-parsec2-prof (<< 3)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (>= 2)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (<< 3)
-               , libghc-pretty-dev | ghc
-               , libghc-pretty-prof | ghc-prof
-               , libghc-process-dev | ghc
-               , libghc-process-prof | ghc-prof
                , libghc-process-listlike-prof | libghc-process-extras-prof
                , libghc-puremd5-dev
                , libghc-puremd5-prof
@@ -59,44 +39,31 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-regex-tdfa-prof
                , libghc-text-dev
                , libghc-text-prof
-               , libghc-time-dev | ghc
-               , libghc-time-prof | ghc-prof
-               , libghc-unix-dev | ghc
-               , libghc-unix-prof | ghc-prof
                , libghc-utf8-string-dev
                , libghc-utf8-string-prof
                , libghc-zlib-dev
                , libghc-zlib-prof
-               , libcrypto++-dev
+               , libghc-unixutils-dev
+               , libghc-unixutils-prof
+               , libghc-haxml-dev
+               , libghc-haxml-prof
 Build-Depends-Indep: ghc-doc
-                     , libghc-cabal-doc (>= 1.9) | ghc-doc
+                     , ghc-doc | libghc-cabal-doc (>= 1.9)
                      , libghc-hunit-doc
-                     , libghc-haxml-doc (>= 1.20)
+                     , libghc-haxml-doc (>= 1:1.20)
                      , libghc-unixutils-doc (>= 1.50)
-                     , libghc-ansi-wl-pprint-doc
-                     , libghc-base-doc (>= 4) | ghc-doc
-                     , libghc-base-doc (<< 5) | ghc-doc
-                     , libghc-bytestring-doc | ghc-doc
                      , libghc-bzlib-doc
-                     , libghc-containers-doc | ghc-doc
-                     , libghc-directory-doc | ghc-doc
-                     , libghc-filepath-doc | ghc-doc
                      , libghc-mtl-doc
                      , libghc-network-doc (>= 2.4)
-                     , libghc-old-locale-doc | ghc-doc
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (>= 2)
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (<< 3)
                      , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (>= 2)
                      , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (<< 3)
-                     , libghc-pretty-doc | ghc-doc
-                     , libghc-process-doc | ghc-doc
                      , libghc-process-listlike-doc | libghc-process-extras-doc
                      , libghc-puremd5-doc
                      , libghc-regex-compat-doc
                      , libghc-regex-tdfa-doc
                      , libghc-text-doc
-                     , libghc-time-doc | ghc-doc
-                     , libghc-unix-doc | ghc-doc
                      , libghc-utf8-string-doc
                      , libghc-zlib-doc
 Standards-Version: 3.9.3
