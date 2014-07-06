@@ -10,6 +10,8 @@ Build-Depends: debhelper (>= 7.0)
                , ghc-prof
                , ghc | libghc-cabal-dev (>= 1.9)
                , ghc-prof | libghc-cabal-prof (>= 1.9)
+               , libghc-ansi-wl-pprint-dev
+               , libghc-ansi-wl-pprint-prof
                , libghc-hunit-dev
                , libghc-hunit-prof
                , libghc-haxml-dev (>= 1:1.20)
