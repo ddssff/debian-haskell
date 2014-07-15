@@ -1,3 +1,9 @@
+haskell-debian (3.81.3) unstable; urgency=low
+
+  * Remove spurious dependency on Cabal.
+
+ -- David Fox <dsf@seereason.com>  Tue, 15 Jul 2014 06:58:42 -0700
+
 haskell-debian (3.81.2) unstable; urgency=low
 
   * Update debian build dependencies.

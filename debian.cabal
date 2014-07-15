@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.81.2
+Version:        3.81.3
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -15,9 +15,6 @@ Description:
 extra-source-files:
   Test/Main.hs, Test/Changes.hs, Test/Dependencies.hs,
   Test/SourcesList.hs, Test/VersionPolicy.hs, Test/Versions.hs, Test/Control.hs, changelog, debian/changelog, debian/changelog.pre-debian
-
-Flag cabal19
- Description: True if Cabal >= 1.9 is available
 
 Flag listlike
  Description: Use process-listlike instead of process-extra
@@ -52,12 +49,6 @@ Library
  else
    build-depends: process-extras
  ghc-options: -Wall -O2
- if flag(cabal19)
-   build-depends: Cabal >= 1.9
-   cpp-options: -DCABAL19
- else
-   build-depends: Cabal >= 1.8
-   cpp-options: -DCABAL18
  Extensions: ExistentialQuantification CPP
  Exposed-modules:
         Debian.Apt.Dependencies,
@@ -105,12 +96,6 @@ Executable fakechanges
  Build-Depends: base, debian, filepath, Unixutils
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
- if flag(cabal19)
-   build-depends: Cabal >= 1.9
-   cpp-options: -DCABAL19
- else
-   build-depends: Cabal >= 1.8
-   cpp-options: -DCABAL18
 
 Executable debian-report
  Hs-Source-Dirs: utils
@@ -122,12 +107,6 @@ Executable debian-report
  Install-Includes:    gwinsz.h
  Extensions:           ExistentialQuantification CPP
  Build-Depends: pretty
- if flag(cabal19)
-   build-depends: Cabal >= 1.9
-   cpp-options: -DCABAL19
- else
-   build-depends: Cabal >= 1.8
-   cpp-options: -DCABAL18
 
 Executable apt-get-build-depends
  Hs-Source-Dirs: utils
@@ -135,12 +114,6 @@ Executable apt-get-build-depends
  Build-Depends: base, debian, process
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
- if flag(cabal19)
-   build-depends: Cabal >= 1.9
-   cpp-options: -DCABAL19
- else
-   build-depends: Cabal >= 1.8
-   cpp-options: -DCABAL18
 
 source-repository head
   type:     darcs

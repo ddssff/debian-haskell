@@ -8,8 +8,6 @@ Build-Depends: debhelper (>= 7.0)
                , cdbs
                , ghc
                , ghc-prof
-               , ghc | libghc-cabal-dev (>= 1.9)
-               , ghc-prof | libghc-cabal-prof (>= 1.9)
                , libghc-ansi-wl-pprint-dev
                , libghc-ansi-wl-pprint-prof
                , libghc-hunit-dev
@@ -50,7 +48,6 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-haxml-dev
                , libghc-haxml-prof
 Build-Depends-Indep: ghc-doc
-                     , ghc-doc | libghc-cabal-doc (>= 1.9)
                      , libghc-hunit-doc
                      , libghc-haxml-doc (>= 1:1.20)
                      , libghc-unixutils-doc (>= 1.50)
