@@ -2,9 +2,9 @@
 
 import Distribution.Simple
 import Distribution.Simple.Program
-import System.Cmd
 import System.Directory
 import System.Exit
+import System.Process
 
 main = copyFile "debian/changelog" "changelog" >>
        defaultMainWithHooks simpleUserHooks {

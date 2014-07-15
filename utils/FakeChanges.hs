@@ -3,8 +3,8 @@ module Main where
 import Debian.Util.FakeChanges
 import System.Environment
 import System.Console.GetOpt
+import System.Directory (canonicalizePath)
 import System.FilePath
-import System.Unix.FilePath (realpath)
 
 data Flag 
     = OutputDir FilePath
@@ -32,7 +32,7 @@ main =
        (changesFP, contents) <- fakeChanges files
        outdir <-
            case opts of
-             [OutputDir dir] -> realpath dir
+             [OutputDir dir] -> canonicalizePath dir
              _ -> return "."
        writeFile (outdir </> changesFP) $! contents
 

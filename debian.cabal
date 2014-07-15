@@ -93,7 +93,7 @@ Library
 Executable fakechanges
  Hs-Source-Dirs: utils
  Main-is: FakeChanges.hs
- Build-Depends: base, debian, filepath, Unixutils
+ Build-Depends: base, debian, directory, filepath
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
 
