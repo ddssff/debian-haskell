@@ -30,6 +30,7 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-parsec3-prof (>= 3) | libghc-parsec2-prof (<< 3)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (>= 2)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (<< 3)
+               , libghc-process-listlike-dev | libghc-process-extras-dev
                , libghc-process-listlike-prof | libghc-process-extras-prof
                , libghc-puremd5-dev
                , libghc-puremd5-prof

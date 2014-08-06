@@ -51,7 +51,7 @@ data ChangedFileSpec =
 
 -- |A changelog is a series of ChangeLogEntries
 data ChangeLogEntry =
-    Entry { logPackage :: String
+    Entry { logPackage :: String -- FIXME: Should be a SrcPkgName
           , logVersion :: DebianVersion
           , logDists :: [ReleaseName]
           , logUrgency :: String

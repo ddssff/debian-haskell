@@ -26,6 +26,14 @@ module Debian.Control
     , formatControl
     , formatParagraph
     , formatField
+    -- * Policy classes and functions
+    , P.HasDebianControl(..)
+    , P.debianSourceParagraph
+    , P.debianBinaryParagraphs
+    , P.debianPackageParagraphs
+    , P.debianPackageNames
+    , P.debianSourcePackageName
+    , P.debianBinaryPackageNames
     ) where
 
 --import Control.Monad
@@ -38,6 +46,7 @@ import Data.List
 import Data.Text as T (Text, pack, concat)
 import qualified Debian.Control.Text as T
 import qualified Debian.Control.ByteString as B ()
+import qualified Debian.Control.Policy as P
 import qualified Debian.Control.String as S
 
 packParagraph :: S.Paragraph -> T.Paragraph
