@@ -27,6 +27,7 @@ Library
    bzlib,
    containers,
    directory,
+   either,
    filepath,
    HaXml >= 1.20,
    HUnit,
