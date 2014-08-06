@@ -22,7 +22,6 @@ module Debian.GenBuildDeps
     , getSourceOrder
     ) where
 
-import		 Control.Applicative ((<$>), (<*>))
 import		 Control.Monad (filterM)
 import           Control.Monad.Trans (lift)
 import           Control.Monad.Trans.Either (EitherT, left, right, bimapEitherT)
@@ -50,8 +49,9 @@ data DepInfo = DepInfo {
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
 buildDependencies :: (Monad m, HasDebianControl control Text) => control -> EitherT ControlFileError m DepInfo
 buildDependencies control = do
-  (s, bd, bdi, bs) <- (,,,) <$> debianSourcePackageName control <*> debianBuildDeps control <*> debianBuildDepsIndep control <*> debianBinaryPackageNames control
-  right $ DepInfo { sourceName = s, relations = concat [bd, bdi], binaryNames = bs}
+  right $ DepInfo { sourceName = debianSourcePackageName control
+                  , relations = concat [debianBuildDeps control, debianBuildDepsIndep control]
+                  , binaryNames = debianBinaryPackageNames control }
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package

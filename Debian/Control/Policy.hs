@@ -1,7 +1,7 @@
-{-# LANGUAGE CPP, FlexibleContexts, FlexibleInstances, FunctionalDependencies, MultiParamTypeClasses, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleContexts, FlexibleInstances, FunctionalDependencies, MultiParamTypeClasses, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wall #-}
 -- | Access to things that Debian policy says should be in a valid
--- control file.
+-- control file.  All of these may throw ControlFileError exceptions.
 module Debian.Control.Policy
     ( HasDebianControl(debianControl)
     , ControlFileError(..)
@@ -16,8 +16,8 @@ module Debian.Control.Policy
     , removeCommentParagraphs
     ) where
 
-import Control.Applicative ((<$>), (<*>))
-import Control.Monad.Trans.Either (EitherT, left, right)
+import Control.Exception (Exception, throw)
+import Data.Typeable (Typeable)
 import Data.ListLike (ListLike, toList)
 import Debian.Control.Common (Control'(..), Paragraph'(..), Field'(..), fieldValue, ControlFunctions)
 import Debian.Relation (SrcPkgName(..), BinPkgName(..), Relations, ParseRelations, parseRelations)
@@ -35,53 +35,54 @@ data ControlFileError
     | MissingField String
     | ParseRelationsError ParseError
     | ParseControlError String
-    deriving Show
+    deriving (Show, Typeable)
+
+instance Exception ControlFileError
 
 instance Eq ControlFileError where
     _ == _ = False
 
-debianPackageParagraphs :: (Monad m, HasDebianControl control text) =>
-                           control -> EitherT ControlFileError m (Paragraph' text, [Paragraph' text])
+debianPackageParagraphs :: HasDebianControl control text =>
+                           control -> (Paragraph' text, [Paragraph' text])
 debianPackageParagraphs ctl =
     case removeCommentParagraphs ctl of
-      (Control [_]) -> left NoBinaryParagraphs
-      (Control []) -> left NoParagraphs
-      (Control (sourceParagraph : binParagraphs)) -> right (sourceParagraph, binParagraphs)
+      (Control [_]) -> throw NoBinaryParagraphs
+      (Control []) -> throw NoParagraphs
+      (Control (sourceParagraph : binParagraphs)) -> (sourceParagraph, binParagraphs)
 
-debianSourceParagraph :: (Monad m, HasDebianControl control text) => control -> EitherT ControlFileError m (Paragraph' text)
-debianSourceParagraph ctl = fst <$> debianPackageParagraphs ctl
+debianSourceParagraph :: HasDebianControl control text => control -> Paragraph' text
+debianSourceParagraph = fst . debianPackageParagraphs
 
-debianBinaryParagraphs :: (Monad m, HasDebianControl control text) => control -> EitherT ControlFileError m [Paragraph' text]
-debianBinaryParagraphs ctl = snd <$> debianPackageParagraphs ctl
+debianBinaryParagraphs :: HasDebianControl control text => control -> [Paragraph' text]
+debianBinaryParagraphs = snd . debianPackageParagraphs
 
-debianPackageNames :: (Monad m, HasDebianControl control text, ListLike text Char) => control -> EitherT ControlFileError m (SrcPkgName, [BinPkgName])
-debianPackageNames c = do
-  (srcParagraph, binParagraphs) <- debianPackageParagraphs c
-  (,) <$> mapFieldValue (SrcPkgName . toList) "Source" srcParagraph <*> mapM (mapFieldValue (BinPkgName . toList) "Package") binParagraphs
+debianPackageNames :: (HasDebianControl control text, ListLike text Char) => control -> (SrcPkgName, [BinPkgName])
+debianPackageNames c =
+  let (srcParagraph, binParagraphs) = debianPackageParagraphs c in
+  (mapFieldValue (SrcPkgName . toList) "Source" srcParagraph, map (mapFieldValue (BinPkgName . toList) "Package") binParagraphs)
 
-debianSourcePackageName :: (Monad m, HasDebianControl control text, ListLike text Char) => control -> EitherT ControlFileError m SrcPkgName
-debianSourcePackageName ctl = fst <$> debianPackageNames ctl
+debianSourcePackageName :: (HasDebianControl control text, ListLike text Char) => control -> SrcPkgName
+debianSourcePackageName = fst . debianPackageNames
 
-debianBinaryPackageNames :: (Monad m, HasDebianControl control text, ListLike text Char) => control -> EitherT ControlFileError m [BinPkgName]
-debianBinaryPackageNames ctl = snd <$> debianPackageNames ctl
+debianBinaryPackageNames :: (HasDebianControl control text, ListLike text Char) => control -> [BinPkgName]
+debianBinaryPackageNames = snd . debianPackageNames
 
-mapFieldValue :: (Monad m, ControlFunctions text) => (text -> a) -> String -> Paragraph' text -> EitherT ControlFileError m a
-mapFieldValue f fieldName paragraph = f <$> (fieldValue' fieldName paragraph)
+mapFieldValue :: ControlFunctions text => (text -> a) -> String -> Paragraph' text -> a
+mapFieldValue f fieldName paragraph = f $ fieldValue' fieldName paragraph
 
-debianRelations :: (Monad m, HasDebianControl control text, ListLike text Char, ParseRelations text) => String -> control -> EitherT ControlFileError m Relations
+debianRelations :: (HasDebianControl control text, ListLike text Char, ParseRelations text) => String -> control -> Relations
 debianRelations fieldName ctl =
-    debianSourceParagraph ctl >>= fieldValue' fieldName >>= either (left . ParseRelationsError) right . parseRelations
-    -- either (\ e -> error $ "Error parsing Build-Depends-Indep for" ++ display (debianSourcePackageName ctl) ++ ": " ++ show e) id . parseRelations . fieldValue' fieldName . debianSourceParagraph $ ctl
+     either (throw . ParseRelationsError) id $ parseRelations $ fieldValue' fieldName (debianSourceParagraph ctl)
 
-debianBuildDepsIndep :: (Monad m, HasDebianControl control text, ListLike text Char, ParseRelations text) => control -> EitherT ControlFileError m Relations
+debianBuildDepsIndep :: (HasDebianControl control text, ListLike text Char, ParseRelations text) => control -> Relations
 debianBuildDepsIndep = debianRelations "Build-Depends-Indep"
 
-debianBuildDeps :: (Monad m, HasDebianControl control text, ListLike text Char, ParseRelations text) => control -> EitherT ControlFileError m Relations
+debianBuildDeps :: (HasDebianControl control text, ListLike text Char, ParseRelations text) => control -> Relations
 debianBuildDeps = debianRelations "Build-Depends"
 
-fieldValue' :: (Monad m, ControlFunctions text) => String -> Paragraph' text -> EitherT ControlFileError m text
+fieldValue' :: ControlFunctions text => String -> Paragraph' text -> text
 fieldValue' fieldName paragraph =
-    maybe (left $ MissingField fieldName) right $ fieldValue fieldName paragraph
+    maybe (throw $ MissingField fieldName) id $ fieldValue fieldName paragraph
 
 -- | Comment paragraphs are rare, but they happen.
 removeCommentParagraphs :: HasDebianControl control text => control -> Control' text
