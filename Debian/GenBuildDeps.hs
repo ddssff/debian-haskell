@@ -12,6 +12,7 @@ module Debian.GenBuildDeps
     , oldRelaxDeps
     -- * Using dependency info
     , BuildableInfo(..)
+    , ReadyTarget(..)
     , buildable
     , compareSource
     -- * Obsolete?
@@ -137,18 +138,27 @@ oldRelaxDeps relaxInfo deps =
                 map fst . filter (maybe True (== source) . snd) $ pairs
                 -- concat . map binaries . catMaybes . map snd . filter (\ (_, x) -> maybe True (== source) x) $ pairs
 
+-- | 
+data ReadyTarget a
+    = ReadyTarget { ready :: a
+                  -- ^ Some target whose build dependencies are all satisfied
+                  , waiting :: [a]
+                  -- ^ The targets that are waiting for the ready target
+                  , other :: [a]
+                  -- ^ The rest of the targets that need to be built
+                  }
+
 data BuildableInfo a
-    = BuildableInfo 
-      { readyTriples :: [(a, [a], [a])]
-      , allBlocked :: [a]
-      }
+    = BuildableInfo
+      { readyTargets :: [ReadyTarget a]
+      , allBlocked :: [a] }
     | CycleInfo
       { depPairs :: [(a, a)] }
 
--- |Given an ordering function representing the dependencies on a
--- list of packages, return a triple: One ready package, the packages
--- that depend on the ready package directly or indirectly, and all
--- the other packages.
+-- | Given an ordering function representing the dependencies on a
+-- list of packages, return a ReadyTarget triple: One ready package,
+-- the packages that depend on the ready package directly or
+-- indirectly, and all the other packages.
 buildable :: (a -> a -> Ordering) -> [a] -> BuildableInfo a
 buildable cmp packages =
     -- Find all packages which can't reach any other packages in the
@@ -160,14 +170,15 @@ buildable cmp packages =
       -- We have some buildable packages, return them along with
       -- the list of packages each one directly blocks
       (allReady, blocked) ->
-          BuildableInfo 
-          { readyTriples = map (makeTriple blocked allReady) allReady,
-            allBlocked = map ofVertex blocked }
+          BuildableInfo { readyTargets = map (makeReady blocked allReady) allReady
+                        , allBlocked = map ofVertex blocked }
     where
-      makeTriple blocked ready thisReady =
+      makeReady blocked ready thisReady =
           let otherReady = filter (/= thisReady) ready
               (directlyBlocked, otherBlocked) = partition (\ x -> elem x (reachable isDep thisReady)) blocked in
-          (ofVertex thisReady, map ofVertex directlyBlocked, map ofVertex (otherReady ++ otherBlocked))
+          ReadyTarget { ready = ofVertex thisReady
+                      , waiting = map ofVertex directlyBlocked
+                      , other = map ofVertex (otherReady ++ otherBlocked) }
       --allDeps x = (ofVertex x, map ofVertex (filter (/= x) (reachable hasDep x)))
       isDep = buildG (0, length packages - 1) edges'
       edges' = map (\ (a, b) -> (b, a)) edges''
