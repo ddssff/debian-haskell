@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
@@ -22,15 +22,17 @@ module Debian.GenBuildDeps
     , getSourceOrder
     ) where
 
+import		 Control.Applicative ((<$>))
 import		 Control.Monad (filterM)
-import		 Debian.Control
 import           Data.Either
 import		 Data.Graph (Graph, Edge, buildG, topSort, reachable, transposeG, vertices, edges)
 import		 Data.List
 import qualified Data.Map as Map
 import		 Data.Maybe
 import qualified Data.Set as Set
-import           Data.Text (Text, unpack)
+import           Data.Text (Text)
+import		 Debian.Control (HasDebianControl, debianSourcePackageName, debianBinaryPackageNames, parseControlFromFile)
+import		 Debian.Control.Policy (debianBuildDeps, debianBuildDepsIndep)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
 import		 System.Directory (getDirectoryContents, doesFileExist)
@@ -53,25 +55,11 @@ concatEithers xs =
 -- |Return the dependency info for a source package with the given dependency relaxation.
 -- |According to debian policy, only the first paragraph in debian\/control can be a source package
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
-buildDependencies :: Control' Text -> Either String DepInfo
-buildDependencies (Control []) = error "Control file seems to be empty"
-buildDependencies (Control (source:binaries)) =
-    either (Left . concat) (\ rels -> Right (DepInfo {sourceName = sourcePackage, relations = rels, binaryNames = bins})) deps
-    where
-      sourcePackage = maybe (error "First Paragraph in control file lacks a Source field") (SrcPkgName . unpack) $ assoc "Source" source
-      -- The raw list of build dependencies for this package
-      deps = either Left (Right . concat) (concatEithers [buildDeps, buildDepsIndep])
-      buildDeps =
-          case assoc "Build-Depends" source of
-            Just v -> either (\ e -> Left ("Error parsing Build-Depends for" ++ show sourcePackage ++ ": " ++ show e)) Right (parseRelations v)
-            _ -> Right []
-      buildDepsIndep =
-          case assoc "Build-Depends-Indep" source of
-            (Just v) -> either (\ e -> Left ("Error parsing Build-Depends-Indep for" ++ show sourcePackage ++ ": " ++ show e)) Right (parseRelations v)
-            _ -> Right []
-      bins = mapMaybe lookupPkgName binaries
-      lookupPkgName :: Paragraph' Text -> Maybe BinPkgName
-      lookupPkgName p = maybe Nothing (Just . BinPkgName . unpack) (assoc "Package" p)
+buildDependencies :: HasDebianControl control Text => control -> Either String DepInfo
+buildDependencies control =
+    Right (DepInfo { sourceName = debianSourcePackageName control
+                   , relations = concat [debianBuildDeps control, debianBuildDepsIndep control]
+                   , binaryNames = debianBinaryPackageNames control })
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package
@@ -268,8 +256,9 @@ genDeps controlFiles =
     return . either (Left . concat) (Right . orderSource compareSource) . concatEithers
     where
       genDep' :: FilePath -> IO (Either String DepInfo)
-      genDep' controlPath = parseControlFromFile controlPath >>=
-                            return . either (Left . show) buildDependencies
+      genDep' controlPath = do
+        ctl <- either (Left . show) Right <$> (parseControlFromFile controlPath)
+        return . either (Left . show) buildDependencies $ ctl
 
 -- |One example of how to tie the below functions together. In this
 -- case 'fp' is the path to a directory that contains a bunch of
@@ -288,7 +277,3 @@ getSourceOrder fp =
           getDirectoryContents root >>=
           mapM (\ x -> return $ root ++ "/" ++ x ++ "/debian/control") >>=
           filterM doesFileExist
-
-
-assoc :: String -> Paragraph' Text -> Maybe Text
-assoc name fields = maybe Nothing (\ (Field (_, v)) -> Just (stripWS v)) (lookupP name fields)
