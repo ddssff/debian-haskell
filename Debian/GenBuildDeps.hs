@@ -5,7 +5,7 @@
 module Debian.GenBuildDeps 
     ( DepInfo(..)
     -- * Preparing dependency info
-    , buildDependencies
+    , buildDependenciesE
     , RelaxInfo
     , relaxDeps
     , OldRelaxInfo(..)
@@ -17,22 +17,22 @@ module Debian.GenBuildDeps
     , compareSource
     -- * Obsolete?
     , orderSource
-    , genDeps
+    , genDepsE
     , failPackage
-    , getSourceOrder
+    , getSourceOrderE
     ) where
 
+import           Control.Applicative ((<$>))
+import           Control.Exception (throw)
 import		 Control.Monad (filterM)
-import           Control.Monad.Trans (lift)
-import           Control.Monad.Trans.Either (EitherT, left, right, bimapEitherT)
 import		 Data.Graph (Graph, Edge, buildG, topSort, reachable, transposeG, vertices, edges)
 import		 Data.List
 import qualified Data.Map as Map
 import		 Data.Maybe
 import qualified Data.Set as Set
 import           Data.Text (Text)
-import		 Debian.Control (HasDebianControl, debianSourcePackageName, debianBinaryPackageNames, parseControlFromFile)
-import		 Debian.Control.Policy (ControlFileError(..), debianBuildDeps, debianBuildDepsIndep)
+import		 Debian.Control (HasDebianControl, parseControlFromFile)
+import		 Debian.Control.Policy (ControlFileError(..), debianSourcePackageNameE, debianBinaryPackageNamesE, debianBuildDepsE, debianBuildDepsIndepE)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
 import		 System.Directory (getDirectoryContents, doesFileExist)
@@ -47,11 +47,12 @@ data DepInfo = DepInfo {
 -- |Return the dependency info for a source package with the given dependency relaxation.
 -- |According to debian policy, only the first paragraph in debian\/control can be a source package
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
-buildDependencies :: (Monad m, HasDebianControl control Text) => control -> EitherT ControlFileError m DepInfo
-buildDependencies control = do
-  right $ DepInfo { sourceName = debianSourcePackageName control
-                  , relations = concat [debianBuildDeps control, debianBuildDepsIndep control]
-                  , binaryNames = debianBinaryPackageNames control }
+buildDependenciesE :: (HasDebianControl control Text) => control -> DepInfo
+buildDependenciesE control = do
+  DepInfo { sourceName = debianSourcePackageNameE control
+          , relations = concat [fromMaybe [] (debianBuildDepsE control),
+                                fromMaybe [] (debianBuildDepsIndepE control)]
+          , binaryNames = debianBinaryPackageNamesE control }
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package
@@ -242,23 +243,22 @@ compareSource (DepInfo {relations = depends1, binaryNames = bins1}) (DepInfo {re
       checkPackageNameReq (Rel rPkgName _ _) bPkgName = rPkgName == bPkgName
 
 -- |Return the dependency info for a list of control files.
-genDeps :: [FilePath] -> EitherT ControlFileError IO [DepInfo]
-genDeps controlFiles = do
-  bimapEitherT id (orderSource compareSource) (mapM genDep' controlFiles)
+genDepsE :: [FilePath] -> IO [DepInfo]
+genDepsE controlFiles = do
+  orderSource compareSource <$> mapM genDep' controlFiles
     where
       -- Parse the control file and extract the build dependencies
-      genDep' :: FilePath -> EitherT ControlFileError IO DepInfo
-      genDep' controlPath = lift (parseControlFromFile controlPath) >>= either (left . ParseRelationsError) right >>= buildDependencies
+      genDep' :: FilePath -> IO DepInfo
+      genDep' controlPath = parseControlFromFile controlPath >>= either (throw . ParseRelationsError) (return . buildDependenciesE)
 
 -- |One example of how to tie the below functions together. In this
 -- case 'fp' is the path to a directory that contains a bunch of
 -- checked out source packages. The code will automatically look for
 -- debian\/control. It returns a list with the packages in the
 -- order they should be built.
-getSourceOrder :: FilePath -> EitherT ControlFileError IO [SrcPkgName]
-getSourceOrder fp =
-    lift (findControlFiles fp) >>=
-    bimapEitherT id (map sourceName . orderSource compareSource) . genDeps
+getSourceOrderE :: FilePath -> IO [SrcPkgName]
+getSourceOrderE fp =
+    findControlFiles fp >>= genDepsE >>= return . map sourceName
     where
       -- Return a list of the files that look like debian\/control.
       findControlFiles :: FilePath -> IO [FilePath]
