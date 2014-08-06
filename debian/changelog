@@ -1,3 +1,14 @@
+haskell-debian (3.82) unstable; urgency=low
+
+  * Add Debian.Control.Policy which has knowledge of specific fields, such
+    as Source and Package, which are expected to be present in a debian
+    control file.
+  * Replace a 3-tuple in Debian.GenBuildDeps with a record named
+    ReadyTargets.
+  * Add Debian.Pretty.display :: Pretty a => a -> String
+
+ -- David Fox <dsf@seereason.com>  Wed, 06 Aug 2014 06:13:15 -0700
+
 haskell-debian (3.81.3) unstable; urgency=low
 
   * Remove spurious dependency on Cabal.
