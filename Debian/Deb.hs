@@ -4,7 +4,7 @@ module Debian.Deb where
 import Control.Monad
 
 import Debian.Control.Common
-import System.Directory (canonicalizePath, getTemporaryDirectory)
+import System.Directory (canonicalizePath)
 import System.Exit (ExitCode(..))
 import System.Process (readProcessWithExitCode)
 import System.Unix.Directory (withTemporaryDirectory, withWorkingDirectory)
