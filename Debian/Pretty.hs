@@ -7,6 +7,7 @@ module Debian.Pretty
     , vcat
     , Pretty(pretty)
     , render
+    , display
     , (<>)
     ) where
 
@@ -47,6 +48,9 @@ instance Pretty Text where
 
 render :: Doc -> Text
 render = unDoc
+
+display :: Pretty a => a -> String
+display = unpack . unDoc . pretty
 
 -- I'm keeping this for backwards compatibility, though it doesn't seem like
 -- a proper use of the Show class to me.
