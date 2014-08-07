@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
@@ -31,9 +31,11 @@ import qualified Data.Map as Map
 import		 Data.Maybe
 import qualified Data.Set as Set
 import		 Debian.Control (parseControlFromFile)
-import		 Debian.Control.Policy (HasDebianControl, ControlFileError(ParseRelationsError), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
+import		 Debian.Control.Policy (HasDebianControl, ControlFileError(..), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
+import           Debian.Loc (__LOC__, mapExn)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
+import           Language.Haskell.TH (Loc)
 import		 System.Directory (getDirectoryContents, doesFileExist)
 
 -- | This type describes the build dependencies of a source package.
@@ -248,7 +250,12 @@ genDeps controlFiles = do
     where
       -- Parse the control file and extract the build dependencies
       genDep' :: FilePath -> IO DepInfo
-      genDep' controlPath = parseControlFromFile controlPath >>= either (throw . ParseRelationsError) (\ x -> validateDebianControl x >>= either throw (return . buildDependencies))
+      genDep' controlPath = parseControlFromFile controlPath >>=
+                            either (\ x -> throw (ParseRelationsError [$__LOC__] x))
+                                   (\ x -> validateDebianControl x {- `mapExn` (pushLoc $__LOC__) -} >>= either throw (return . buildDependencies))
+
+-- pushLoc :: Loc -> ControlFileError -> ControlFileError
+-- pushLoc loc e = e {locs = loc : locs e}
 
 -- |One example of how to tie the below functions together. In this
 -- case 'fp' is the path to a directory that contains a bunch of

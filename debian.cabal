@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.82
+Version:        3.83
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -41,6 +41,7 @@ Library
    pureMD5,
    regex-compat,
    regex-tdfa,
+   template-haskell,
    text,
    time,
    unix,
@@ -69,6 +70,7 @@ Library
         Debian.Deb,
         Debian.Extra.Files,
         Debian.GenBuildDeps,
+        Debian.Loc,
         Debian.Pretty,
         Debian.Relation,
         Debian.Relation.ByteString,
@@ -122,7 +124,7 @@ Executable apt-get-build-depends
 Executable debian-tests
  Main-is: Test/Main.hs
  ghc-options: -threaded -W -O2
- Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike, mtl, network, parsec, process, regex-compat, regex-tdfa, text, utf8-string
+ Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike, mtl, network, parsec, process, regex-compat, regex-tdfa, template-haskell, text, utf8-string
  if flag(listlike)
    build-depends: process-listlike
  else
