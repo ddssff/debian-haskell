@@ -1,6 +1,5 @@
 module Main where
 
-import Data.List (intercalate)
 import Test.HUnit
 import System.Exit
 import Test.Changes
@@ -16,7 +15,7 @@ main =
        putStrLn (st "")
        case (failures c) + (errors c) of
          0 -> return ()
-         n -> exitFailure
+         _ -> exitFailure
 
 -- | I was converting from one pretty printing package to another and
 -- was unclear how this should work.

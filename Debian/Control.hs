@@ -28,12 +28,19 @@ module Debian.Control
     , formatField
     -- * Policy classes and functions
     , P.HasDebianControl(..)
+    , P.ControlFileError(..)
+    , P.parseDebianControlFromFile
+    , P.validateDebianControl
+    , P.unsafeDebianControl
     , P.debianSourceParagraph
     , P.debianBinaryParagraphs
     , P.debianPackageParagraphs
     , P.debianPackageNames
     , P.debianSourcePackageName
     , P.debianBinaryPackageNames
+    , P.debianRelations
+    , P.debianBuildDeps
+    , P.debianBuildDepsIndep
     ) where
 
 --import Control.Monad

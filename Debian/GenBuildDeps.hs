@@ -5,7 +5,7 @@
 module Debian.GenBuildDeps 
     ( DepInfo(..)
     -- * Preparing dependency info
-    , buildDependenciesE
+    , buildDependencies
     , RelaxInfo
     , relaxDeps
     , OldRelaxInfo(..)
@@ -17,9 +17,9 @@ module Debian.GenBuildDeps
     , compareSource
     -- * Obsolete?
     , orderSource
-    , genDepsE
+    , genDeps
     , failPackage
-    , getSourceOrderE
+    , getSourceOrder
     ) where
 
 import           Control.Applicative ((<$>))
@@ -30,9 +30,8 @@ import		 Data.List
 import qualified Data.Map as Map
 import		 Data.Maybe
 import qualified Data.Set as Set
-import           Data.Text (Text)
-import		 Debian.Control (HasDebianControl, parseControlFromFile)
-import		 Debian.Control.Policy (ControlFileError(..), debianSourcePackageNameE, debianBinaryPackageNamesE, debianBuildDepsE, debianBuildDepsIndepE)
+import		 Debian.Control (parseControlFromFile)
+import		 Debian.Control.Policy (HasDebianControl, ControlFileError(ParseRelationsError), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
 import		 System.Directory (getDirectoryContents, doesFileExist)
@@ -47,12 +46,12 @@ data DepInfo = DepInfo {
 -- |Return the dependency info for a source package with the given dependency relaxation.
 -- |According to debian policy, only the first paragraph in debian\/control can be a source package
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
-buildDependenciesE :: (HasDebianControl control Text) => control -> DepInfo
-buildDependenciesE control = do
-  DepInfo { sourceName = debianSourcePackageNameE control
-          , relations = concat [fromMaybe [] (debianBuildDepsE control),
-                                fromMaybe [] (debianBuildDepsIndepE control)]
-          , binaryNames = debianBinaryPackageNamesE control }
+buildDependencies :: HasDebianControl control => control -> DepInfo
+buildDependencies control = do
+  DepInfo { sourceName = debianSourcePackageName control
+          , relations = concat [fromMaybe [] (debianBuildDeps control),
+                                fromMaybe [] (debianBuildDepsIndep control)]
+          , binaryNames = debianBinaryPackageNames control }
 
 -- |Specifies build dependencies that should be ignored during the build
 -- decision.  If the pair is (BINARY, Nothing) it means the binary package
@@ -243,22 +242,22 @@ compareSource (DepInfo {relations = depends1, binaryNames = bins1}) (DepInfo {re
       checkPackageNameReq (Rel rPkgName _ _) bPkgName = rPkgName == bPkgName
 
 -- |Return the dependency info for a list of control files.
-genDepsE :: [FilePath] -> IO [DepInfo]
-genDepsE controlFiles = do
+genDeps :: [FilePath] -> IO [DepInfo]
+genDeps controlFiles = do
   orderSource compareSource <$> mapM genDep' controlFiles
     where
       -- Parse the control file and extract the build dependencies
       genDep' :: FilePath -> IO DepInfo
-      genDep' controlPath = parseControlFromFile controlPath >>= either (throw . ParseRelationsError) (return . buildDependenciesE)
+      genDep' controlPath = parseControlFromFile controlPath >>= either (throw . ParseRelationsError) (\ x -> validateDebianControl x >>= either throw (return . buildDependencies))
 
 -- |One example of how to tie the below functions together. In this
 -- case 'fp' is the path to a directory that contains a bunch of
 -- checked out source packages. The code will automatically look for
 -- debian\/control. It returns a list with the packages in the
 -- order they should be built.
-getSourceOrderE :: FilePath -> IO [SrcPkgName]
-getSourceOrderE fp =
-    findControlFiles fp >>= genDepsE >>= return . map sourceName
+getSourceOrder :: FilePath -> IO [SrcPkgName]
+getSourceOrder fp =
+    findControlFiles fp >>= genDeps >>= return . map sourceName
     where
       -- Return a list of the files that look like debian\/control.
       findControlFiles :: FilePath -> IO [FilePath]

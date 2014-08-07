@@ -119,6 +119,15 @@ Executable apt-get-build-depends
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
 
+Executable debian-tests
+ Main-is: Test/Main.hs
+ ghc-options: -threaded -W -O2
+ Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike, mtl, network, parsec, process, regex-compat, regex-tdfa, text, utf8-string
+ if flag(listlike)
+   build-depends: process-listlike
+ else
+   build-depends: process-extras
+
 source-repository head
   type:     darcs
   location: http://src.seereason.com/haskell-debian
