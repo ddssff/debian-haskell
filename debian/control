@@ -18,6 +18,12 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-unixutils-prof (>= 1.50)
                , libghc-bzlib-dev
                , libghc-bzlib-prof
+               , libghc-either-dev
+               , libghc-either-prof
+               , libghc-exceptions-dev
+               , libghc-exceptions-prof
+               , libghc-listlike-dev
+               , libghc-listlike-prof
                , libghc-mtl-dev
                , libghc-mtl-prof
                , libghc-network-dev (>= 2.4)
@@ -53,6 +59,9 @@ Build-Depends-Indep: ghc-doc
                      , libghc-haxml-doc (>= 1:1.20)
                      , libghc-unixutils-doc (>= 1.50)
                      , libghc-bzlib-doc
+                     , libghc-either-doc
+                     , libghc-exceptions-doc
+                     , libghc-listlike-doc
                      , libghc-mtl-doc
                      , libghc-network-doc (>= 2.4)
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (>= 2)
