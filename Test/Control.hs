@@ -11,8 +11,6 @@ import Debian.Pretty (pretty, render)
 import Debian.Relation
 import Debian.Version (parseDebianVersion)
 
-deriving instance Eq (Control' Text)
-
 instance Eq DebianControl where
     a == b = unDebianControl a == unDebianControl b
 -- deriving instance Show (Control' Text)
