@@ -1,3 +1,9 @@
+haskell-debian (3.83.2) unstable; urgency=low
+
+  * Add some Read, Show, Data, and Typeable instances.
+
+ -- David Fox <dsf@seereason.com>  Mon, 25 Aug 2014 03:47:38 -0700
+
 haskell-debian (3.83.1) unstable; urgency=low
 
   * Support new network-uri package.

@@ -9,9 +9,9 @@ import Debian.Pretty (pretty, render)
 import Debian.Release (ReleaseName(ReleaseName, relName))
 import Debian.Version (parseDebianVersion)
 
-deriving instance Show ChangeLogEntry
-instance Show ChangeLog where
-    show = unpack . render . pretty
+-- deriving instance Show ChangeLogEntry
+-- instance Show ChangeLog where
+--     show = unpack . render . pretty
 
 s3 = unlines
      ["name (version) dist; urgency=urgency",

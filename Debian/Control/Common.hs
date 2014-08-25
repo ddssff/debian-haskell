@@ -27,18 +27,18 @@ import System.Process (runInteractiveCommand, waitForProcess)
 import Text.ParserCombinators.Parsec (ParseError)
 
 newtype Control' a
-    = Control { unControl :: [Paragraph' a] }
+    = Control { unControl :: [Paragraph' a] } deriving (Eq, Ord, Read, Show)
 
 newtype Paragraph' a
     = Paragraph [Field' a]
-    deriving Eq
+    deriving (Eq, Ord, Read, Show)
 
 -- |NOTE: we do not strip the leading or trailing whitespace in the
 -- name or value
 data Field' a
     = Field (a, a)
     | Comment a     -- ^ Lines beginning with #
-      deriving Eq
+      deriving (Eq, Ord, Read, Show)
 
 class ControlFunctions a where
     -- |'parseControlFromFile' @filepath@ is a simple wrapper function

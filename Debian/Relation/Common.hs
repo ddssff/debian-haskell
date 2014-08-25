@@ -1,12 +1,14 @@
-{-# LANGUAGE FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
 module Debian.Relation.Common where
 
 -- Standard GHC Modules
 
+import Data.Data (Data)
 import Data.List as List (map, intersperse)
 import Data.Monoid (mconcat, (<>))
 import Data.Function
 import Data.Set as Set (Set, toList)
+import Data.Typeable (Typeable)
 import Debian.Arch (Arch, prettyArch)
 import Debian.Pretty (Pretty(pretty), Doc, text, empty)
 import Prelude hiding (map)
@@ -22,10 +24,10 @@ type Relations = AndRelation
 type AndRelation = [OrRelation]
 type OrRelation = [Relation]
 
-data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) deriving (Eq, Show)
+data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) deriving (Eq, Read, Show)
 
-newtype SrcPkgName = SrcPkgName {unSrcPkgName :: String} deriving (Show, Eq, Ord)
-newtype BinPkgName = BinPkgName {unBinPkgName :: String} deriving (Show, Eq, Ord)
+newtype SrcPkgName = SrcPkgName {unSrcPkgName :: String} deriving (Read, Show, Eq, Ord, Data, Typeable)
+newtype BinPkgName = BinPkgName {unBinPkgName :: String} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
 class Pretty a => PkgName a where
     pkgNameFromString :: String -> a
@@ -63,7 +65,7 @@ instance Ord Relation where
 data ArchitectureReq
     = ArchOnly (Set Arch)
     | ArchExcept (Set Arch)
-    deriving (Eq, Ord, Show)
+    deriving (Eq, Ord, Read, Show)
 
 prettyArchitectureReq :: ArchitectureReq -> Doc
 prettyArchitectureReq (ArchOnly arch) = text " [" <> mconcat (List.map prettyArch (toList arch)) <> text "]"
@@ -75,7 +77,7 @@ data VersionReq
     | EEQ  DebianVersion
     | GRE  DebianVersion
     | SGR DebianVersion
-      deriving (Eq, Show)
+      deriving (Eq, Read, Show)
 
 prettyVersionReq :: VersionReq -> Doc
 prettyVersionReq (SLT v) = text " (<< " <> prettyDebianVersion v <> text ")"
