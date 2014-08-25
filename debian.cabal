@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.83
+Version:        3.83.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -15,6 +15,10 @@ Description:
 extra-source-files:
   Test/Main.hs, Test/Changes.hs, Test/Dependencies.hs,
   Test/SourcesList.hs, Test/VersionPolicy.hs, Test/Versions.hs, Test/Control.hs, changelog, debian/changelog, debian/changelog.pre-debian
+
+flag network-uri
+ Description: Get Network.URI from the network-uri package
+ Default: True
 
 Flag listlike
  Description: Use process-listlike instead of process-extra
@@ -34,7 +38,6 @@ Library
    HUnit,
    ListLike,
    mtl,
-   network >= 2.4,
    old-locale,
    parsec >= 2 && <4,
    process,
@@ -48,6 +51,11 @@ Library
    Unixutils >= 1.50,
    utf8-string,
    zlib
+ if flag(network-uri)
+   Build-Depends: network-uri >= 2.6
+ else
+   Build-Depends: network >= 2.4 && < 2.6
+
  if flag(listlike)
    build-depends: process-listlike
  else
@@ -124,7 +132,11 @@ Executable apt-get-build-depends
 Executable debian-tests
  Main-is: Test/Main.hs
  ghc-options: -threaded -W -O2
- Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike, mtl, network, parsec, process, regex-compat, regex-tdfa, template-haskell, text, utf8-string
+ Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike, mtl, parsec, process, regex-compat, regex-tdfa, template-haskell, text, utf8-string
+ if flag(network-uri)
+   Build-Depends: network >= 2.6, network-uri >= 2.6
+ else
+   Build-Depends: network >= 2.4 && < 2.6
  if flag(listlike)
    build-depends: process-listlike
  else

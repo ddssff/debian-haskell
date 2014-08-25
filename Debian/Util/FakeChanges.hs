@@ -17,7 +17,7 @@ import System.FilePath
 import System.Posix.Files
 import Text.Regex.TDFA
 import Prelude hiding (concat, foldr, all, mapM, sum)
-import Network.BSD
+import Network.BSD (getHostName)
 
 import Debian.Control
 import qualified Debian.Deb as Deb

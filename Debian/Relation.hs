@@ -18,7 +18,7 @@ module Debian.Relation
     -- * Relation Parser
     , RelParser
     , ParseRelations(..)
-    ) where 
+    ) where
 
 import Debian.Arch (Arch(..), ArchOS(..), ArchCPU(..))
 import Debian.Relation.Common (SrcPkgName(..), BinPkgName(..), PkgName(pkgNameFromString))

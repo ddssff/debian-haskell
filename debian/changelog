@@ -1,3 +1,9 @@
+haskell-debian (3.83.1) unstable; urgency=low
+
+  * Support new network-uri package.
+
+ -- David Fox <dsf@seereason.com>  Sun, 24 Aug 2014 17:17:55 -0700
+
 haskell-debian (3.83) unstable; urgency=low
 
   * Add a Loc value to the ControlFileError type, the template
