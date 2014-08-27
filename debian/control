@@ -26,8 +26,10 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-listlike-prof
                , libghc-mtl-dev
                , libghc-mtl-prof
-               , libghc-network-dev (>= 2.4)
-               , libghc-network-prof (>= 2.4)
+               , libghc-network-dev (>= 2.6)
+               , libghc-network-prof (>= 2.6)
+               , libghc-network-uri-dev
+               , libghc-network-uri-prof
                , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (>= 2)
                , libghc-parsec3-dev (>= 3) | libghc-parsec2-dev (<< 3)
                , libghc-parsec3-dev (<< 4) | libghc-parsec2-dev (>= 2)
@@ -63,7 +65,8 @@ Build-Depends-Indep: ghc-doc
                      , libghc-exceptions-doc
                      , libghc-listlike-doc
                      , libghc-mtl-doc
-                     , libghc-network-doc (>= 2.4)
+                     , libghc-network-doc (>= 2.6)
+                     , libghc-network-uri-doc (>= 2.6)
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (>= 2)
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (<< 3)
                      , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (>= 2)
