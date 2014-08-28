@@ -1,11 +1,11 @@
 Name:           debian
-Version:        3.83.2
+Version:        3.83.3
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
 Category:       Debian
 Maintainer:     David Fox <dsf@seereason.com>
-Homepage:       http://src.seereason.com/haskell-debian
+Homepage:       https://github.com/ddssff/debian-haskell
 Build-Type:     Simple
 Synopsis:       Modules for working with the Debian package system
 Cabal-Version: >= 1.9
@@ -144,4 +144,4 @@ Executable debian-tests
 
 source-repository head
   type:     darcs
-  location: http://src.seereason.com/haskell-debian
+  location: https://github.com/ddssff/debian-haskell

@@ -1,3 +1,9 @@
+haskell-debian (3.83.3) unstable; urgency=low
+
+  * Moved repository to https://github.com/ddssff/debian-haskell
+
+ -- David Fox <dsf@seereason.com>  Thu, 28 Aug 2014 08:36:16 -0700
+
 haskell-debian (3.83.2) unstable; urgency=low
 
   * Add some Read, Show, Data, and Typeable instances.
