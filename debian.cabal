@@ -143,5 +143,5 @@ Executable debian-tests
    build-depends: process-extras
 
 source-repository head
-  type:     darcs
+  type:     git
   location: https://github.com/ddssff/debian-haskell
