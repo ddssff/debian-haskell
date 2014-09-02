@@ -57,7 +57,7 @@ Library
    Build-Depends: network >= 2.4 && < 2.6
 
  if flag(listlike)
-   build-depends: process-listlike
+   build-depends: process-listlike >= 0.9
  else
    build-depends: process-extras
  ghc-options: -Wall -O2
@@ -138,7 +138,7 @@ Executable debian-tests
  else
    Build-Depends: network >= 2.4 && < 2.6
  if flag(listlike)
-   build-depends: process-listlike
+   build-depends: process-listlike >= 0.9
  else
    build-depends: process-extras
 
