@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.83.3
+Version:        3.83.4.1
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -36,7 +36,7 @@ Library
    filepath,
    HaXml >= 1.20,
    HUnit,
-   ListLike,
+   ListLike >= 4,
    mtl,
    old-locale,
    parsec >= 2 && <4,
