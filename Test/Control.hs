@@ -3,13 +3,13 @@ module Test.Control where
 
 import Test.HUnit
 import Data.Monoid ((<>))
-import Data.Text as T (Text, intercalate)
+import Data.Text as T (Text, intercalate, pack)
 import Debian.Control
 import Debian.Control.Policy
 import Debian.Control.Text ({- Pretty instances -})
-import Debian.Pretty (pretty, render)
 import Debian.Relation
 import Debian.Version (parseDebianVersion)
+import Text.PrettyPrint.HughesPJClass (pPrint, render)
 
 instance Eq DebianControl where
     a == b = unDebianControl a == unDebianControl b
@@ -21,25 +21,25 @@ instance Eq DebianControl where
 -- inter-paragraph newlines, or missing terminating newlines, would be
 -- good.
 controlTests =
-    [ TestCase (assertEqual "pretty1" (Prelude.show . pretty $ control) (either (error "parser failed") (Prelude.show . pretty) (parseControl "debian/control" sample)))
-    , TestCase (assertEqual "pretty2" sample (render (pretty control)))
-    , TestCase (assertEqual "pretty3" (head paragraphs <> "\n") (render (pretty (head (unControl control)))))
+    [ TestCase (assertEqual "pretty1" (Prelude.show . pPrint $ control) (either (error "parser failed") (Prelude.show . pPrint) (parseControl "debian/control" sample)))
+    , TestCase (assertEqual "pretty2" sample (pack (render (pPrint control))))
+    , TestCase (assertEqual "pretty3" (head paragraphs <> "\n") (pack (render (pPrint (head (unControl control))))))
     -- The Pretty class instances are distinct implementations from
     -- those in Debian.Control.PrettyPrint.  Not sure why, there is a
     -- terse note about performance concerns.
-    , TestCase (assertEqual "pretty4" sample (render (pretty control)))
-    , TestCase (assertEqual "pretty5" (head paragraphs <> "\n") (render (pretty (head (unControl control)))))
+    , TestCase (assertEqual "pretty4" sample (pack (render (pPrint control))))
+    , TestCase (assertEqual "pretty5" (head paragraphs <> "\n") (pack (render (pPrint (head (unControl control))))))
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy1" (Right (unsafeDebianControl control)) vc) -- validate control file
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy2" (Right (Just builddeps)) (either Left (debianRelations "Build-Depends") vc)) -- parse build deps
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy3" (Right Nothing) (either Left (debianRelations "Foo") vc)) -- absent field
     , TestCase (parseDebianControlFromFile "Test/Control.hs" >>= \ vc ->
                 assertEqual "policy4"
                             -- Exceptions have bogus Eq instances, so we need to show then compare.
-                            "Left (ParseControlError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (79,54), loc_end = (79,62)}], parseError = \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs})"
+                            "Left (ParseControlError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (82,54), loc_end = (82,62)}], parseError = \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs})"
                             (show (either Left (either Left Right . debianRelations "Foo") vc)))
     , TestCase (parseDebianControlFromFile "nonexistant" >>= \ vc ->
                 assertEqual "policy5"
-                            "Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (78,36), loc_end = (78,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})"
+                            "Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (81,36), loc_end = (81,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})"
                             (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl))))
     ]
 

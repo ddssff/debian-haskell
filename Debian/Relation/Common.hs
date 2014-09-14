@@ -10,9 +10,10 @@ import Data.Function
 import Data.Set as Set (Set, toList)
 import Data.Typeable (Typeable)
 import Debian.Arch (Arch, prettyArch)
-import Debian.Pretty (Pretty(pretty), Doc, text, empty)
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
+import Text.PrettyPrint (Doc, text, empty)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 -- Local Modules
 
@@ -53,7 +54,7 @@ prettyOrRelation xs = mconcat . intersperse (text " | ") . List.map prettyRelati
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
-    pretty name <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
+    pPrint name <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
@@ -107,22 +108,22 @@ checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
 
 instance Pretty BinPkgName where
-    pretty = pretty . unBinPkgName
+    pPrint = pPrint . unBinPkgName
 
 instance Pretty SrcPkgName where
-    pretty = pretty . unSrcPkgName
+    pPrint = pPrint . unSrcPkgName
 
 instance Pretty Relations where
-    pretty = prettyRelations
+    pPrint = prettyRelations
 
 instance Pretty OrRelation where
-    pretty = prettyOrRelation
+    pPrint = prettyOrRelation
 
 instance Pretty Relation where
-    pretty = prettyRelation
+    pPrint = prettyRelation
 
 instance Pretty VersionReq where
-    pretty = prettyVersionReq
+    pPrint = prettyVersionReq
 
 instance Pretty ArchitectureReq where
-    pretty = prettyArchitectureReq
+    pPrint = prettyArchitectureReq

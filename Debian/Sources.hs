@@ -1,13 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
 module Debian.Sources where
 
 import Data.List (intercalate)
 import Data.Monoid ((<>))
-import Data.Text (pack)
-import Debian.Pretty (Pretty(pretty), text)
 import Debian.Release
 import Network.URI (URI, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
+import Text.PrettyPrint (text, hcat)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint, pPrintList))
 
 data SourceType
     = Deb | DebSrc
@@ -21,17 +21,18 @@ data DebSource
     } deriving (Eq, Ord)
 
 instance Pretty SourceType where
-    pretty Deb = text "deb"
-    pretty DebSrc = text "deb-src"
+    pPrint Deb = text "deb"
+    pPrint DebSrc = text "deb-src"
 
 instance Pretty DebSource where
-    pretty (DebSource thetype theuri thedist) =
-        pretty thetype <>
-        text (" " <> pack (uriToString id theuri " ") <>
+    pPrint (DebSource thetype theuri thedist) =
+        pPrint thetype <>
+        text (" " <> uriToString id theuri " " <>
               case thedist of
                 Left exactPath -> escape exactPath
-                Right (dist, sections) -> pack (releaseName' dist <> " " <> intercalate " " (map sectionName' sections)))
-            where escape = pack . escapeURIString isAllowedInURI
+                Right (dist, sections) -> releaseName' dist <> " " <> intercalate " " (map sectionName' sections))
+            where escape = escapeURIString isAllowedInURI
+    pPrintList _ = hcat . map (\ x -> pPrint x <> text "\n")
 
 -- |This is a name given to a combination of parts of one or more
 -- releases that can be specified by a sources.list file.

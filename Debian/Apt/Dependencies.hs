@@ -20,10 +20,10 @@ import Data.Tree(Tree(rootLabel, Node))
 import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
 import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile),
                                  Field'(Field, Comment), Control'(Control), Paragraph, Control)
-import Debian.Pretty (render)
 import Debian.Relation (BinPkgName(..))
 import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
 import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
+import Text.PrettyPrint (render)
 
 -- * Basic CSP Types and Functions
 

@@ -20,11 +20,12 @@ module Debian.Control.Common
 
 import Data.List (partition, intersperse)
 import Data.Monoid ((<>))
-import Debian.Pretty (Doc, text, Pretty(pretty), cat, vcat)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (Handle)
 import System.Process (runInteractiveCommand, waitForProcess)
 import Text.ParserCombinators.Parsec (ParseError)
+import Text.PrettyPrint (Doc, text, hcat)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 newtype Control' a
     = Control { unControl :: [Paragraph' a] } deriving (Eq, Ord, Read, Show)
@@ -57,30 +58,27 @@ class ControlFunctions a where
     stripWS :: a -> a
     asString :: a -> String
 
--- |This may have bad performance issues (why?)
+-- | This may have bad performance issues (dsf: Whoever wrote this
+-- comment should have explained why.)
 instance Pretty a => Pretty (Control' a) where
-    pretty = ppControl
-    -- pretty (Control paragraphs) = vcat (map pretty paragraphs)
+    pPrint = ppControl
 instance Pretty a => Pretty (Paragraph' a) where
-    pretty = ppParagraph
-    -- pretty (Paragraph fields) = vcat (map pretty fields ++ [empty])
+    pPrint = ppParagraph
 
 instance Pretty a => Pretty (Field' a) where
-    pretty = ppField
-    -- pretty (Field (name,value)) = pretty name <> text ":" <> pretty value
-    -- pretty (Comment s) = pretty s
+    pPrint = ppField
 
 ppControl :: (Pretty a) => Control' a -> Doc
 ppControl (Control paragraph) =
-    cat (intersperse (text "\n") (map ppParagraph paragraph))
+    hcat (intersperse (text "\n") (map ppParagraph paragraph))
 
 ppParagraph :: (Pretty a) => Paragraph' a -> Doc
 ppParagraph (Paragraph fields) =
-    vcat (map ppField fields)
+    hcat (map (\ x -> ppField x <> text "\n") fields)
 
 ppField :: (Pretty a) => Field' a -> Doc
-ppField (Field (n,v)) = pretty n <> text ":" <> pretty v
-ppField (Comment c) = pretty c
+ppField (Field (n,v)) = pPrint n <> text ":" <> pPrint v
+ppField (Comment c) = pPrint c
 
 mergeControls :: [Control' a] -> Control' a
 mergeControls controls =

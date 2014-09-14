@@ -14,13 +14,14 @@ module Debian.Version.Common
     ) where 
 
 import Data.Char (ord, isDigit, isAlpha)
-import Debian.Pretty (Doc, pretty, render)
 import Debian.Version.Internal
 import Text.ParserCombinators.Parsec
 import Text.Regex
+import Text.PrettyPrint (Doc, render)
+import Text.PrettyPrint.HughesPJClass (text)
 
 prettyDebianVersion :: DebianVersion -> Doc
-prettyDebianVersion (DebianVersion s _) = pretty s
+prettyDebianVersion (DebianVersion s _) = text s
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2

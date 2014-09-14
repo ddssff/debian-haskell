@@ -1,16 +1,15 @@
 module Debian.Report where
 
-import Debian.Apt.Index (Fetcher, Compression(..), update, controlFromIndex')
-import Debian.Control.Text
-import Debian.Pretty (render)
-import Debian.Sources
-import Debian.Version
-
 import Data.Maybe
 import qualified Data.Map as M
 import Data.Text as Text (Text, unpack)
+import Debian.Apt.Index (Fetcher, Compression(..), update, controlFromIndex')
+import Debian.Control.Text
+import Debian.Sources
+import Debian.Version
 import Text.XML.HaXml (CFilter, mkElem, cdata)
 import Text.XML.HaXml.Posn
+import Text.PrettyPrint (render)
 
 -- * General Package Map Builders
 
@@ -83,6 +82,6 @@ trumpedXML trumpedMap' =
       mkTrumpedPackage (package, (oldVersion, newVersion)) =
           mkElem "trumpedPackage"
                      [ mkElem "package" [ cdata (unpack package) ]
-                     , mkElem "oldVersion" [ cdata (unpack . render . prettyDebianVersion $ oldVersion) ]
-                     , mkElem "newVersion" [ cdata (unpack . render . prettyDebianVersion $ newVersion) ]
+                     , mkElem "oldVersion" [ cdata (render . prettyDebianVersion $ oldVersion) ]
+                     , mkElem "newVersion" [ cdata (render . prettyDebianVersion $ newVersion) ]
                      ]

@@ -29,29 +29,32 @@ module Debian.Control.Policy
 
 import Control.Exception (Exception, throw)
 import Control.Monad.Catch (MonadCatch, try)
-import Data.Text (Text)
+import Data.Text (Text, unpack)
 import Data.Typeable (Typeable)
 import Data.ListLike (toList)
 import Debian.Control.Common (Control'(..), Paragraph'(..), Field'(..), fieldValue, ControlFunctions(parseControlFromFile, parseControl))
 import Debian.Control.Text ()
 import Debian.Loc (mapExn, __LOC__)
-import Debian.Pretty (pretty)
 import Debian.Relation (SrcPkgName(..), BinPkgName(..), Relations, parseRelations)
 import Debian.Relation.Text ()
 import Language.Haskell.TH (Loc)
 -- import qualified Debug.ShowPlease as Please
 import GHC.IO.Exception (ioe_location)
 import Text.Parsec.Error (ParseError)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 -- | Opaque (constructor not exported) type to hold a validated Debian
 -- Control File
 data DebianControl = DebianControl {unDebianControl :: Control' Text}
 
 instance Show DebianControl where
-    show c = "(parseDebianControl \"\" " ++ show (show (pretty (unDebianControl c))) ++ ")"
+    show c = "(parseDebianControl \"\" " ++ show (show (pPrint (unDebianControl c))) ++ ")"
+
+instance Pretty Text where
+    pPrint = pPrint . unpack
 
 instance Show (Control' Text) where
-    show c = "(parseControl \"\" " ++ show (show (pretty c)) ++ ")"
+    show c = "(parseControl \"\" " ++ show (show (pPrint c)) ++ ")"
 
 -- | Validate and return a control file in an opaque wrapper.  May
 -- throw a ControlFileError.  Currently we only verify that it has a

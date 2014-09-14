@@ -1,13 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Test.SourcesList where
 
-import Data.Text (Text, unpack)
+import Data.Text (Text)
 import Data.Monoid (mconcat, (<>))
-import Debian.Pretty (vcat, pretty, render)
-import Test.HUnit
-
 import Debian.Sources
---import Data.Maybe
+import Test.HUnit
+import Text.PrettyPrint (render)
+import Text.PrettyPrint.HughesPJClass (pPrint)
 
 -- * Unit Tests
 
@@ -25,7 +24,7 @@ testQuoteWords =
 
 testSourcesList :: Test
 testSourcesList =
-    test [ assertEqual "valid sources.list" validSourcesListExpected (unpack . render . vcat . map pretty . parseSourcesList $ validSourcesListStr) ]
+    test [ assertEqual "valid sources.list" validSourcesListExpected (render . pPrint . parseSourcesList $ validSourcesListStr) ]
     where
       validSourcesListStr =
           unlines $ [ " # A comment only line "
@@ -48,7 +47,7 @@ testSourcesList =
 
 testSourcesListParse :: Test
 testSourcesListParse =
-    test [ assertEqual "" gutsy (unpack . mconcat . map (<> "\n") . map (render . pretty) . parseSourcesList $ gutsy) ]
+    test [ assertEqual "" gutsy (mconcat . map (<> "\n") . map (render . pPrint) . parseSourcesList $ gutsy) ]
     where
       gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
 	              "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",

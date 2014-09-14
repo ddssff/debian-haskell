@@ -32,7 +32,6 @@ import Debian.Control (formatControl)
 import Debian.Control.ByteString
 import Debian.Control.Common
 import Debian.Control.Text (decodeControl)
-import Debian.Pretty (pretty, render)
 import Debian.Release
 import Debian.Sources
 import Debian.URI
@@ -42,6 +41,8 @@ import System.Posix.Files
 import System.FilePath (takeBaseName)
 --import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
+import Text.PrettyPrint (render)
+import Text.PrettyPrint.HughesPJClass (pPrint)
 
 -- |Package indexes on the server are uncompressed or compressed with
 -- gzip or bzip2. We do not know what will exist on the server until we
@@ -123,7 +124,7 @@ indexURIs arch debSource =
     where
       baseURI = sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ unpack (render (pretty debSource))) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pPrint debSource)) id (sourceDist debSource)
 
 -- |return a tuple for the section 
 --  - the URI to the uncompressed index file

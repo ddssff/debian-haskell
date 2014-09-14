@@ -2,12 +2,12 @@
 {-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
 module Test.Changes where
 
-import Test.HUnit
-import Data.Text (unpack)
 import Debian.Changes
-import Debian.Pretty (pretty, render)
 import Debian.Release (ReleaseName(ReleaseName, relName))
 import Debian.Version (parseDebianVersion)
+import Test.HUnit
+import Text.PrettyPrint (render)
+import Text.PrettyPrint.HughesPJClass (pPrint)
 
 -- deriving instance Show ChangeLogEntry
 -- instance Show ChangeLog where
@@ -160,14 +160,14 @@ s2 = unlines
       " -- Marco Túlio Gontijo e Silva <marcot@holoscopio.com>  Wed, 11 Mar 2009 18:58:06 -0300",
       ""]
 
-test5 = TestCase (assertEqual "haskell-regex-compat changelog" s1 (unpack . render . pretty . parseChangeLog $ s1))
+test5 = TestCase (assertEqual "haskell-regex-compat changelog 1" s1 (render . pPrint . parseChangeLog $ s1))
 
 test3 =
-    TestCase (assertEqual "haskell-regex-compat changelog" expected (parseEntries s3))
+    TestCase (assertEqual "haskell-regex-compat changelog 2" expected (parseEntries s3))
     where expected = [Right (Entry {logPackage = "name", logVersion = parseDebianVersion "version", logDists = [ReleaseName {relName = "dist"}], logUrgency = "urgency", logComments = "  * details\n", logWho = "David Fox <dsf@seereason.com>", logDate = "Wed, 21 Nov 2007 01:26:57 +0000"})]
 
 test4 =
-    TestCase (assertEqual "haskell-regex-compat changelog" expected (parseEntries s4))
+    TestCase (assertEqual "haskell-regex-compat changelog 3" expected (parseEntries s4))
     where expected = [Right (Entry {logPackage = "haskell-regex-compat",
                                      logVersion = parseDebianVersion "0.92-3+seereason1~jaunty4",
                                      logDists = [ReleaseName {relName = "jaunty-seereason"}],
@@ -177,7 +177,7 @@ test4 =
                                      logDate = "Wed, 21 Nov 2007 01:26:57 +0000"})]
 
 test1 =
-    TestCase (assertEqual "haskell-regex-compat changelog" expected (parseChangeLog s1))
+    TestCase (assertEqual "haskell-regex-compat changelog 4" expected (parseChangeLog s1))
     where expected = ChangeLog [(Entry {logPackage = "haskell-regex-compat", logVersion = parseDebianVersion "0.92-3+seereason1~jaunty4", logDists = [ReleaseName {relName = "jaunty-seereason"}], logUrgency = "low", logComments = "  [ Joachim Breitner ]\n  * Adjust priority according to override file\n  * Depend on hscolour (Closes: #550769)\n\n  [ Marco T\250lio Gontijo e Silva ]\n  * debian/control: Use more sintetic name for Vcs-Darcs.\n  * Built from sid apt pool\n  * Build dependency changes:\n     cpphs:                    1.9-1+seereason1~jaunty5     -> 1.9-1+seereason1~jaunty6\n     ghc6:                     6.10.4-1+seereason5~jaunty1  -> 6.12.1-0+seereason1~jaunty1\n     ghc6-doc:                 6.10.4-1+seereason5~jaunty1  -> 6.12.1-0+seereason1~jaunty1\n     ghc6-prof:                6.10.4-1+seereason5~jaunty1  -> 6.12.1-0+seereason1~jaunty1\n     haddock:                  2.4.2-3+seereason3~jaunty1   -> 6.12.1-0+seereason1~jaunty1\n     haskell-devscripts:       0.6.18-21+seereason1~jaunty1 -> 0.6.18-23+seereason1~jaunty1\n     haskell-regex-base-doc:   0.93.1-5+seereason1~jaunty1  -> 0.93.1-5++1+seereason1~jaunty1\n     haskell-regex-posix-doc:  0.93.2-4+seereason1~jaunty1  -> 0.93.2-4+seereason1~jaunty2\n     libghc6-regex-base-dev:   0.93.1-5+seereason1~jaunty1  -> 0.93.1-5++1+seereason1~jaunty1\n     libghc6-regex-base-prof:  0.93.1-5+seereason1~jaunty1  -> 0.93.1-5++1+seereason1~jaunty1\n     libghc6-regex-posix-dev:  0.93.2-4+seereason1~jaunty1  -> 0.93.2-4+seereason1~jaunty2\n     libghc6-regex-posix-prof: 0.93.2-4+seereason1~jaunty1  -> 0.93.2-4+seereason1~jaunty2\n", logWho = "SeeReason Autobuilder <autobuilder@seereason.org>", logDate = "Fri, 25 Dec 2009 01:55:37 -0800"}),
                       (Entry {logPackage = "haskell-regex-compat", logVersion = parseDebianVersion "0.92-3", logDists = [ReleaseName {relName = "unstable"}], logUrgency = "low", logComments = "  [ Joachim Breitner ]\n  * Adjust priority according to override file\n  * Depend on hscolour (Closes: #550769)\n\n  [ Marco T\250lio Gontijo e Silva ]\n  * debian/control: Use more sintetic name for Vcs-Darcs.\n", logWho = "Joachim Breitner <nomeata@debian.org>", logDate = "Mon, 20 Jul 2009 13:05:35 +0200"}),
                       (Entry {logPackage = "haskell-regex-compat", logVersion = parseDebianVersion "0.92-2", logDists = [ReleaseName {relName = "unstable"}], logUrgency = "low", logComments = "  * Adopt package for the Debian Haskell Group\n  * Fix \"FTBFS with new dpkg-dev\" by adding comma to debian/control\n    (Closes: #536473)\n", logWho = "Joachim Breitner <nomeata@debian.org>", logDate = "Mon, 20 Jul 2009 12:05:40 +0200"}),
