@@ -41,7 +41,7 @@ import Language.Haskell.TH (Loc)
 -- import qualified Debug.ShowPlease as Please
 import GHC.IO.Exception (ioe_location)
 import Text.Parsec.Error (ParseError)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 
 -- | Opaque (constructor not exported) type to hold a validated Debian
 -- Control File
@@ -49,9 +49,6 @@ data DebianControl = DebianControl {unDebianControl :: Control' Text}
 
 instance Show DebianControl where
     show c = "(parseDebianControl \"\" " ++ show (show (pPrint (unDebianControl c))) ++ ")"
-
-instance Pretty Text where
-    pPrint = pPrint . unpack
 
 instance Show (Control' Text) where
     show c = "(parseControl \"\" " ++ show (show (pPrint c)) ++ ")"

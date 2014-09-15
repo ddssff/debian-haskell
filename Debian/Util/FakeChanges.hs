@@ -20,7 +20,7 @@ import System.Environment
 import System.FilePath
 import System.Posix.Files
 import Text.PrettyPrint (render)
-import Text.PrettyPrint.HughesPJClass (pPrint)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 import Text.Regex.TDFA
 
 data Error

@@ -11,7 +11,6 @@ import Data.Data (Data)
 import Data.Monoid ((<>))
 import Data.Typeable (Typeable)
 import Text.PrettyPrint (Doc, text)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 data ArchOS = ArchOS String | ArchOSAny deriving (Eq, Ord, Read, Show, Data, Typeable)
 

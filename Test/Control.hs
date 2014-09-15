@@ -35,11 +35,11 @@ controlTests =
     , TestCase (parseDebianControlFromFile "Test/Control.hs" >>= \ vc ->
                 assertEqual "policy4"
                             -- Exceptions have bogus Eq instances, so we need to show then compare.
-                            "Left (ParseControlError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (82,54), loc_end = (82,62)}], parseError = \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs})"
+                            "Left (ParseControlError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (79,54), loc_end = (79,62)}], parseError = \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs})"
                             (show (either Left (either Left Right . debianRelations "Foo") vc)))
     , TestCase (parseDebianControlFromFile "nonexistant" >>= \ vc ->
                 assertEqual "policy5"
-                            "Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (81,36), loc_end = (81,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})"
+                            "Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (78,36), loc_end = (78,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})"
                             (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl))))
     ]
 

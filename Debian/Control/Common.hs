@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, UndecidableInstances #-}
 module Debian.Control.Common
     ( -- * Types
       Control'(..)
@@ -20,6 +20,7 @@ module Debian.Control.Common
 
 import Data.List (partition, intersperse)
 import Data.Monoid ((<>))
+import Debian.Pretty (PP(..))
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 import System.IO (Handle)
 import System.Process (runInteractiveCommand, waitForProcess)
@@ -60,25 +61,25 @@ class ControlFunctions a where
 
 -- | This may have bad performance issues (dsf: Whoever wrote this
 -- comment should have explained why.)
-instance Pretty a => Pretty (Control' a) where
+instance Pretty (PP a) => Pretty (Control' a) where
     pPrint = ppControl
-instance Pretty a => Pretty (Paragraph' a) where
+instance Pretty (PP a) => Pretty (Paragraph' a) where
     pPrint = ppParagraph
 
-instance Pretty a => Pretty (Field' a) where
+instance Pretty (PP a) => Pretty (Field' a) where
     pPrint = ppField
 
-ppControl :: (Pretty a) => Control' a -> Doc
+ppControl :: Pretty (PP a) => Control' a -> Doc
 ppControl (Control paragraph) =
     hcat (intersperse (text "\n") (map ppParagraph paragraph))
 
-ppParagraph :: (Pretty a) => Paragraph' a -> Doc
+ppParagraph :: Pretty (PP a) => Paragraph' a -> Doc
 ppParagraph (Paragraph fields) =
     hcat (map (\ x -> ppField x <> text "\n") fields)
 
-ppField :: (Pretty a) => Field' a -> Doc
-ppField (Field (n,v)) = pPrint n <> text ":" <> pPrint v
-ppField (Comment c) = pPrint c
+ppField :: Pretty (PP a) => Field' a -> Doc
+ppField (Field (n,v)) = pPrint (PP n) <> text ":" <> pPrint (PP v)
+ppField (Comment c) = pPrint (PP c)
 
 mergeControls :: [Control' a] -> Control' a
 mergeControls controls =
