@@ -1,3 +1,12 @@
+haskell-debian (3.84) unstable; urgency=low
+
+  * Replace the Debian.Pretty module with a module copied from the
+    pretty-class package, Text.PrettyPrint.HughesPJClass.  This is almost
+    identical to the module in Lennart's prettyclass package, but has what
+    I believe to be a more correct pPrintList method for type Char.
+
+ -- David Fox <dsf@seereason.com>  Sun, 14 Sep 2014 12:37:57 -0700
+
 haskell-debian (3.83.4.2) unstable; urgency=low
 
   * Require a better version of process-listlike.
