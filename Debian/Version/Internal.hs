@@ -4,8 +4,7 @@ module Debian.Version.Internal
     , Numeric(..)
     , NonNumeric(..)
     , Found(..)
-    )
-    where
+    ) where
 
 import Data.Data (Data)
 import Data.Typeable (Typeable)
@@ -24,7 +23,6 @@ data NonNumeric
 data Numeric
     = Numeric Int (Maybe NonNumeric)
       deriving (Show, Data, Typeable)
-
 
 data Found a
     = Found { unFound :: a }

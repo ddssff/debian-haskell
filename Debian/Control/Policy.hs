@@ -29,19 +29,18 @@ module Debian.Control.Policy
 
 import Control.Exception (Exception, throw)
 import Control.Monad.Catch (MonadCatch, try)
-import Data.Text (Text, unpack)
+import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.ListLike (toList)
 import Debian.Control.Common (Control'(..), Paragraph'(..), Field'(..), fieldValue, ControlFunctions(parseControlFromFile, parseControl))
 import Debian.Control.Text ()
-import Debian.Loc (mapExn, __LOC__)
+import Debian.Loc (__LOC__)
 import Debian.Relation (SrcPkgName(..), BinPkgName(..), Relations, parseRelations)
 import Debian.Relation.Text ()
 import Language.Haskell.TH (Loc)
 -- import qualified Debug.ShowPlease as Please
-import GHC.IO.Exception (ioe_location)
 import Text.Parsec.Error (ParseError)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 -- | Opaque (constructor not exported) type to hold a validated Debian
 -- Control File

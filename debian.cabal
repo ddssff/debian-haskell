@@ -25,6 +25,7 @@ Flag listlike
  Default: True
 
 Library
+ Hs-Source-Dirs: .
  Build-Depends:
    base >= 4 && < 5,
    bytestring,
@@ -62,6 +63,7 @@ Library
    build-depends: process-listlike >= 0.9
  else
    build-depends: process-extras
+
  ghc-options: -Wall -O2
  Extensions: ExistentialQuantification CPP
  Exposed-modules:

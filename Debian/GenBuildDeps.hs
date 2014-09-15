@@ -32,7 +32,7 @@ import		 Data.Maybe
 import qualified Data.Set as Set
 import		 Debian.Control (parseControlFromFile)
 import		 Debian.Control.Policy (HasDebianControl, ControlFileError(..), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
-import           Debian.Loc (__LOC__, mapExn)
+import           Debian.Loc (__LOC__)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
 import           Language.Haskell.TH (Loc)

@@ -9,10 +9,6 @@ import Test.HUnit
 import Text.PrettyPrint (render)
 import Text.PrettyPrint.HughesPJClass (pPrint)
 
--- deriving instance Show ChangeLogEntry
--- instance Show ChangeLog where
---     show = unpack . render . pretty
-
 s3 = unlines
      ["name (version) dist; urgency=urgency",
       "  * details",

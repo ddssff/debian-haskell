@@ -14,7 +14,7 @@ import Debian.Pretty (PP(unPP))
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint (Doc, text, empty)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 
 -- Local Modules
 
