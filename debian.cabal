@@ -41,6 +41,7 @@ Library
    old-locale,
    parsec >= 2 && <4,
    pretty,
+   pretty-class >= 1.0.1.1,
    process,
    pureMD5,
    regex-compat,
@@ -103,7 +104,6 @@ Library
         Test.Dependencies,
         Test.SourcesList,
         Test.Versions
-        Text.PrettyPrint.HughesPJClass
 
 Executable fakechanges
  Hs-Source-Dirs: utils
