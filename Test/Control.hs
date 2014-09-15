@@ -3,13 +3,18 @@ module Test.Control where
 
 import Test.HUnit
 import Data.Monoid ((<>))
-import Data.Text as T (Text, intercalate, pack)
+import Data.List as L (intercalate)
+import Data.Text as T (Text)
 import Debian.Control
 import Debian.Control.Policy
 import Debian.Control.Text ({- Pretty instances -})
+import Debian.Pretty (ppPrint)
 import Debian.Relation
 import Debian.Version (parseDebianVersion)
-import Text.PrettyPrint.HughesPJClass (pPrint, render)
+import Text.PrettyPrint.HughesPJClass (Doc, text)
+
+instance Eq Doc where
+    a == b = show a == show b
 
 instance Eq DebianControl where
     a == b = unDebianControl a == unDebianControl b
@@ -21,14 +26,14 @@ instance Eq DebianControl where
 -- inter-paragraph newlines, or missing terminating newlines, would be
 -- good.
 controlTests =
-    [ TestCase (assertEqual "pretty1" (Prelude.show . pPrint $ control) (either (error "parser failed") (Prelude.show . pPrint) (parseControl "debian/control" sample)))
-    , TestCase (assertEqual "pretty2" sample (pack (render (pPrint control))))
-    , TestCase (assertEqual "pretty3" (head paragraphs <> "\n") (pack (render (pPrint (head (unControl control))))))
+    [ TestCase (assertEqual "pretty1" (ppPrint control) (either (error "parser failed") ppPrint (parseControl "debian/control" sample)))
+    , TestCase (assertEqual "pretty2" (text sample) (ppPrint control))
+    , TestCase (assertEqual "pretty3" (text (head paragraphs <> "\n")) (ppPrint (head (unControl control))))
     -- The Pretty class instances are distinct implementations from
     -- those in Debian.Control.PrettyPrint.  Not sure why, there is a
     -- terse note about performance concerns.
-    , TestCase (assertEqual "pretty4" sample (pack (render (pPrint control))))
-    , TestCase (assertEqual "pretty5" (head paragraphs <> "\n") (pack (render (pPrint (head (unControl control))))))
+    , TestCase (assertEqual "pretty4" (text sample) (ppPrint control))
+    , TestCase (assertEqual "pretty5" (text (head paragraphs <> "\n")) (ppPrint (head (unControl control))))
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy1" (Right (unsafeDebianControl control)) vc) -- validate control file
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy2" (Right (Just builddeps)) (either Left (debianRelations "Build-Depends") vc)) -- parse build deps
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy3" (Right Nothing) (either Left (debianRelations "Foo") vc)) -- absent field
@@ -45,7 +50,7 @@ controlTests =
 
 -- | These paragraphs have no terminating newlines.  They are added
 -- where appropriate to the expected test results.
-paragraphs :: [Text]
+paragraphs :: [String]
 paragraphs =
     [ "Source: haskell-debian\nSection: haskell\nPriority: extra\nMaintainer: Debian Haskell Group <pkg-haskell-maintainers@lists.alioth.debian.org>\nUploaders: Joachim Breitner <nomeata@debian.org>\nBuild-Depends: debhelper (>= 7)\n  , cdbs\n  , haskell-devscripts (>= 0.7)\n  , ghc\n  , ghc-prof\n  , libghc-hunit-dev\n  , libghc-hunit-prof\n  , libghc-mtl-dev\n  , libghc-mtl-prof\n  , libghc-parsec3-dev\n  , libghc-parsec3-prof\n  , libghc-pretty-class-dev\n  , libghc-pretty-class-prof\n  , libghc-process-extras-dev (>= 0.4)\n  , libghc-process-extras-prof (>= 0.4)\n  , libghc-regex-compat-dev\n  , libghc-regex-compat-prof\n  , libghc-regex-tdfa-dev (>= 1.1.3)\n  , libghc-regex-tdfa-prof\n  , libghc-bzlib-dev (>= 0.5.0.0-4)\n  , libghc-bzlib-prof\n  , libghc-haxml-prof (>= 1:1.20)\n  , libghc-unixutils-dev (>= 1.50)\n  , libghc-unixutils-prof (>= 1.50)\n  , libghc-zlib-dev\n  , libghc-zlib-prof\n  , libghc-network-dev (>= 2.4)\n  , libghc-network-prof (>= 2.4)\n  , libghc-utf8-string-dev\n  , libghc-utf8-string-prof,\n  , libcrypto++-dev\nBuild-Depends-Indep: ghc-doc\n  , libghc-hunit-doc\n  , libghc-mtl-doc\n  , libghc-parsec3-doc\n  , libghc-pretty-class-doc\n  , libghc-process-extras-doc (>= 0.4)\n  , libghc-regex-compat-doc\n  , libghc-regex-tdfa-doc\n  , libghc-bzlib-doc\n  , libghc-haxml-doc (>= 1:1.20)\n  , libghc-unixutils-doc (>= 1.50)\n  , libghc-zlib-doc\n  , libghc-network-doc (>= 2.4)\n  , libghc-utf8-string-doc\nStandards-Version: 3.9.2\nHomepage: http://hackage.haskell.org/package/debian\nVcs-Darcs: http://darcs.debian.org/pkg-haskell/haskell-debian\nVcs-Browser: http://darcs.debian.org/cgi-bin/darcsweb.cgi?r=pkg-haskell/haskell-debian",
       "Package: libghc-debian-dev\nArchitecture: any\nDepends: ${haskell:Depends}\n  , ${shlibs:Depends}\n  , ${misc:Depends}\nRecommends: ${haskell:Recommends}\nSuggests: ${haskell:Suggests}\nProvides: ${haskell:Provides}\nDescription: Haskell library for working with the Debian package system\n This package provides a library for the Haskell programming language.\n See http://www.haskell.org/ for more information on Haskell.\n .\n This library includes modules covering almost every aspect of the Debian\n packaging system, including low level data types such as version numbers\n and dependency relations, on up to the types necessary for computing and\n installing build dependencies, building source and binary packages,\n and inserting them into a repository.\n .\n This package contains the libraries compiled for GHC 6.",
@@ -87,8 +92,8 @@ builddeps = [[Rel (BinPkgName {unBinPkgName = "debhelper"}) (Just (GRE (Debian.V
              [Rel (BinPkgName {unBinPkgName = "libghc-utf8-string-prof"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libcrypto++-dev"}) Nothing Nothing]]
 
-sample :: Text
-sample = T.intercalate "\n\n" paragraphs <> "\n"
+sample :: String
+sample = intercalate "\n\n" paragraphs <> "\n"
 
 -- | The expecte result of parsing the sample control file.
 control :: Control' Text

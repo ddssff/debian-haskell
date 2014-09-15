@@ -10,6 +10,7 @@ import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Foldable (concat, all, foldr)
 import Data.List as List (intercalate, nub, partition, isSuffixOf)
 import Data.Maybe
+import Debian.Pretty (ppDisplay)
 import Data.Traversable
 import Debian.Control
 import qualified Debian.Deb as Deb
@@ -19,8 +20,6 @@ import Prelude hiding (concat, foldr, all, mapM, sum)
 import System.Environment
 import System.FilePath
 import System.Posix.Files
-import Text.PrettyPrint (render)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 import Text.Regex.TDFA
 
 data Error
@@ -74,7 +73,7 @@ fakeChanges fps =
                                              ))
                , ("Files", "\n" ++ unlines fileLines)
                ]
-       return $ (concat [ source, "_", version, "_", binArch, ".changes"], render (pPrint changes))
+       return $ (concat [ source, "_", version, "_", binArch, ".changes"], ppDisplay changes)
 --       let (invalid, binaries) = unzipEithers $ map debNameSplit debs
 {-
        when (not . null $ invalid) (throwDyn [MalformedDebFilename invalid])
@@ -219,13 +218,13 @@ loadFiles files =
              case  res of
                (Left e) -> error $ "Error parsing " ++ dsc' ++ "\n" ++ show e
                (Right (Control [p])) -> return (dsc', p)
-               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ render (pPrint c)
+               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ ppDisplay c
       loadDeb :: FilePath -> IO (FilePath, Paragraph)
       loadDeb deb =
           do res <- Deb.fields deb
              case res of
                (Control [p]) -> return (deb, p)
-               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ render (pPrint res)
+               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ ppDisplay res
 
 
 getUploader :: IO String
