@@ -38,6 +38,8 @@ Build-Depends: debhelper (>= 7.0)
                , libghc-parsec3-prof (>= 3) | libghc-parsec2-prof (<< 3)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (>= 2)
                , libghc-parsec3-prof (<< 4) | libghc-parsec2-prof (<< 3)
+               , libghc-pretty-class-dev (>= 1.0.1.1)
+               , libghc-pretty-class-prof (>= 1.0.1.1)
                , libghc-process-listlike-dev | libghc-process-extras-dev
                , libghc-process-listlike-prof | libghc-process-extras-prof
                , libghc-puremd5-dev
@@ -71,6 +73,7 @@ Build-Depends-Indep: ghc-doc
                      , libghc-parsec3-doc (>= 3) | libghc-parsec2-doc (<< 3)
                      , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (>= 2)
                      , libghc-parsec3-doc (<< 4) | libghc-parsec2-doc (<< 3)
+                     , libghc-pretty-class-doc (>= 1.0.1.1)
                      , libghc-process-listlike-doc | libghc-process-extras-doc
                      , libghc-puremd5-doc
                      , libghc-regex-compat-doc
