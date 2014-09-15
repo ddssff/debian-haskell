@@ -61,13 +61,13 @@ class ControlFunctions a where
 
 -- | This may have bad performance issues (dsf: Whoever wrote this
 -- comment should have explained why.)
-instance Pretty (PP a) => Pretty (Control' a) where
-    pPrint = ppControl
-instance Pretty (PP a) => Pretty (Paragraph' a) where
-    pPrint = ppParagraph
+instance Pretty (PP a) => Pretty (PP (Control' a)) where
+    pPrint = ppControl . unPP
+instance Pretty (PP a) => Pretty (PP (Paragraph' a)) where
+    pPrint = ppParagraph . unPP
 
-instance Pretty (PP a) => Pretty (Field' a) where
-    pPrint = ppField
+instance Pretty (PP a) => Pretty (PP (Field' a)) where
+    pPrint = ppField . unPP
 
 ppControl :: Pretty (PP a) => Control' a -> Doc
 ppControl (Control paragraph) =
