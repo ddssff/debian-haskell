@@ -2,7 +2,7 @@
 -- numbers. <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version>
 {-# OPTIONS -fno-warn-orphans -fno-warn-unused-do-bind #-}
 module Debian.Version.Common
-    (DebianVersion -- |Exported abstract because the internal representation is likely to change 
+    ( DebianVersion -- |Exported abstract because the internal representation is likely to change 
     , prettyDebianVersion
     , ParseDebianVersion(..)
     , evr		-- DebianVersion -> (Maybe Int, String, Maybe String)
@@ -11,17 +11,20 @@ module Debian.Version.Common
     , revision
     , buildDebianVersion
     , parseDV
-    ) where 
+    ) where
 
 import Data.Char (ord, isDigit, isAlpha)
 import Debian.Version.Internal
 import Text.ParserCombinators.Parsec
 import Text.Regex
 import Text.PrettyPrint (Doc, render)
-import Text.PrettyPrint.HughesPJClass (text)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 
 prettyDebianVersion :: DebianVersion -> Doc
 prettyDebianVersion (DebianVersion s _) = text s
+
+instance Pretty DebianVersion where
+    pPrint = prettyDebianVersion
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2
