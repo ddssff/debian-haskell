@@ -4,10 +4,11 @@ module Debian.Sources where
 
 import Data.List (intercalate)
 import Data.Monoid ((<>))
+import Debian.Pretty (PP(unPP))
 import Debian.Release
 import Network.URI (URI, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
 import Text.PrettyPrint (text, hcat)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint, pPrintList))
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 data SourceType
     = Deb | DebSrc
@@ -32,7 +33,9 @@ instance Pretty DebSource where
                 Left exactPath -> escape exactPath
                 Right (dist, sections) -> releaseName' dist <> " " <> intercalate " " (map sectionName' sections))
             where escape = escapeURIString isAllowedInURI
-    pPrintList _ = hcat . map (\ x -> pPrint x <> text "\n")
+
+instance Pretty (PP [DebSource]) where
+    pPrint = hcat . map (\ x -> pPrint x <> text "\n") . unPP
 
 -- |This is a name given to a combination of parts of one or more
 -- releases that can be specified by a sources.list file.

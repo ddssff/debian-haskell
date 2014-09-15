@@ -10,6 +10,7 @@ import Data.Function
 import Data.Set as Set (Set, toList)
 import Data.Typeable (Typeable)
 import Debian.Arch (Arch, prettyArch)
+import Debian.Pretty (PP(unPP))
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint (Doc, text, empty)
@@ -113,11 +114,13 @@ instance Pretty BinPkgName where
 instance Pretty SrcPkgName where
     pPrint = text . unSrcPkgName
 
-instance Pretty Relations where
-    pPrint = prettyRelations
+-- | Wrap `PP` around type synonyms that might overlap with the
+-- `Pretty [a]` instance.
+instance Pretty (PP Relations) where
+    pPrint = prettyRelations . unPP
 
-instance Pretty OrRelation where
-    pPrint = prettyOrRelation
+instance Pretty (PP OrRelation) where
+    pPrint = prettyOrRelation . unPP
 
 instance Pretty Relation where
     pPrint = prettyRelation

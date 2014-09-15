@@ -3,6 +3,7 @@ module Test.SourcesList where
 
 import Data.Text (Text)
 import Data.Monoid (mconcat, (<>))
+import Debian.Pretty (PP(PP))
 import Debian.Sources
 import Test.HUnit
 import Text.PrettyPrint (render)
@@ -24,7 +25,7 @@ testQuoteWords =
 
 testSourcesList :: Test
 testSourcesList =
-    test [ assertEqual "valid sources.list" validSourcesListExpected (render . pPrint . parseSourcesList $ validSourcesListStr) ]
+    test [ assertEqual "valid sources.list" validSourcesListExpected (render . pPrint . PP . parseSourcesList $ validSourcesListStr) ]
     where
       validSourcesListStr =
           unlines $ [ " # A comment only line "
