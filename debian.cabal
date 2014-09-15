@@ -65,7 +65,6 @@ Library
    build-depends: process-extras
 
  ghc-options: -Wall -O2
- Extensions: ExistentialQuantification CPP
  Exposed-modules:
         Debian.Apt.Dependencies,
         Debian.Apt.Index,

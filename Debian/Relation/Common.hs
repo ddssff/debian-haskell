@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
 module Debian.Relation.Common where
 
 -- Standard GHC Modules
@@ -10,11 +10,11 @@ import Data.Function
 import Data.Set as Set (Set, toList)
 import Data.Typeable (Typeable)
 import Debian.Arch (Arch, prettyArch)
-import Debian.Pretty (PP(unPP))
+import Debian.Pretty (PP(..))
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint (Doc, text, empty)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
+import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 -- Local Modules
 
@@ -31,7 +31,7 @@ data Relation = Rel BinPkgName (Maybe VersionReq) (Maybe ArchitectureReq) derivi
 newtype SrcPkgName = SrcPkgName {unSrcPkgName :: String} deriving (Read, Show, Eq, Ord, Data, Typeable)
 newtype BinPkgName = BinPkgName {unBinPkgName :: String} deriving (Read, Show, Eq, Ord, Data, Typeable)
 
-class Pretty a => PkgName a where
+class Pretty (PP a) => PkgName a where
     pkgNameFromString :: String -> a
 
 instance PkgName BinPkgName where
@@ -55,7 +55,7 @@ prettyOrRelation xs = mconcat . intersperse (text " | ") . List.map prettyRelati
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
-    pPrint name <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
+    pPrint (PP name) <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
@@ -108,11 +108,11 @@ checkVersionReq (Just (EEQ v1)) (Just v2) = v2 == v1
 checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
 
-instance Pretty BinPkgName where
-    pPrint = text . unBinPkgName
+instance Pretty (PP BinPkgName) where
+    pPrint = text . unBinPkgName . unPP
 
-instance Pretty SrcPkgName where
-    pPrint = text . unSrcPkgName
+instance Pretty (PP SrcPkgName) where
+    pPrint = text . unSrcPkgName . unPP
 
 -- | Wrap `PP` around type synonyms that might overlap with the
 -- `Pretty [a]` instance.
@@ -122,11 +122,11 @@ instance Pretty (PP Relations) where
 instance Pretty (PP OrRelation) where
     pPrint = prettyOrRelation . unPP
 
-instance Pretty Relation where
-    pPrint = prettyRelation
+instance Pretty (PP Relation) where
+    pPrint = prettyRelation . unPP
 
-instance Pretty VersionReq where
-    pPrint = prettyVersionReq
+instance Pretty (PP VersionReq) where
+    pPrint = prettyVersionReq . unPP
 
-instance Pretty ArchitectureReq where
-    pPrint = prettyArchitectureReq
+instance Pretty (PP ArchitectureReq) where
+    pPrint = prettyArchitectureReq . unPP

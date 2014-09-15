@@ -48,7 +48,7 @@ testSourcesList =
 
 testSourcesListParse :: Test
 testSourcesListParse =
-    test [ assertEqual "" gutsy (mconcat . map (<> "\n") . map (render . pPrint) . parseSourcesList $ gutsy) ]
+    test [ assertEqual "" gutsy (mconcat . map (<> "\n") . map (render . pPrint . PP) . parseSourcesList $ gutsy) ]
     where
       gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
 	              "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",

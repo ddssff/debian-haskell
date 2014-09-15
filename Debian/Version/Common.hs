@@ -1,5 +1,6 @@
 -- |A module for parsing, comparing, and (eventually) modifying debian version
 -- numbers. <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version>
+{-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS -fno-warn-orphans -fno-warn-unused-do-bind #-}
 module Debian.Version.Common
     ( DebianVersion -- |Exported abstract because the internal representation is likely to change 
@@ -14,6 +15,7 @@ module Debian.Version.Common
     ) where
 
 import Data.Char (ord, isDigit, isAlpha)
+import Debian.Pretty (PP(..))
 import Debian.Version.Internal
 import Text.ParserCombinators.Parsec
 import Text.Regex
@@ -23,8 +25,8 @@ import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 prettyDebianVersion :: DebianVersion -> Doc
 prettyDebianVersion (DebianVersion s _) = text s
 
-instance Pretty DebianVersion where
-    pPrint = prettyDebianVersion
+instance Pretty (PP DebianVersion) where
+    pPrint = prettyDebianVersion . unPP
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2

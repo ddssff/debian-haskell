@@ -3,6 +3,7 @@
 module Test.Changes where
 
 import Debian.Changes
+import Debian.Pretty (PP(..))
 import Debian.Release (ReleaseName(ReleaseName, relName))
 import Debian.Version (parseDebianVersion)
 import Test.HUnit
@@ -156,7 +157,7 @@ s2 = unlines
       " -- Marco Túlio Gontijo e Silva <marcot@holoscopio.com>  Wed, 11 Mar 2009 18:58:06 -0300",
       ""]
 
-test5 = TestCase (assertEqual "haskell-regex-compat changelog 1" s1 (render . pPrint . parseChangeLog $ s1))
+test5 = TestCase (assertEqual "haskell-regex-compat changelog 1" s1 (render . pPrint . PP . parseChangeLog $ s1))
 
 test3 =
     TestCase (assertEqual "haskell-regex-compat changelog 2" expected (parseEntries s3))

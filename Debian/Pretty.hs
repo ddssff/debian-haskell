@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
+{-# LANGUAGE DeriveFunctor, FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
 module Debian.Pretty
     ( PP(PP, unPP)
     ) where
@@ -10,7 +10,7 @@ import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 -- we can write our own Pretty instances for common types without
 -- polluting the name space of clients of this package with instances
 -- they don't want.
-newtype PP a = PP {unPP :: a}
+newtype PP a = PP {unPP :: a} deriving (Functor)
 
 instance Pretty (PP Text) where
     pPrint = text . unpack . unPP
