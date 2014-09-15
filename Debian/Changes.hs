@@ -74,11 +74,11 @@ changesFileName :: ChangesFile -> String
 changesFileName = render . pPrint
 
 instance Pretty ChangesFile where
-    pPrint changes = pPrint (changePackage changes ++ "_") <> prettyDebianVersion (changeVersion changes) <> pPrint "_" <> prettyArch (changeArch changes) <> pPrint ".changes"
+    pPrint changes = text (changePackage changes ++ "_") <> prettyDebianVersion (changeVersion changes) <> text "_" <> prettyArch (changeArch changes) <> text ".changes"
 
 instance Pretty ChangedFileSpec where
     pPrint file =
-      pPrint (changedFileMD5sum file <> " " <>
+        text (changedFileMD5sum file <> " " <>
               show (changedFileSize file) <> " " <>
               sectionName (changedFileSection file) <> " " <>
               changedFilePriority file <> " " <>
@@ -103,7 +103,7 @@ instance Pretty ChangeLog where
 -- |Show just the top line of a changelog entry (for debugging output.)
 _showHeader :: ChangeLogEntry -> Doc
 _showHeader (Entry package ver dists urgency _ _ _) =
-    pPrint (package <> " (") <> prettyDebianVersion ver <> pPrint (") " <> intercalate " " (map releaseName' dists) <> "; urgency=" <> urgency <> "...")
+    text (package <> " (") <> prettyDebianVersion ver <> text (") " <> intercalate " " (map releaseName' dists) <> "; urgency=" <> urgency <> "...")
 _showHeader (WhiteSpace _) = error "_showHeader"
 
 {-

@@ -108,10 +108,10 @@ checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
 
 instance Pretty BinPkgName where
-    pPrint = pPrint . unBinPkgName
+    pPrint = text . unBinPkgName
 
 instance Pretty SrcPkgName where
-    pPrint = pPrint . unSrcPkgName
+    pPrint = text . unSrcPkgName
 
 instance Pretty Relations where
     pPrint = prettyRelations
