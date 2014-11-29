@@ -49,9 +49,6 @@ data DebianControl = DebianControl {unDebianControl :: Control' Text}
 instance Show DebianControl where
     show c = "(parseDebianControl \"\" " ++ show (ppDisplay (unDebianControl c)) ++ ")"
 
-instance Show (Control' Text) where
-    show c = "(parseControl \"\" " ++ show (ppDisplay c) ++ ")"
-
 -- | Validate and return a control file in an opaque wrapper.  May
 -- throw a ControlFileError.  Currently we only verify that it has a
 -- Source field in the first paragraph and one or more subsequent
