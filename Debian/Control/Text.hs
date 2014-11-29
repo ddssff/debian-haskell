@@ -27,9 +27,9 @@ module Debian.Control.Text
     ) where
 
 import qualified Data.ByteString.Char8 as B
-import Data.Char (toLower, chr)
+import Data.Char (toLower, chr, isSpace)
 import Data.List (find)
-import qualified Data.Text as T (Text, pack, unpack, map, strip, reverse)
+import qualified Data.Text as T (Text, pack, unpack, map, strip, reverse, dropWhileEnd)
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 --import Data.Text.IO as T (readFile)
 import qualified Debian.Control.ByteString as B
@@ -39,7 +39,7 @@ import qualified Debian.Control.ByteString as B
 import Debian.Control.Common (ControlFunctions(parseControlFromFile, parseControlFromHandle, parseControl, lookupP, stripWS, asString),
                               Control'(Control), Paragraph'(Paragraph), Field'(Field, Comment),
                               mergeControls, fieldValue, removeField, prependFields, appendFields,
-                              renameField, modifyField, raiseFields)
+                              renameField, modifyField, raiseFields, protectFieldText')
 
 -- | @parseFromFile p filePath@ runs a string parser @p@ on the
 -- input read from @filePath@ using 'Prelude.readFile'. Returns either a 'ParseError'
@@ -93,6 +93,7 @@ instance ControlFunctions T.Text where
               hasFieldName name (Field (fieldName',_)) = T.pack name == T.map toLower fieldName'
               hasFieldName _ _ = False
     stripWS = T.reverse . T.strip . T.reverse . T.strip
+    protectFieldText = protectFieldText'
     asString = T.unpack
 
 -- * Control File Parser

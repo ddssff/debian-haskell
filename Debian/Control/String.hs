@@ -26,10 +26,10 @@ module Debian.Control.String
 import qualified Control.Exception as E
 import Data.Char (toLower)
 import Data.List (find)
-import Debian.Control.Common (ControlFunctions(parseControlFromFile, parseControlFromHandle, parseControl, lookupP, stripWS, asString),
+import Debian.Control.Common (ControlFunctions(parseControlFromFile, parseControlFromHandle, parseControl, lookupP, stripWS, protectFieldText, asString),
                               Control'(Control), Paragraph'(Paragraph), Field'(Field, Comment),
                               mergeControls, fieldValue, removeField, prependFields, appendFields,
-                              renameField, modifyField, raiseFields)
+                              renameField, modifyField, raiseFields, protectFieldText')
 import System.IO (hGetContents)
 import Text.ParserCombinators.Parsec (CharParser, parse, parseFromFile, sepEndBy, satisfy, oneOf, string, lookAhead, try, many, many1, (<|>), noneOf, char, eof)
 
@@ -53,6 +53,7 @@ instance ControlFunctions String where
               hasFieldName _ _ = False
     stripWS = reverse . strip . reverse . strip
         where strip = dropWhile (flip elem " \t")
+    protectFieldText = protectFieldText'
     asString = id
 
 -- * Control File Parser

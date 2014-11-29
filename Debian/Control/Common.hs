@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, FlexibleInstances, OverloadedStrings, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, OverloadedStrings, ScopedTypeVariables, UndecidableInstances #-}
 module Debian.Control.Common
     ( -- * Types
       Control'(..)
@@ -15,10 +15,14 @@ module Debian.Control.Common
     , raiseFields
     , parseControlFromCmd
     , md5sumField
+    , protectFieldText'
     )
     where
 
+import Data.Char (isSpace)
 import Data.List (partition, intersperse)
+import Data.ListLike as LL (ListLike, dropWhile, empty, cons, find, reverse)
+import Data.ListLike.String as LL (StringLike, lines, unlines)
 import Data.Monoid ((<>))
 import Debian.Pretty (PP(..))
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
@@ -57,28 +61,48 @@ class ControlFunctions a where
     -- string. Folded whitespace is /not/ unfolded. This should probably
     -- be moved to someplace more general purpose.
     stripWS :: a -> a
+    -- |Protect field value text so the parser doesn't split it into
+    -- multiple fields or paragraphs.  This must modify all field text
+    -- to enforce two conditions: (1) All lines other than the initial
+    -- one must begin with a space or a tab, and (2) the trailing
+    -- white space must not contain newlines.  This is called before
+    -- pretty printing to prevent the parser from misinterpreting
+    -- field text as multiple fields or paragraphs.
+    protectFieldText :: a -> a
     asString :: a -> String
+
+-- | This can usually be used as the implementation of protectFieldText
+protectFieldText' :: forall a. (StringLike a, ListLike a Char) => ControlFunctions a => a -> a
+protectFieldText' s =
+    case LL.lines s of
+      [] -> empty
+      (l : ls) -> dropWhileEnd isSpace $ LL.unlines $ l : map protect ls
+    where
+      dropWhileEnd :: (Char -> Bool) -> a -> a
+      dropWhileEnd func = LL.reverse . LL.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
+      protect :: a -> a
+      protect l = maybe empty (\ c -> if elem c " \t" then l else LL.cons ' ' l) (LL.find (const True) l)
 
 -- | This may have bad performance issues (dsf: Whoever wrote this
 -- comment should have explained why.)
-instance Pretty (PP a) => Pretty (PP (Control' a)) where
+instance (ControlFunctions a, Pretty (PP a)) => Pretty (PP (Control' a)) where
     pPrint = ppControl . unPP
-instance Pretty (PP a) => Pretty (PP (Paragraph' a)) where
+instance (ControlFunctions a, Pretty (PP a)) => Pretty (PP (Paragraph' a)) where
     pPrint = ppParagraph . unPP
 
-instance Pretty (PP a) => Pretty (PP (Field' a)) where
+instance (ControlFunctions a, Pretty (PP a)) => Pretty (PP (Field' a)) where
     pPrint = ppField . unPP
 
-ppControl :: Pretty (PP a) => Control' a -> Doc
+ppControl :: (ControlFunctions a, Pretty (PP a)) => Control' a -> Doc
 ppControl (Control paragraph) =
     hcat (intersperse (text "\n") (map ppParagraph paragraph))
 
-ppParagraph :: Pretty (PP a) => Paragraph' a -> Doc
+ppParagraph :: (ControlFunctions a, Pretty (PP a)) => Paragraph' a -> Doc
 ppParagraph (Paragraph fields) =
     hcat (map (\ x -> ppField x <> text "\n") fields)
 
-ppField :: Pretty (PP a) => Field' a -> Doc
-ppField (Field (n,v)) = pPrint (PP n) <> text ":" <> pPrint (PP v)
+ppField :: (ControlFunctions a, Pretty (PP a)) => Field' a -> Doc
+ppField (Field (n,v)) = pPrint (PP n) <> text ":" <> pPrint (PP (protectFieldText v))
 ppField (Comment c) = pPrint (PP c)
 
 mergeControls :: [Control' a] -> Control' a

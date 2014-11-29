@@ -1,4 +1,4 @@
-{-# LANGUAGE PackageImports, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses, PackageImports, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Control.ByteString
     ( Control'(..)
@@ -24,8 +24,11 @@ module Debian.Control.ByteString
 import qualified Control.Exception as E
 import "mtl" Control.Monad.State
 
-import Data.Char(toLower)
+import Data.Char(toLower, isSpace, chr, ord)
+import Data.Word (Word8)
 import Data.List
+import qualified Data.ListLike as LL
+import qualified Data.ListLike.String as LL
 
 import Text.ParserCombinators.Parsec.Error
 import Text.ParserCombinators.Parsec.Pos
@@ -34,7 +37,7 @@ import Text.ParserCombinators.Parsec.Pos
 
 import qualified Data.ByteString.Char8 as C
 
-import Debian.Control.Common
+import Debian.Control.Common hiding (protectFieldText')
 
 -- Local Modules
 
@@ -119,7 +122,23 @@ instance ControlFunctions C.ByteString where
     -- NOTE: probably inefficient
     stripWS = C.reverse . strip . C.reverse . strip
         where strip = C.dropWhile (flip elem " \t")
+    protectFieldText = protectFieldText'
     asString = C.unpack
+
+protectFieldText' :: (LL.StringLike a, LL.ListLike a Word8) => ControlFunctions a => a -> a
+protectFieldText' s =
+    case LL.lines s of
+      [] -> LL.empty
+      (l : ls) -> dropWhileEnd (isSpace . chr . fromIntegral) $ LL.unlines $ l : map protect ls
+    where
+      dropWhileEnd :: (LL.StringLike a, LL.ListLike a Word8) => (Word8 -> Bool) -> a -> a
+      dropWhileEnd func = LL.reverse . LL.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
+      protect :: (LL.StringLike a, LL.ListLike a Word8) => a -> a
+      protect l = maybe LL.empty (\ c -> if isHorizSpace c then l else LL.cons (ord' ' ' :: Word8) l) (LL.find (const True :: Word8 -> Bool) l)
+      isSpace' = isSpace . chr'
+      isHorizSpace c = elem c (map ord' " \t")
+      ord' = fromIntegral . ord
+      chr' = chr . fromIntegral
 
 {-
 main = 

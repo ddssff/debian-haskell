@@ -53,17 +53,19 @@ controlTests =
     -- the parsed output is not correct, so the buggy result is placed
     -- in the "expected" position.
     , TestCase (assertEqual "pretty6" input6 parsed6)
-    , TestCase (assertEqual "pretty7" parsed7buggy parsed7)
+    , TestCase (assertEqual "pretty7" expected7 parsed7)
     , TestCase (assertEqual "pretty8" input8 parsed8)
-    , TestCase (assertEqual "pretty9" parsed9buggy parsed9)
+    , TestCase (assertEqual "pretty9" expected9 parsed9)
     ]
     where
       input6 = Control {unControl = [Paragraph [Field ("Field1", " field1 begins\n  Field1a: indented text that looks like a field")]]} :: Control' String
       input7 = Control {unControl = [Paragraph [Field ("Field1", " field1 begins\nField1a: text that looks like a field")]]} :: Control' String
-      parsed7buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 begins"),Field ("Field1a"," text that looks like a field")]]} :: Control' String
+      -- parsed7buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 begins"),Field ("Field1a"," text that looks like a field")]]} :: Control' String
+      expected7 =    Control {unControl = [Paragraph [Field ("Field1"," field1 begins\n Field1a: text that looks like a field")]]}
       input8 = Control {unControl = [Paragraph [Field ("Field1", " field1 content"), Field ("Field2", " an actual second field")]]} :: Control' String
       input9 = Control {unControl = [Paragraph [Field ("Field1", " field1 content\n"), Field ("Field2", " an actual second field")]]} :: Control' String
-      parsed9buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 content")],Paragraph [Field ("Field2"," an actual second field")]]} :: Control' String
+      -- parsed9buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 content")],Paragraph [Field ("Field2"," an actual second field")]]} :: Control' String
+      expected9 =    Control {unControl = [Paragraph [Field ("Field1"," field1 content"),Field ("Field2"," an actual second field")]]}
       (Right parsed6) = parseControl "string" (ppDisplay input6) :: Either ParseError (Control' String)
       (Right parsed7) = parseControl "string" (ppDisplay input7) :: Either ParseError (Control' String)
       (Right parsed8) = parseControl "string" (ppDisplay input8) :: Either ParseError (Control' String)
