@@ -8,9 +8,10 @@ import Data.Text as T (Text)
 import Debian.Control
 import Debian.Control.Policy
 import Debian.Control.Text ({- Pretty instances -})
-import Debian.Pretty (ppPrint)
+import Debian.Pretty (ppPrint, ppDisplay)
 import Debian.Relation
 import Debian.Version (parseDebianVersion)
+import Text.Parsec.Error (ParseError)
 import Text.PrettyPrint.HughesPJClass (Doc, text)
 
 instance Eq Doc where
@@ -46,7 +47,27 @@ controlTests =
                 assertEqual "policy5"
                             "Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"main\", loc_module = \"Debian.Control.Policy\", loc_start = (74,36), loc_end = (74,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})"
                             (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl))))
+
+    -- Test whether embedded newlines in field values can be mistaken
+    -- for field or paragraph divisions.  In cases pretty7 and pretty9
+    -- the parsed output is not correct, so the buggy result is placed
+    -- in the "expected" position.
+    , TestCase (assertEqual "pretty6" input6 parsed6)
+    , TestCase (assertEqual "pretty7" parsed7buggy parsed7)
+    , TestCase (assertEqual "pretty8" input8 parsed8)
+    , TestCase (assertEqual "pretty9" parsed9buggy parsed9)
     ]
+    where
+      input6 = Control {unControl = [Paragraph [Field ("Field1", " field1 begins\n  Field1a: indented text that looks like a field")]]} :: Control' String
+      input7 = Control {unControl = [Paragraph [Field ("Field1", " field1 begins\nField1a: text that looks like a field")]]} :: Control' String
+      parsed7buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 begins"),Field ("Field1a"," text that looks like a field")]]} :: Control' String
+      input8 = Control {unControl = [Paragraph [Field ("Field1", " field1 content"), Field ("Field2", " an actual second field")]]} :: Control' String
+      input9 = Control {unControl = [Paragraph [Field ("Field1", " field1 content\n"), Field ("Field2", " an actual second field")]]} :: Control' String
+      parsed9buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 content")],Paragraph [Field ("Field2"," an actual second field")]]} :: Control' String
+      (Right parsed6) = parseControl "string" (ppDisplay input6) :: Either ParseError (Control' String)
+      (Right parsed7) = parseControl "string" (ppDisplay input7) :: Either ParseError (Control' String)
+      (Right parsed8) = parseControl "string" (ppDisplay input8) :: Either ParseError (Control' String)
+      (Right parsed9) = parseControl "string" (ppDisplay input9) :: Either ParseError (Control' String)
 
 -- | These paragraphs have no terminating newlines.  They are added
 -- where appropriate to the expected test results.
