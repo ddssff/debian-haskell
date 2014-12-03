@@ -1,3 +1,10 @@
+haskell-debian (3.85) unstable; urgency=low
+
+  * Fix some cases where the pretty printer output parsed to something
+    different from its input
+
+ -- David Fox <dsf@seereason.com>  Sat, 29 Nov 2014 09:27:42 -0800
+
 haskell-debian (3.84.1) unstable; urgency=low
 
   * Remove a Show instance that overlaps the one derived in the Control
