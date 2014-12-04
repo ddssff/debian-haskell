@@ -62,7 +62,7 @@ Library
  if flag(listlike)
    build-depends: process-listlike >= 0.9
  else
-   build-depends: process-extras >= 0.2.1
+   build-depends: process-extras >= 0.2.0
 
  ghc-options: -Wall -O2
  Exposed-modules:
@@ -143,7 +143,7 @@ Executable debian-tests
  if flag(listlike)
    build-depends: process-listlike >= 0.9
  else
-   build-depends: process-extras >= 0.2.1
+   build-depends: process-extras >= 0.2.0
 
 source-repository head
   type:     git
