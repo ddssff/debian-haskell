@@ -1,3 +1,9 @@
+haskell-debian (3.85.1) unstable; urgency=low
+
+  * Allow build with process-extras-0.2.0
+
+ -- David Fox <dsf@seereason.com>  Thu, 04 Dec 2014 06:23:38 -0800
+
 haskell-debian (3.85) unstable; urgency=low
 
   * Fix some cases where the pretty printer output parsed to something
