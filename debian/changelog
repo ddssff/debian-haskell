@@ -1,3 +1,12 @@
+haskell-debian (3.85.2) unstable; urgency=low
+
+  * If any of the lines of a multi-line control file field are not
+    indented, indent all the lines by one space.
+  * When formatting multi-line control file fields, make sure empty
+    lines are replaced by a single (indented) '.'.
+
+ -- David Fox <dsf@seereason.com>  Wed, 04 Feb 2015 11:23:42 -0800
+
 haskell-debian (3.85.1) unstable; urgency=low
 
   * Allow build with process-extras-0.2.0

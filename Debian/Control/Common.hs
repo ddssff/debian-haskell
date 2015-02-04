@@ -20,8 +20,8 @@ module Debian.Control.Common
     where
 
 import Data.Char (isSpace)
-import Data.List (partition, intersperse)
-import Data.ListLike as LL (ListLike, dropWhile, empty, cons, find, reverse)
+import Data.List as List (dropWhileEnd, partition, intersperse)
+import Data.ListLike as LL (ListLike, cons, dropWhileEnd, empty, find, null, singleton)
 import Data.ListLike.String as LL (StringLike, lines, unlines)
 import Data.Monoid ((<>))
 import Debian.Pretty (PP(..))
@@ -74,14 +74,26 @@ class ControlFunctions a where
 -- | This can usually be used as the implementation of protectFieldText
 protectFieldText' :: forall a. (StringLike a, ListLike a Char) => ControlFunctions a => a -> a
 protectFieldText' s =
-    case LL.lines s of
+    let trimmedLines :: [a]
+        trimmedLines = map (LL.dropWhileEnd isSpace :: a -> a) $ (LL.lines s :: [a])
+        strippedLines :: [a]
+        strippedLines = List.dropWhileEnd LL.null trimmedLines in
+    -- Split the text into lines, drop trailing whitespace from each
+    -- line, and drop trailing blank lines.
+    case strippedLines of
       [] -> empty
-      (l : ls) -> dropWhileEnd isSpace $ LL.unlines $ l : map protect ls
+      (l : ls) ->
+          let -- The first line is indented one space
+              l' = {-LL.cons ' '-} l
+              -- Null lines are replaced by a single '.'  If any line
+              -- is unindented, all will get an additional space of
+              -- indentation.
+              ls' = case all indented ls of
+                      True -> map (\ x -> if LL.null x then (LL.cons ' ' $ singleton '.') else x) ls
+                      False -> map (LL.cons ' ') $ map (\ x -> if LL.null x then (singleton '.') else x) ls in
+          LL.dropWhileEnd isSpace (LL.unlines (l' : ls'))
     where
-      dropWhileEnd :: (Char -> Bool) -> a -> a
-      dropWhileEnd func = LL.reverse . LL.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
-      protect :: a -> a
-      protect l = maybe empty (\ c -> if elem c " \t" then l else LL.cons ' ' l) (LL.find (const True) l)
+      indented l = maybe True isSpace (LL.find (const True) l)
 
 -- | This may have bad performance issues (dsf: Whoever wrote this
 -- comment should have explained why.)

@@ -27,9 +27,9 @@ module Debian.Control.Text
     ) where
 
 import qualified Data.ByteString.Char8 as B
-import Data.Char (toLower, chr, isSpace)
+import Data.Char (toLower, chr)
 import Data.List (find)
-import qualified Data.Text as T (Text, pack, unpack, map, strip, reverse, dropWhileEnd)
+import qualified Data.Text as T (Text, pack, unpack, map, strip, reverse)
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 --import Data.Text.IO as T (readFile)
 import qualified Debian.Control.ByteString as B
