@@ -20,6 +20,10 @@ flag network-uri
  Description: Get Network.URI from the network-uri package
  Default: True
 
+flag pretty-new
+ Description: pretty-1.1.2 includes the Text.PrettyPrint.HughesPJClass module from prettyclass
+ Default: True
+
 Library
  Hs-Source-Dirs: .
  Build-Depends:
@@ -37,8 +41,6 @@ Library
    mtl,
    old-locale,
    parsec >= 2 && <4,
-   pretty,
-   prettyclass,
    process,
    process-extras >= 0.2.0,
    pureMD5,
@@ -55,6 +57,10 @@ Library
    Build-Depends: network >= 2.6, network-uri >= 2.6
  else
    Build-Depends: network >= 2.4 && < 2.6
+ if flag(pretty-new)
+   Build-Depends: pretty >= 1.1.2
+ else
+   Build-Depends: pretty, prettyclass
 
  ghc-options: -Wall -O2
  Exposed-modules:
@@ -127,11 +133,15 @@ Executable apt-get-build-depends
 Executable debian-tests
  Main-is: Test/Main.hs
  ghc-options: -threaded -W -O2
- Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike >= 4.1.1, mtl, parsec, pretty, prettyclass, process, process-extras >= 0.2.0, regex-compat, regex-tdfa, template-haskell, text, utf8-string
+ Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike >= 4.1.1, mtl, parsec, process, process-extras >= 0.2.0, regex-compat, regex-tdfa, template-haskell, text, utf8-string
  if flag(network-uri)
    Build-Depends: network >= 2.6, network-uri >= 2.6
  else
    Build-Depends: network >= 2.4 && < 2.6
+ if flag(pretty-new)
+   Build-Depends: pretty >= 1.1.2
+ else
+   Build-Depends: pretty, prettyclass
 
 source-repository head
   type:     git
