@@ -1,6 +1,7 @@
 haskell-debian (3.85.3) unstable; urgency=low
 
   * Handle new pretty-1.1.2 package, which supercedes prettyclass.
+  * Make a change to trigger a travis build.
 
  -- David Fox <dsf@seereason.com>  Fri, 06 Feb 2015 10:18:30 -0800
 
