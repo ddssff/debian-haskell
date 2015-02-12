@@ -127,10 +127,10 @@ Executable apt-get-build-depends
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
 
-Executable debian-tests
- Hs-Source-Dirs: Test
- Main-is: Main.hs
- ghc-options: -threaded -W -O2
+Test-Suite test
+  Type: exitcode-stdio-1.0
+  Hs-Source-Dirs: Test
+  Main-Is: Main.hs
  Build-Depends: ansi-wl-pprint, base, debian, HUnit, parsec, text
  if flag(pretty-new)
    Build-Depends: pretty >= 1.1.2
