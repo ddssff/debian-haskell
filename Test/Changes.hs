@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
-module Test.Changes where
+module Changes where
 
 import Debian.Changes
 import Debian.Pretty (PP(..))

@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleInstances, OverloadedStrings, StandaloneDeriving #-}
-module Test.Control where
+module Control where
 
 import Test.HUnit
 import Data.Monoid ((<>))

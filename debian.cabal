@@ -100,11 +100,7 @@ Library
         Debian.UTF8,
         Debian.Util.FakeChanges
  other-modules:
-        Debian.Version.Internal,
-        Test.Changes,
-        Test.Dependencies,
-        Test.SourcesList,
-        Test.Versions
+        Debian.Version.Internal
 
 Executable fakechanges
  Hs-Source-Dirs: utils
@@ -132,13 +128,10 @@ Executable apt-get-build-depends
  Extensions:           ExistentialQuantification CPP
 
 Executable debian-tests
- Main-is: Test/Main.hs
+ Hs-Source-Dirs: Test
+ Main-is: Main.hs
  ghc-options: -threaded -W -O2
- Build-Depends: ansi-wl-pprint, base, bytestring, containers, debian, directory, exceptions, HUnit, ListLike >= 4.1.1, mtl, parsec, process, process-extras >= 0.2.0, regex-compat, regex-tdfa, template-haskell, text, utf8-string
- if flag(network-uri)
-   Build-Depends: network >= 2.6, network-uri >= 2.6
- else
-   Build-Depends: network >= 2.4 && < 2.6
+ Build-Depends: ansi-wl-pprint, base, debian, HUnit, parsec, text
  if flag(pretty-new)
    Build-Depends: pretty >= 1.1.2
  else

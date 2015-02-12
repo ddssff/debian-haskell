@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Test.SourcesList where
+module SourcesList where
 
 import Data.Text (Text)
 import Data.Monoid (mconcat, (<>))

@@ -2,12 +2,12 @@ module Main where
 
 import Test.HUnit
 import System.Exit
-import Test.Changes
-import Test.Control
-import Test.Versions
+import Changes
+import Control
+import Versions
 --import Test.VersionPolicy
-import Test.SourcesList
-import Test.Dependencies
+import SourcesList
+import Dependencies
 import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<+>), (<$>), fillSep, renderPretty, displayS)
 
 main =

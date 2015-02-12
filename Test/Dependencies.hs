@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS -fno-warn-missing-signatures -fno-warn-orphans #-}
-module Test.Dependencies where
+module Dependencies where
 
 import Control.Arrow
 import Test.HUnit
