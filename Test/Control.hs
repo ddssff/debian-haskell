@@ -15,6 +15,7 @@ import Debian.Version (parseDebianVersion)
 import Paths_debian (version)
 import Text.Parsec.Error (ParseError)
 import Text.PrettyPrint.HughesPJClass (Doc, text)
+import Text.Regex.TDFA ((=~), MatchResult(..))
 
 instance Eq Doc where
     a == b = show a == show b
@@ -24,6 +25,12 @@ instance Eq DebianControl where
 -- deriving instance Show (Control' Text)
 -- deriving instance Show (Paragraph' Text)
 -- deriving instance Show (Field' Text)
+
+replaceString :: String -> String -> String -> String
+replaceString old new x =
+    case x =~ old of
+      mr | null (mrMatch mr) -> x
+      mr -> mrBefore mr <> new <> mrAfter mr
 
 -- Additional tests of the results of parsing additional
 -- inter-paragraph newlines, or missing terminating newlines, would be
@@ -48,7 +55,8 @@ controlTests =
     , TestCase (parseDebianControlFromFile "nonexistant" >>= \ vc ->
                 assertEqual "policy5"
                             ("Left (IOError {locs = [Loc {loc_filename = \"./Debian/Control/Policy.hs\", loc_package = \"debian-" ++ showVersion version ++ "\", loc_module = \"Debian.Control.Policy\", loc_start = (74,36), loc_end = (74,44)}], ioError = nonexistant: openBinaryFile: does not exist (No such file or directory)})")
-                            (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl))))
+                            (replaceString "openFile" "openBinaryFile"
+                             (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl)))))
 
     -- Test whether embedded newlines in field values can be mistaken
     -- for field or paragraph divisions.  In cases pretty7 and pretty9
