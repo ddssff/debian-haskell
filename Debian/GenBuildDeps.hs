@@ -35,7 +35,6 @@ import		 Debian.Control.Policy (HasDebianControl, ControlFileError(..), validate
 import           Debian.Loc (__LOC__)
 import		 Debian.Relation
 import		 Debian.Relation.Text ()
-import           Language.Haskell.TH (Loc)
 import		 System.Directory (getDirectoryContents, doesFileExist)
 
 -- | This type describes the build dependencies of a source package.

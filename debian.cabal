@@ -48,6 +48,7 @@ Library
    regex-tdfa,
    template-haskell,
    text,
+   th-orphans >= 0.9,
    time,
    unix,
    Unixutils >= 1.52.4,
