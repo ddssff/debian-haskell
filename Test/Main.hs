@@ -5,7 +5,6 @@ import System.Exit
 import Changes
 import Control
 import Versions
---import Test.VersionPolicy
 import SourcesList
 import Dependencies
 import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<+>), (<$>), fillSep, renderPretty, displayS)
