@@ -127,7 +127,7 @@ Executable apt-get-build-depends
  ghc-options: -threaded -W -O2
  Extensions:           ExistentialQuantification CPP
 
-Test-Suite test
+Test-Suite debian-tests
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: Test
   Main-Is: Main.hs
