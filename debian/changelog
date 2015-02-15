@@ -1,3 +1,12 @@
+haskell-debian (3.86) unstable; urgency=low
+
+  * Avoid dependency on th-orphans
+  * Turn test program into a test-suite
+  * add DEB_ENABLE_TESTS = yes to debian/rules
+  * Support builds on older versions of GHC
+
+ -- David Fox <dsf@seereason.com>  Sun, 15 Feb 2015 07:32:42 -0800
+
 haskell-debian (3.85.3) unstable; urgency=low
 
   * Handle new pretty-1.1.2 package, which supercedes prettyclass.

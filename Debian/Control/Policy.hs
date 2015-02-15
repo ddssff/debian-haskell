@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleContexts, FlexibleInstances, FunctionalDependencies, MultiParamTypeClasses, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleContexts, FlexibleInstances, FunctionalDependencies, MultiParamTypeClasses, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
 {-# OPTIONS_GHC -Wall #-}
 -- | Access to things that Debian policy says should be in a valid
 -- control file.  The pure functions will not throw ControlFileError
@@ -29,6 +29,7 @@ module Debian.Control.Policy
 
 import Control.Exception (Exception, throw)
 import Control.Monad.Catch (MonadCatch, try)
+import Data.List (intercalate)
 import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.ListLike (toList)
@@ -38,7 +39,8 @@ import Debian.Loc (__LOC__)
 import Debian.Pretty (ppDisplay)
 import Debian.Relation (SrcPkgName(..), BinPkgName(..), Relations, parseRelations)
 import Debian.Relation.Text ()
-import Language.Haskell.TH (Loc)
+import Language.Haskell.TH (Loc(..))
+import Prelude hiding (ioError)
 -- import qualified Debug.ShowPlease as Please
 import Text.Parsec.Error (ParseError)
 
@@ -99,7 +101,18 @@ data ControlFileError
     | ParseRelationsError {locs :: [Loc], parseError :: ParseError}
     | ParseControlError   {locs :: [Loc], parseError :: ParseError}
     | IOError             {locs :: [Loc], ioError :: IOError}
-    deriving (Show, Typeable)
+    deriving Typeable
+
+instance Show ControlFileError where
+    show (NoParagraphs {..}) = intercalate ", " (map showLoc locs) ++ ": NoParagraphs"
+    show (NoBinaryParagraphs {..}) = intercalate ", " (map showLoc locs) ++ ": NoBinaryParagraphs"
+    show (MissingField {..}) = intercalate ", " (map showLoc locs) ++ ": MissingField " ++ show field
+    show (ParseRelationsError {..}) = intercalate ", " (map showLoc locs) ++ ": ParseRelationsError " ++ show parseError
+    show (ParseControlError {..}) = intercalate ", " (map showLoc locs) ++ ": ParseControlError " ++ show parseError
+    show (IOError {..}) = intercalate ", " (map showLoc locs) ++ ": IOError " ++ show ioError
+
+showLoc :: Loc -> String
+showLoc x = show (loc_filename x) ++ "(line " ++ show (fst (loc_start x)) ++ ", column " ++ show (snd (loc_start x)) ++ ")"
 
 -- instance Please.Show ControlFileError where
 --     show (IOError e) = "(IOError " ++ Please.show e ++ ")"
