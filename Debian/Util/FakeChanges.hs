@@ -10,7 +10,7 @@ import qualified Data.Digest.Pure.MD5 as MD5
 import Data.Foldable (concat, all, foldr)
 import Data.List as List (intercalate, nub, partition, isSuffixOf)
 import Data.Maybe
-import Debian.Pretty (ppDisplay)
+import Debian.Pretty (prettyShow)
 import Data.Traversable
 import Debian.Control
 import qualified Debian.Deb as Deb
@@ -73,7 +73,7 @@ fakeChanges fps =
                                              ))
                , ("Files", "\n" ++ unlines fileLines)
                ]
-       return $ (concat [ source, "_", version, "_", binArch, ".changes"], ppDisplay changes)
+       return $ (concat [ source, "_", version, "_", binArch, ".changes"], prettyShow changes)
 --       let (invalid, binaries) = unzipEithers $ map debNameSplit debs
 {-
        when (not . null $ invalid) (throwDyn [MalformedDebFilename invalid])
@@ -218,13 +218,13 @@ loadFiles files =
              case  res of
                (Left e) -> error $ "Error parsing " ++ dsc' ++ "\n" ++ show e
                (Right (Control [p])) -> return (dsc', p)
-               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ ppDisplay c
+               (Right c) -> error $ dsc' ++ " did not have exactly one paragraph: " ++ prettyShow c
       loadDeb :: FilePath -> IO (FilePath, Paragraph)
       loadDeb deb =
           do res <- Deb.fields deb
              case res of
                (Control [p]) -> return (deb, p)
-               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ ppDisplay res
+               _ -> error $ deb ++ " did not have exactly one paragraph: " ++ prettyShow res
 
 
 getUploader :: IO String

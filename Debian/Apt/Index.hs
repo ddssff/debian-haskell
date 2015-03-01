@@ -32,7 +32,6 @@ import Debian.Control (formatControl)
 import Debian.Control.ByteString
 import Debian.Control.Common
 import Debian.Control.Text (decodeControl)
-import Debian.Pretty (PP(..))
 import Debian.Release
 import Debian.Sources
 import Debian.URI
@@ -125,7 +124,7 @@ indexURIs arch debSource =
     where
       baseURI = sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pPrint (PP debSource))) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pPrint debSource)) id (sourceDist debSource)
 
 -- |return a tuple for the section 
 --  - the URI to the uncompressed index file

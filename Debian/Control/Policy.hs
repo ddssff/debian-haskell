@@ -36,7 +36,7 @@ import Data.ListLike (toList)
 import Debian.Control.Common (Control'(..), Paragraph'(..), Field'(..), fieldValue, ControlFunctions(parseControlFromFile, parseControl))
 import Debian.Control.Text ()
 import Debian.Loc (__LOC__)
-import Debian.Pretty (ppDisplay)
+import Debian.Pretty (prettyShow)
 import Debian.Relation (SrcPkgName(..), BinPkgName(..), Relations, parseRelations)
 import Debian.Relation.Text ()
 import Language.Haskell.TH (Loc(..))
@@ -49,7 +49,7 @@ import Text.Parsec.Error (ParseError)
 data DebianControl = DebianControl {unDebianControl :: Control' Text}
 
 instance Show DebianControl where
-    show c = "(parseDebianControl \"\" " ++ show (ppDisplay (unDebianControl c)) ++ ")"
+    show c = "(parseDebianControl \"\" " ++ show (prettyShow (unDebianControl c)) ++ ")"
 
 -- | Validate and return a control file in an opaque wrapper.  May
 -- throw a ControlFileError.  Currently we only verify that it has a

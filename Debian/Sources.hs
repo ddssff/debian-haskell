@@ -21,13 +21,13 @@ data DebSource
     , sourceDist :: Either String (ReleaseName, [Section])
     } deriving (Eq, Ord)
 
-instance Pretty (PP SourceType) where
-    pPrint (PP Deb) = text "deb"
-    pPrint (PP DebSrc) = text "deb-src"
+instance Pretty SourceType where
+    pPrint Deb = text "deb"
+    pPrint DebSrc = text "deb-src"
 
-instance Pretty (PP DebSource) where
-    pPrint (PP (DebSource thetype theuri thedist)) =
-        pPrint (PP thetype) <>
+instance Pretty DebSource where
+    pPrint (DebSource thetype theuri thedist) =
+        pPrint thetype <>
         text (" " <> uriToString id theuri " " <>
               case thedist of
                 Left exactPath -> escape exactPath
@@ -35,7 +35,7 @@ instance Pretty (PP DebSource) where
             where escape = escapeURIString isAllowedInURI
 
 instance Pretty (PP [DebSource]) where
-    pPrint = hcat . map (\ x -> pPrint (PP x) <> text "\n") . unPP
+    pPrint = hcat . map (\ x -> pPrint x <> text "\n") . unPP
 
 -- |This is a name given to a combination of parts of one or more
 -- releases that can be specified by a sources.list file.

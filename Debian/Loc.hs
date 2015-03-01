@@ -8,7 +8,6 @@ import Control.Applicative ((<$>), (<*>), pure)
 import Control.Exception (Exception, throw)
 import Control.Monad.Catch (MonadCatch, catch)
 import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
 
 __LOC__ :: Q Exp
 __LOC__ = location >>= \ x ->

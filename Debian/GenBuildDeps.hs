@@ -23,8 +23,6 @@ module Debian.GenBuildDeps
     , getSourceOrder
     ) where
 
-import Debug.Trace
-
 import           Control.Applicative ((<$>))
 import           Control.Exception (throw)
 import		 Control.Monad (filterM)
