@@ -12,14 +12,14 @@ import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 data SourceType
     = Deb | DebSrc
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 data DebSource
     = DebSource
     { sourceType :: SourceType
     , sourceUri :: URI
     , sourceDist :: Either String (ReleaseName, [Section])
-    } deriving (Eq, Ord)
+    } deriving (Eq, Ord, Show)
 
 instance Pretty SourceType where
     pPrint Deb = text "deb"
