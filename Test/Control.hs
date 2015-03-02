@@ -9,12 +9,12 @@ import Data.Version (showVersion)
 import Debian.Control
 import Debian.Control.Policy
 import Debian.Control.Text ({- Pretty instances -})
-import Debian.Pretty (ppPrint, ppDisplay)
+import Debian.Pretty (prettyShow)
 import Debian.Relation
 import Debian.Version (parseDebianVersion)
 import Paths_debian (version)
 import Text.Parsec.Error (ParseError)
-import Text.PrettyPrint.HughesPJClass (Doc, text)
+import Text.PrettyPrint.HughesPJClass (Doc, text, pPrint)
 import Text.Regex.TDFA ((=~), MatchResult(..))
 
 instance Eq Doc where
@@ -36,14 +36,14 @@ replaceString old new x =
 -- inter-paragraph newlines, or missing terminating newlines, would be
 -- good.
 controlTests =
-    [ TestCase (assertEqual "pretty1" (ppPrint control) (either (error "parser failed") ppPrint (parseControl "debian/control" sample)))
-    , TestCase (assertEqual "pretty2" (text sample) (ppPrint control))
-    , TestCase (assertEqual "pretty3" (text (head paragraphs <> "\n")) (ppPrint (head (unControl control))))
+    [ TestCase (assertEqual "pretty1" (pPrint control) (either (error "parser failed") pPrint (parseControl "debian/control" sample)))
+    , TestCase (assertEqual "pretty2" (text sample) (pPrint control))
+    , TestCase (assertEqual "pretty3" (text (head paragraphs <> "\n")) (pPrint (head (unControl control))))
     -- The Pretty class instances are distinct implementations from
     -- those in Debian.Control.PrettyPrint.  Not sure why, there is a
     -- terse note about performance concerns.
-    , TestCase (assertEqual "pretty4" (text sample) (ppPrint control))
-    , TestCase (assertEqual "pretty5" (text (head paragraphs <> "\n")) (ppPrint (head (unControl control))))
+    , TestCase (assertEqual "pretty4" (text sample) (pPrint control))
+    , TestCase (assertEqual "pretty5" (text (head paragraphs <> "\n")) (pPrint (head (unControl control))))
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy1" (Right (unsafeDebianControl control)) vc) -- validate control file
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy2" (Right (Just builddeps)) (either Left (debianRelations "Build-Depends") vc)) -- parse build deps
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy3" (Right Nothing) (either Left (debianRelations "Foo") vc)) -- absent field
@@ -76,10 +76,10 @@ controlTests =
       input9 = Control {unControl = [Paragraph [Field ("Field1", " field1 content\n"), Field ("Field2", " an actual second field")]]} :: Control' String
       -- parsed9buggy = Control {unControl = [Paragraph [Field ("Field1"," field1 content")],Paragraph [Field ("Field2"," an actual second field")]]} :: Control' String
       expected9 =    Control {unControl = [Paragraph [Field ("Field1"," field1 content"),Field ("Field2"," an actual second field")]]}
-      (Right parsed6) = parseControl "string" (ppDisplay input6) :: Either ParseError (Control' String)
-      (Right parsed7) = parseControl "string" (ppDisplay input7) :: Either ParseError (Control' String)
-      (Right parsed8) = parseControl "string" (ppDisplay input8) :: Either ParseError (Control' String)
-      (Right parsed9) = parseControl "string" (ppDisplay input9) :: Either ParseError (Control' String)
+      (Right parsed6) = parseControl "string" (prettyShow input6) :: Either ParseError (Control' String)
+      (Right parsed7) = parseControl "string" (prettyShow input7) :: Either ParseError (Control' String)
+      (Right parsed8) = parseControl "string" (prettyShow input8) :: Either ParseError (Control' String)
+      (Right parsed9) = parseControl "string" (prettyShow input9) :: Either ParseError (Control' String)
 
 -- | These paragraphs have no terminating newlines.  They are added
 -- where appropriate to the expected test results.
