@@ -89,7 +89,7 @@ quoteWords s = quoteWords' (dropWhile (==' ') s)
       quoteWords' :: String -> [String]
       quoteWords' [] = []
       quoteWords' str =
-          case break (flip elem " [\"") str of
+          case break (flip elem (" [\"" :: String)) str of
             ([],[]) -> []
             (w, []) -> [w]
             (w, (' ':rest)) -> w : (quoteWords' (dropWhile (==' ') rest))
