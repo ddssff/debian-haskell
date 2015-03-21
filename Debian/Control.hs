@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 -- |A module for working with Debian control files <http://www.debian.org/doc/debian-policy/ch-controlfields.html>
-module Debian.Control 
+module Debian.Control
     ( -- * Types
       Control'(..)
     , Paragraph'(..)

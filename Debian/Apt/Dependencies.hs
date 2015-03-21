@@ -3,7 +3,7 @@
 module Debian.Apt.Dependencies
 {-
     ( solve
-    , State 
+    , State
     , binaryDepends
     , search
     , bj'
@@ -27,7 +27,7 @@ import Text.PrettyPrint (render)
 
 -- * Basic CSP Types and Functions
 
-data Status 
+data Status
     = Remaining AndRelation
     | MissingDep Relation
     | Complete
@@ -87,13 +87,13 @@ depF p =
     let preDepends =
             case lookupP "Pre-Depends" p of
               Nothing -> []
-              Just (Field (_,pd)) -> 
+              Just (Field (_,pd)) ->
                   either (error . show) id (parseRelations pd)
               Just (Comment _) -> error "depF"
         depends =
             case lookupP "Depends" p of
               Nothing -> []
-              Just (Field (_,pd)) -> 
+              Just (Field (_,pd)) ->
                   either (error . show) id (parseRelations pd)
               Just (Comment _) -> error "depF"
     in
@@ -207,7 +207,7 @@ mkSearchTree csp =
 -- |earliestInconsistency does what it sounds like
 -- the 'reverse as' is because the vars are order high to low, but we
 -- want to find the lowest numbered (aka, eariest) inconsistency ??
--- 
+--
 earliestInconsistency :: CSP a -> State a -> Maybe ((BinPkgName, DebianVersion), (BinPkgName, DebianVersion))
 earliestInconsistency _ (_,[]) = Nothing
 earliestInconsistency _ (_,[_p]) = Nothing
@@ -262,7 +262,7 @@ bj csp = foldTree f
             | isConflict cs  = mkTree (s, cs) ts
 --            | isConflict cs' = mkTree (s, cs') [] -- prevent space leak
             | otherwise = mkTree (s, cs') ts
-            where cs' = 
+            where cs' =
                       let set = combine csp (map label ts) [] in
                       set `seq` set -- prevent space leak
 
@@ -275,7 +275,7 @@ combine csp ((s,cs@(c,m)):ns) acc
     | (not (lastvar `elem` c)) && null m = cs
     | null c && null m = ([],[]) -- is this case ever used?
     | otherwise = combine csp ns ((c, m):acc)
-    where lastvar = 
+    where lastvar =
               let (_,(p:_)) = s in (packageVersion csp) p
 
 

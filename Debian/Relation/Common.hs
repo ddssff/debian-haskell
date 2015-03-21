@@ -59,10 +59,10 @@ prettyRelation (Rel name ver arch) =
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
-	case compare pkgName1 pkgName2 of
-	     LT -> LT
-	     GT -> GT
-	     EQ -> compare mVerReq1 mVerReq2
+        case compare pkgName1 pkgName2 of
+             LT -> LT
+             GT -> GT
+             EQ -> compare mVerReq1 mVerReq2
 
 data ArchitectureReq
     = ArchOnly (Set Arch)

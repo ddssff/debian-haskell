@@ -40,14 +40,14 @@ type Paragraph = Paragraph' String
 -- * ControlFunctions
 
 instance ControlFunctions String where
-    parseControlFromFile filepath = 
-        parseFromFile pControl filepath 
-    parseControlFromHandle sourceName handle = 
+    parseControlFromFile filepath =
+        parseFromFile pControl filepath
+    parseControlFromHandle sourceName handle =
         E.try (hGetContents handle) >>=
         either (\ (e :: E.SomeException) -> error ("parseControlFromHandle String: Failure parsing " ++ sourceName ++ ": " ++ show e)) (return . parseControl sourceName)
-    parseControl sourceName c = 
+    parseControl sourceName c =
         parse pControl sourceName c
-    lookupP fieldName (Paragraph paragraph) = 
+    lookupP fieldName (Paragraph paragraph) =
         find (hasFieldName (map toLower fieldName)) paragraph
         where hasFieldName name (Field (fieldName',_)) = name == map toLower fieldName'
               hasFieldName _ _ = False

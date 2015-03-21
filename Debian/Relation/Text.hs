@@ -13,7 +13,7 @@ module Debian.Relation.Text
     -- * Relation Parser
     , RelParser
     , ParseRelations(..)
-    ) where 
+    ) where
 
 import qualified Data.Text as T
 

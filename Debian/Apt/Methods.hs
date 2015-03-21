@@ -138,13 +138,13 @@ parseStatus (code' : headers') =
                         | a == "Pipeline"        = c { pipeline = parseTrueFalse v }
                         | a == "Send-Config"     = c { sendConfig = parseTrueFalse v }
                         | a == "Needs-Cleanup"   = c { needsCleanup = parseTrueFalse v }
-                        | a == "Local-Only"	 = c { localOnly = parseTrueFalse v }
+                        | a == "Local-Only"      = c { localOnly = parseTrueFalse v }
                         | otherwise = error $ "unknown capability: " ++ show (a,v)
                     defaultCapabilities =
                         Capabilities { version = ""
                                      , singleInstance = False
-                                     , preScan 	      = False
-                                     , pipeline	      = False
+                                     , preScan        = False
+                                     , pipeline       = False
                                      , sendConfig     = False
                                      , needsCleanup   = False
                                      , localOnly      = False

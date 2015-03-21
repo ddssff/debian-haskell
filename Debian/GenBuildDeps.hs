@@ -25,25 +25,25 @@ module Debian.GenBuildDeps
 
 import           Control.Applicative ((<$>))
 import           Control.Exception (throw)
-import		 Control.Monad (filterM)
-import		 Data.Graph (Graph, Edge, Vertex, buildG, topSort, reachable, transposeG, edges, scc)
-import		 Data.List
+import           Control.Monad (filterM)
+import           Data.Graph (Graph, Edge, Vertex, buildG, topSort, reachable, transposeG, edges, scc)
+import           Data.List
 import qualified Data.Map as Map
-import		 Data.Maybe
+import           Data.Maybe
 import qualified Data.Set as Set
 import           Data.Tree as Tree (Tree(Node, rootLabel, subForest))
-import		 Debian.Control (parseControlFromFile)
-import		 Debian.Control.Policy (HasDebianControl, DebianControl, ControlFileError(..), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
+import           Debian.Control (parseControlFromFile)
+import           Debian.Control.Policy (HasDebianControl, DebianControl, ControlFileError(..), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
 import           Debian.Loc (__LOC__)
-import		 Debian.Relation
-import		 Debian.Relation.Text ()
-import		 System.Directory (getDirectoryContents, doesFileExist)
+import           Debian.Relation
+import           Debian.Relation.Text ()
+import           System.Directory (getDirectoryContents, doesFileExist)
 
 -- | This type describes the build dependencies of a source package.
 data DepInfo = DepInfo {
-      sourceName :: SrcPkgName		-- ^ source package name
-    , relations :: Relations		-- ^ dependency relations
-    , binaryNames :: [BinPkgName]	-- ^ binary dependency names (is this a function of relations?)
+      sourceName :: SrcPkgName          -- ^ source package name
+    , relations :: Relations            -- ^ dependency relations
+    , binaryNames :: [BinPkgName]       -- ^ binary dependency names (is this a function of relations?)
     } deriving Show
 
 instance Eq DepInfo where

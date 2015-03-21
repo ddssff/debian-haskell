@@ -32,8 +32,8 @@ data Error
     | VersionMismatch [Maybe String]
     deriving (Read, Show, Eq, Typeable, Data)
 
-data Files 
-    = Files { dsc :: Maybe (FilePath, Paragraph) 
+data Files
+    = Files { dsc :: Maybe (FilePath, Paragraph)
             , debs :: [(FilePath, Paragraph)]
             , tar :: Maybe FilePath
             , diff :: Maybe FilePath
@@ -42,12 +42,12 @@ data Files
 fakeChanges :: [FilePath] -> IO (FilePath, String)
 fakeChanges fps =
     do files <- loadFiles fps
-       let version    	= getVersion files
+       let version      = getVersion files
            source       = getSource files
            maintainer   = getMaintainer files
            arches       = getArches files
            binArch      = getBinArch files
-           dist	        = "unstable"
+           dist         = "unstable"
            urgency      = "low"
            (invalid, binaries) = unzipEithers $ map (debNameSplit . fst) (debs files)
        when (not . null $ invalid) (error $ "Some .deb names are invalid: " ++ show invalid)
@@ -119,9 +119,9 @@ getSource files =
       debSource (deb,p) =
           case (fieldValue "Source" p) of
             (Just v) -> v
-            Nothing -> 
+            Nothing ->
                 case fieldValue "Package" p of
-                  (Just v) -> v 
+                  (Just v) -> v
                   Nothing -> error $ "Could not find Source or Package field in " ++ deb
 
 
@@ -165,7 +165,7 @@ mkFileLine :: FilePath -> IO String
 mkFileLine fp
     | ".deb" `isSuffixOf` fp =
         do sum <- L.readFile fp >>= return . show . MD5.md5
-           size <- liftM fileSize $ getFileStatus fp 
+           size <- liftM fileSize $ getFileStatus fp
            (Control (p:_)) <- Deb.fields fp
            return $ concat [ " ", sum, " ", show size, " ", fromMaybe "unknown" (fieldValue "Section" p), " "
                            , fromMaybe "optional" (fieldValue "Priority" p), " ", (takeBaseName fp)
@@ -176,7 +176,7 @@ mkFileLine fp
            return $ concat [ " ", sum, " ", show size, " ", "unknown", " "
                            , "optional"," ", (takeBaseName fp)
                            ]
-       
+
 -- more implementations can be found at:
 -- http://www.google.com/codesearch?hl=en&lr=&q=%22%5BEither+a+b%5D+-%3E+%28%5Ba%5D%2C%5Bb%5D%29%22&btnG=Search
 unzipEithers :: [Either a b] -> ([a],[b])
@@ -191,7 +191,7 @@ debNameSplit fp =
     case (takeFileName fp) =~ "^(.*)_(.*)_(.*).deb$" of
       [[_, name, version, arch]] -> Right (name, version, arch)
       _ -> Left fp
-    
+
 
 loadFiles :: [FilePath] -> IO Files
 loadFiles files =
@@ -213,7 +213,7 @@ loadFiles files =
          -- if (not . null $ errors) then throwDyn errors else return (debs, listToMaybe dscs, listToMaybe tars, listToMaybe diffs)
     where
       loadDsc :: FilePath -> IO (FilePath, Paragraph)
-      loadDsc dsc' = 
+      loadDsc dsc' =
           do res <- parseControlFromFile dsc'
              case  res of
                (Left e) -> error $ "Error parsing " ++ dsc' ++ "\n" ++ show e
@@ -229,7 +229,7 @@ loadFiles files =
 
 getUploader :: IO String
 getUploader =
-    do debFullName <- 
+    do debFullName <-
            do dfn <- try (getEnv "DEBFULLNAME")
               case dfn of
                 (Right n) -> return n
@@ -240,7 +240,7 @@ getUploader =
                          (Left (_ :: SomeException)) -> error $ "Could not determine user name, neither DEBFULLNAME nor USER enviroment variables were set."
        emailAddr <-
            do eml <- try (getEnv "DEBEMAIL")
-              case eml of 
+              case eml of
                 (Right e) -> return e
                 (Left (_ :: SomeException)) ->
                     do eml' <- try (getEnv "EMAIL")

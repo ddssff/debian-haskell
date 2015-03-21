@@ -48,7 +48,7 @@ extractVersion paragraph = fmap (parseDebianVersion . unpack)  $ fieldValue "Ver
 -- see also: |trumpedMap|
 trumped :: Fetcher -- ^ function for downloading package indexes
         -> FilePath -- ^ cache directory to store index files in (must already exist)
-        -> String -- ^ binary architecture 
+        -> String -- ^ binary architecture
         -> [DebSource] -- ^ sources.list a
         -> [DebSource] -- ^ sources.list b
         -> IO (M.Map Text (DebianVersion, DebianVersion)) -- ^ a map of trumped package names to (version a, version b)

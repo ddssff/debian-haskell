@@ -89,13 +89,13 @@ pComment = Parser $ \bs ->
        else Ok (Comment text, bs')
 
 pParagraph :: ControlParser Paragraph
-pParagraph = 
+pParagraph =
     do f <- pMany1 (pComment <|> pField)
        pSkipMany (pChar '\n')
        return (Paragraph f)
 
 pControl :: ControlParser Control
-pControl = 
+pControl =
     do pSkipMany (pChar '\n')
        c <- pMany pParagraph
        return (Control c)
@@ -104,7 +104,7 @@ pControl =
 -- parseControlFromFile :: FilePath -> IO (Either String Control)
 
 instance ControlFunctions C.ByteString where
-    parseControlFromFile fp = 
+    parseControlFromFile fp =
         do c <- C.readFile fp
            case parse pControl c of
              Nothing -> return (Left (newErrorMessage (Message ("Failed to parse " ++ fp)) (newPos fp 0 0)))
@@ -141,7 +141,7 @@ protectFieldText' s =
       chr' = chr . fromIntegral
 
 {-
-main = 
+main =
     do [fp] <- getArgs
        C.readFile fp >>= \c -> maybe (putStrLn "failed.") (print . length . fst) (parse pControl c)
 -}
@@ -174,7 +174,7 @@ instance Monad (Parser state) where
         Parser $ \state ->
             let r = (unParser m) state in
             case r of
-              Ok (a,state') -> 
+              Ok (a,state') ->
                   case unParser (f a) $ state' of
                     Empty -> Fail
                     o -> o
@@ -188,7 +188,7 @@ instance MonadPlus (Parser state) where
                         Empty -> p2 s
                         o -> o
                )
-        
+
 --       Parser (\s -> maybe (p2 s) (Just) (p1 s))
 
 
@@ -236,14 +236,14 @@ _pSkipWhile p =
     Parser $ \bs -> Ok ((), C.dropWhile p bs)
 
 pMany ::  Parser st a -> Parser st [a]
-pMany p 
+pMany p
     = scan id
     where
       scan f = do x <- p
                   scan (\tail -> f (x:tail))
                <|> return (f [])
 
-notEmpty :: Parser st C.ByteString -> Parser st C.ByteString 
+notEmpty :: Parser st C.ByteString -> Parser st C.ByteString
 notEmpty (Parser p) =
     Parser $ \s -> case p s of
                      o@(Ok (a, _s)) ->
@@ -262,7 +262,7 @@ pSkipMany :: Parser st a -> Parser st ()
 pSkipMany p = scan
     where
       scan = (p >> scan) <|> return ()
-       
+
 _pSkipMany1 :: Parser st a -> Parser st ()
 _pSkipMany1 p = p >> pSkipMany p
 

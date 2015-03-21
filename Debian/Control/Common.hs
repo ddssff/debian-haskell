@@ -169,7 +169,7 @@ parseControlFromCmd cmd =
       result <- parseControlFromHandle cmd outh
       either (return . Left . show) (finish handle) result
     where
-      finish handle control = 
+      finish handle control =
           do
             exitCode <- waitForProcess handle
             case exitCode of
@@ -185,7 +185,7 @@ md5sumField :: (ControlFunctions a) => Paragraph' a -> Maybe a
 md5sumField p =
     case fieldValue "MD5Sum" p of
       m@(Just _) -> m
-      Nothing -> 
+      Nothing ->
           case fieldValue "Md5Sum" p of
             m@(Just _) -> m
             Nothing -> fieldValue "MD5sum" p

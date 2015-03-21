@@ -9,7 +9,7 @@ import qualified Data.ByteString.Char8 as C
 
 import Debian.Version.Common
 import Debian.Version.Internal
-    
+
 instance ParseDebianVersion C.ByteString where
     parseDebianVersion byteStr =
         let str = C.unpack byteStr in

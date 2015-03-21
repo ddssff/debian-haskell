@@ -3,10 +3,10 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# OPTIONS -fno-warn-orphans -fno-warn-unused-do-bind #-}
 module Debian.Version.Common
-    ( DebianVersion -- |Exported abstract because the internal representation is likely to change 
+    ( DebianVersion -- |Exported abstract because the internal representation is likely to change
     , prettyDebianVersion
     , ParseDebianVersion(..)
-    , evr		-- DebianVersion -> (Maybe Int, String, Maybe String)
+    , evr               -- DebianVersion -> (Maybe Int, String, Maybe String)
     , epoch
     , version
     , revision
@@ -106,13 +106,13 @@ showNN (NonNumeric s n) = s ++ showN n
 
 showN :: Found Numeric -> String
 showN (Found (Numeric n nn)) = show n ++ maybe "" showNN nn
-showN (Simulated _) = "" 
+showN (Simulated _) = ""
 -}
 
 parseDV :: CharParser () (Found Int, NonNumeric, Found NonNumeric)
 parseDV =
     do skipMany $ oneOf " \t"
-       e <- parseEpoch 
+       e <- parseEpoch
        upstreamVersion <- parseNonNumeric True True
        debianRevision <- option (Simulated (NonNumeric "" (Simulated (Numeric 0 Nothing)))) (char '-' >> parseNonNumeric True False >>= return . Found)
        return (e, upstreamVersion, debianRevision)
@@ -120,7 +120,7 @@ parseDV =
 parseEpoch :: CharParser () (Found Int)
 parseEpoch =
     option (Simulated 0) (try (many1 digit >>= \d -> char ':' >> return (Found (read d))))
-       
+
 
 parseNonNumeric :: Bool -> Bool -> CharParser () NonNumeric
 parseNonNumeric zeroOk upstream =
@@ -146,7 +146,7 @@ compareTest :: String -> String -> Ordering
 compareTest str1 str2 =
     let v1 = either (error . show) id $ parse parseDV str1 str1
         v2 = either (error . show) id $ parse parseDV str2 str2
-        in 
+        in
           compare v1 v2
 -}
 
@@ -157,7 +157,7 @@ evr :: DebianVersion -> (Maybe Int, String, Maybe String)
 evr (DebianVersion s _) =
     let re = mkRegex "^(([0-9]+):)?(([^-]*)|((.*)-([^-]*)))$" in
     --                 (         ) (        (            ))
-    --		        (   e  )    (  v  )  (v2) (  r  )
+    --                  (   e  )    (  v  )  (v2) (  r  )
     case matchRegex re s of
       Just ["", _, _, v, "", _, _] -> (Nothing, v, Nothing)
       Just ["", _, _, _, _,  v, r] -> (Nothing, v, Just r)

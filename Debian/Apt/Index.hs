@@ -52,7 +52,7 @@ data Compression
     = BZ2 | GZ | Uncompressed
       deriving (Read, Show, Eq, Ord, Enum, Bounded)
 
-data CheckSums 
+data CheckSums
     = CheckSums { md5sum :: Maybe String
                 , sha1   :: Maybe String
                 , sha256 :: Maybe String
@@ -66,10 +66,10 @@ data CheckSums
 -- A good choice might be a partially parameterized call to
 -- 'Debian.Apt.Methods.fetch'
 type Fetcher =
-    URI ->		-- remote URI
-    FilePath ->		-- local file name
-    Maybe UTCTime ->	-- optional time stamp for local file
-    IO Bool		-- True on success, False on failure
+    URI ->              -- remote URI
+    FilePath ->         -- local file name
+    Maybe UTCTime ->    -- optional time stamp for local file
+    IO Bool             -- True on success, False on failure
 
 -- |update - similar to apt-get update
 
@@ -78,12 +78,12 @@ type Fetcher =
 -- in \/var\/lib\/apt\/lists. You can almost use this function instead of
 -- calling apt-get update. However there are a few key differences:
 --  1. apt-get update also updates the binary cache files
---  2. apt-get update uses the partial directory and lock file in\ /var\/lib\/apt\/lists 
+--  2. apt-get update uses the partial directory and lock file in\ /var\/lib\/apt\/lists
 --  3. apt-get update downloads the Release and Release.gpg files
 update :: Fetcher -- ^ function that will do actually downloading
        -> FilePath -- ^ download indexes to the directory (must already exist)
        -> String -- ^ binary architecture
-       -> [DebSource] -- ^ sources.list 
+       -> [DebSource] -- ^ sources.list
        -> IO [Maybe (FilePath, Compression)] -- ^ (basename of index file, compression status)
 update fetcher basePath arch sourcesList =
     mapM (uncurry $ fetchIndex fetcher) (map (\(uri, fp, _) -> (uri, (basePath </> fp))) (concatMap (indexURIs arch) sourcesList))
@@ -126,7 +126,7 @@ indexURIs arch debSource =
       (release, sections) =
           either (error $ "indexURIs: support not implemented for exact path: " ++ render (pPrint debSource)) id (sourceDist debSource)
 
--- |return a tuple for the section 
+-- |return a tuple for the section
 --  - the URI to the uncompressed index file
 --  - the basename that apt-get uses for the downloaded index
 -- FIXME: support for Release and Release.gpg
@@ -204,7 +204,7 @@ groupIndexes indexFiles =
       combine = (\x y -> sortBy (compare `on` snd) (x ++ y))
 {-
       with t@(_,_,fp) m =
-          let (un, compression) = 
+          let (un, compression) =
           in
             M.insertWith
 -}
@@ -238,7 +238,7 @@ findIndexes distDir iType controlFiles =
       do indexes' <- mapM (filterExists distDir) (filter (isType iType) indexes)
          return $ map (head . snd) (filter (not . List.null . snd) indexes')
     where
-      isType iType (fp, _) = iType `isSuffixOf` fp 
+      isType iType (fp, _) = iType `isSuffixOf` fp
 
 {-
 findIndexes' :: FilePath -> String -> [FileTuple] -> IO [(FileTuple, Compression)]
@@ -268,7 +268,7 @@ uncompressedName fp
 
 indexesInRelease :: (FilePath -> Bool)
                  -> Control' Text -- ^ A release file
-                 -> [(CheckSums, Integer, FilePath)] -- ^ 
+                 -> [(CheckSums, Integer, FilePath)] -- ^
 indexesInRelease filterp (Control [p]) =
     let md5sums =
             case md5sumField p of

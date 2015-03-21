@@ -52,7 +52,7 @@ type RelParser a = CharParser () a
 -- are omitted and it is possible to parse relations without them.
 pRelations :: RelParser Relations
 pRelations = do -- rel <- sepBy pOrRelation (char ',')
-		rel <- many pOrRelation
+                rel <- many pOrRelation
                 eof
                 return rel
 
@@ -92,34 +92,34 @@ pVerReq :: ParsecT [Char] u Identity (DebianVersion -> VersionReq)
 pVerReq =
     do char '<'
        (do char '<' <|> char ' ' <|> char '\t'
-	   return $ SLT
+           return $ SLT
         <|>
         do char '='
-	   return $ LTE)
+           return $ LTE)
     <|>
     do string "="
        return $ EEQ
     <|>
     do char '>'
        (do char '='
- 	   return $ GRE
+           return $ GRE
         <|>
         do char '>' <|> char ' ' <|> char '\t'
-	   return $ SGR)
+           return $ SGR)
 
 pMaybeArch :: RelParser (Maybe ArchitectureReq)
 pMaybeArch =
     do char '['
        (do archs <- pArchExcept
-	   char ']'
+           char ']'
            skipMany whiteChar
-	   return (Just (ArchExcept (fromList . map parseArchExcept $ archs)))
-	<|>
-	do archs <- pArchOnly
-	   char ']'
+           return (Just (ArchExcept (fromList . map parseArchExcept $ archs)))
+        <|>
+        do archs <- pArchOnly
+           char ']'
            skipMany whiteChar
-	   return (Just (ArchOnly (fromList . map parseArch $ archs)))
-	)
+           return (Just (ArchOnly (fromList . map parseArch $ archs)))
+        )
     <|>
     return Nothing
 

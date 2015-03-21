@@ -9,7 +9,7 @@ import qualified Data.Text as T
 
 import Debian.Version.Common
 import Debian.Version.Internal
-    
+
 instance ParseDebianVersion T.Text where
     parseDebianVersion text =
         let str = T.unpack text in

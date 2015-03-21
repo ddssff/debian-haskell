@@ -13,7 +13,7 @@ module Debian.Relation.ByteString
     -- * Relation Parser
     , RelParser
     , ParseRelations(..)
-    ) where 
+    ) where
 
 import qualified Data.ByteString.Char8 as C
 

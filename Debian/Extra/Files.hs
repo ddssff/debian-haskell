@@ -9,9 +9,9 @@ import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (hPutStr, hClose, openBinaryTempFile)
 
 withTemporaryFile :: MonadIO m
-                  => (FilePath -> m a)	-- ^ The function we want to pass a FilePath to
-                  -> String		-- ^ The text that the file should contain
-                  -> m a		-- ^ The function's return value
+                  => (FilePath -> m a)  -- ^ The function we want to pass a FilePath to
+                  -> String             -- ^ The text that the file should contain
+                  -> m a                -- ^ The function's return value
 withTemporaryFile f text =
     do path <- liftIO writeTemporaryFile
        result <- f path
