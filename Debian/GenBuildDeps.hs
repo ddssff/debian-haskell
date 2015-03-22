@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE CPP, FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
@@ -23,7 +23,9 @@ module Debian.GenBuildDeps
     , getSourceOrder
     ) where
 
+#if !MIN_VERSION_base(4,8,0)
 import           Control.Applicative ((<$>))
+#endif
 import           Control.Exception (throw)
 import           Control.Monad (filterM)
 import           Data.Graph (Graph, Edge, Vertex, buildG, topSort, reachable, transposeG, edges, scc)

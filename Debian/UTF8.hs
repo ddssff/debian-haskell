@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- | There are old index files that have funky characters like 'ø'
 -- that are not properly UTF8 encoded.  As far as I can tell, these
 -- files are otherwise plain ascii, so just naivelyinsert the
@@ -7,7 +8,9 @@ module Debian.UTF8
     , readFile
     ) where
 
+#if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
+#endif
 import qualified Data.ByteString.Char8 as B (concat)
 import qualified Data.ByteString.Lazy.Char8 as L (ByteString, readFile, toChunks)
 import Data.Char (chr)

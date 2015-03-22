@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, MultiParamTypeClasses, PackageImports, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, FlexibleContexts, MultiParamTypeClasses, PackageImports, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Control.ByteString
     ( Control'(..)
@@ -21,6 +21,10 @@ module Debian.Control.ByteString
 
 -- Standard GHC modules
 
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative (Applicative(..))
+#endif
+import Control.Applicative (Alternative(..))
 import qualified Control.Exception as E
 import "mtl" Control.Monad.State
 
@@ -135,10 +139,10 @@ protectFieldText' s =
       dropWhileEnd func = LL.reverse . LL.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
       protect :: (LL.StringLike a, LL.ListLike a Word8) => a -> a
       protect l = maybe LL.empty (\ c -> if isHorizSpace c then l else LL.cons (ord' ' ' :: Word8) l) (LL.find (const True :: Word8 -> Bool) l)
-      isSpace' = isSpace . chr'
+      -- isSpace' = isSpace . chr'
       isHorizSpace c = elem c (map ord' " \t")
       ord' = fromIntegral . ord
-      chr' = chr . fromIntegral
+      -- chr' = chr . fromIntegral
 
 {-
 main =
@@ -167,6 +171,25 @@ r2m (Ok a) = Just a
 r2m _ = Nothing
 
 newtype Parser state a = Parser { unParser :: (state -> Result (a, state)) }
+
+instance Functor (Parser state) where
+    fmap f m =
+        Parser $ \ state ->
+            let r = (unParser m) state in
+            case r of
+              Ok (a,state') -> Ok (f a,state')
+              Empty -> Empty
+              Fail -> Fail
+
+instance Applicative (Parser state) where
+    pure = return
+    (<*>) = ap
+
+instance Alternative (Parser state) where
+    empty =
+        Parser $ \state ->
+            (unParser mzero) state
+    (<|>) = mplus
 
 instance Monad (Parser state) where
     return a = Parser (\s -> Ok (a,s))
@@ -197,10 +220,6 @@ _pSucceed = return
 
 _pFail :: Parser state a
 _pFail = Parser (const Empty)
-
-
-(<|>) :: Parser state a -> Parser state a -> Parser state a
-(<|>) = mplus
 
 
 satisfy :: (Char -> Bool) -> Parser C.ByteString Char

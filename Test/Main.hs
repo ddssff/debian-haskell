@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Main where
 
 import Test.HUnit
@@ -8,6 +9,9 @@ import Versions
 import SourcesList
 import Dependencies
 import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<+>), (<$>), fillSep, renderPretty, displayS)
+#if MIN_VERSION_base(4,8,0)
+import Prelude hiding ((<$>))
+#endif
 
 main =
     do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ sourcesListTests ++ dependencyTests ++ changesTests ++ controlTests ++ prettyTests))
