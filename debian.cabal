@@ -130,7 +130,7 @@ Test-Suite debian-tests
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: Test
   Main-Is: Main.hs
- Build-Depends: ansi-wl-pprint, base, debian, HUnit, parsec, regex-tdfa, text
+ Build-Depends: base, debian, HUnit, parsec, regex-tdfa, text
  if flag(pretty-new)
    Build-Depends: pretty >= 1.1.2
  else

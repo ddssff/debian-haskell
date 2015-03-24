@@ -2,6 +2,7 @@ haskell-debian (3.87.2) unstable; urgency=low
 
   * Functor, Applicative, and Alternative instances for ghc-7.10
   * Fiddle with imports and ifdefs to fix build
+  * Switch from ansi-wl-pprint package to pretty
 
  -- David Fox <dsf@seereason.com>  Sun, 22 Mar 2015 12:55:39 -0700
 

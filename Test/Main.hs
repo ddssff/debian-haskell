@@ -1,4 +1,3 @@
-{-# LANGUAGE CPP #-}
 module Main where
 
 import Test.HUnit
@@ -8,10 +7,7 @@ import Control
 import Versions
 import SourcesList
 import Dependencies
-import Text.PrettyPrint.ANSI.Leijen (Doc, text, (<+>), (<$>), fillSep, renderPretty, displayS)
-#if MIN_VERSION_base(4,8,0)
-import Prelude hiding ((<$>))
-#endif
+import Text.PrettyPrint
 
 main =
     do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ sourcesListTests ++ dependencyTests ++ changesTests ++ controlTests ++ prettyTests))
@@ -30,14 +26,14 @@ prettyTests =
                   "",
                   "Find all the packages referenced by the",
                   "second sources.list which trump packages",
-                  "find in the first sources.list."])
-                (displayS (renderPretty 1.0 40 (helpText "debian-report")) "")
+                  "found in the first sources.list."])
+                (renderStyle (style {lineLength = 60}) (helpText "debian-report"))
                ) ]
 
 helpText :: String -> Doc
 helpText progName =
-    (text "Usage:" <+> text progName <+> text "<old sources.list>" <+> text "<new sources.list>" <$>
-     text [] <$>
-     (fillSep $ map text $ words $ "Find all the packages referenced by the second sources.list which trump packages find in the first sources.list.") <$>
+    (text "Usage:" <+> text progName <+> text "<old sources.list>" <+> text "<new sources.list>" $$
+     text [] $$
+     (fsep $ map text $ words $ "Find all the packages referenced by the second sources.list which trump packages found in the first sources.list.") $$
      text []
     )
