@@ -92,7 +92,7 @@ instance ControlFunctions T.Text where
         where hasFieldName :: String -> Field' T.Text -> Bool
               hasFieldName name (Field (fieldName',_)) = T.pack name == T.map toLower fieldName'
               hasFieldName _ _ = False
-    stripWS = T.reverse . T.strip . T.reverse . T.strip
+    stripWS = T.strip
     protectFieldText = protectFieldText'
     asString = T.unpack
 
