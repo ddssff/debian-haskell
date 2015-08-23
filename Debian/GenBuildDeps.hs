@@ -27,7 +27,8 @@ module Debian.GenBuildDeps
 import           Control.Applicative ((<$>))
 #endif
 import           Control.Exception (throw)
-import           Control.Monad (filterM)
+import           Control.Monad (filterM, foldM)
+import           Control.Monad.State (evalState, get, modify, State)
 import           Data.Graph (Graph, Edge, Vertex, buildG, topSort, reachable, transposeG, edges, scc)
 import           Data.List
 import qualified Data.Map as Map
@@ -156,6 +157,7 @@ buildable relax packages =
 
       hasDepEdges :: [(Int, Int)]
       hasDepEdges =
+#if 0
           nub (foldr f [] (tails vertPairs))
           where f :: [(Int, DepInfo)] -> [(Int, Int)] -> [(Int, Int)]
                 f [] es = es
@@ -166,6 +168,25 @@ buildable relax packages =
                       EQ -> Nothing
                       LT -> Just (yv, xv)
                       GT -> Just (xv, yv)
+#else
+          nub (evalState (foldM f [] (tails vertPairs)) Map.empty)
+          where f :: [(Int, Int)] -> [(Int, DepInfo)] -> State (Map.Map (Int, Int) Ordering) [(Int, Int)]
+                f es [] = return es
+                f es (x : xs) = mapM (toEdge x) xs >>= \es' -> return (catMaybes es' ++ es)
+                toEdge :: (Int, DepInfo) -> (Int, DepInfo) -> State (Map.Map (Int, Int) Ordering) (Maybe Edge)
+                toEdge (xv, xa) (yv, ya) = do
+                  mp <- get
+                  r <- case Map.lookup (xv, yv) mp of
+                         Just r' -> return r'
+                         Nothing -> do
+                           let r' = compareSource xa ya
+                           modify (Map.insert (xv, yv) r')
+                           return r'
+                  case r of
+                    EQ -> return Nothing
+                    LT -> {-trace ("compareSource " ++ show xv ++ " " ++ show yv ++ " -> LT") $-} return $ Just (yv, xv)
+                    GT -> {-trace ("compareSource " ++ show xv ++ " " ++ show yv ++ " -> GT") $-} return $ Just (xv, yv)
+#endif
       ofEdge :: Edge -> (a, a)
       ofEdge (a, b) = (ofVertex a, ofVertex b)
       ofVertex :: Int -> a
