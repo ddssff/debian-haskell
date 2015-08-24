@@ -47,6 +47,8 @@ data DepInfo = DepInfo {
       sourceName :: SrcPkgName          -- ^ source package name
     , relations :: Relations            -- ^ dependency relations
     , binaryNames :: [BinPkgName]       -- ^ binary dependency names (is this a function of relations?)
+    , depSet :: Set.Set BinPkgName          -- ^ Set containing all binary package names mentioned in relations
+    , binSet :: Set.Set BinPkgName          -- ^ Set containing binaryNames
     } deriving Show
 
 instance Eq DepInfo where
@@ -59,10 +61,14 @@ instance Eq DepInfo where
 -- <http://www.debian.org/doc/debian-policy/ch-controlfields.html#s-sourcecontrolfiles>
 buildDependencies :: HasDebianControl control => control -> DepInfo
 buildDependencies control = do
+  let rels = concat [fromMaybe [] (debianBuildDeps control),
+                     fromMaybe [] (debianBuildDepsIndep control)]
+      bins = debianBinaryPackageNames control
   DepInfo { sourceName = debianSourcePackageName control
-          , relations = concat [fromMaybe [] (debianBuildDeps control),
-                                fromMaybe [] (debianBuildDepsIndep control)]
-          , binaryNames = debianBinaryPackageNames control }
+          , relations = rels
+          , binaryNames = bins
+          , depSet = Set.fromList (map (\(Rel x _ _) -> x) (concat rels))
+          , binSet = Set.fromList bins }
 
 -- | source package name
 sourceName' :: HasDebianControl control => control -> SrcPkgName
@@ -131,7 +137,8 @@ data BuildableInfo a
 buildable :: forall a. (a -> DepInfo) -> [a] -> BuildableInfo a
 buildable relax packages =
     -- Find all packages which can't reach any other packages in the
-    -- graph of the "has build dependency" relation.
+    -- graph of the "has build dependency" relation on the
+    -- yet-to-be-built packages
     case partition (\ x -> reachable hasDep x == [x]) verts of
       -- None of the packages are buildable, return information
       -- about how to break this build dependency cycle.
@@ -263,9 +270,14 @@ buildGraph cmp packages =
 -- a pretty simplistic approach to 'or' build depends. However, I
 -- think this should work pretty nicely in practice.
 compareSource :: DepInfo -> DepInfo -> Ordering
-compareSource (DepInfo {relations = depends1, binaryNames = bins1}) (DepInfo {relations = depends2, binaryNames = bins2})
-    | any (\rel -> isJust (find (checkPackageNameReq rel) bins2)) (concat depends1) = GT
-    | any (\rel -> isJust (find (checkPackageNameReq rel) bins1)) (concat depends2) = LT
+compareSource p1 p2
+#if 0
+    | any (\rel -> isJust (find (checkPackageNameReq rel) (binaryNames p2))) (concat (relations p1)) = GT
+    | any (\rel -> isJust (find (checkPackageNameReq rel) (binaryNames p1))) (concat (relations p2)) = LT
+#else
+    | not (null (Set.intersection (depSet p1) (binSet p2))) = GT
+    | not (null (Set.intersection (depSet p2) (binSet p1))) = LT
+#endif
     | otherwise = EQ
     where
       checkPackageNameReq :: Relation -> BinPkgName -> Bool
