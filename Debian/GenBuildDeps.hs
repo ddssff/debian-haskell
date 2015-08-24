@@ -30,10 +30,10 @@ import           Control.Exception (throw)
 import           Control.Monad (filterM, foldM)
 import           Control.Monad.State (evalState, get, modify, State)
 import           Data.Graph (Graph, Edge, Vertex, buildG, topSort, reachable, transposeG, edges, scc)
-import           Data.List
-import qualified Data.Map as Map
+import           Data.List as List (elemIndex, find, map, nub, partition, tails)
+import           Data.Map as Map (empty, findWithDefault, fromList, insert, Map, lookup)
 import           Data.Maybe
-import qualified Data.Set as Set
+import           Data.Set as Set (fromList, intersection, null, Set)
 import           Data.Tree as Tree (Tree(Node, rootLabel, subForest))
 import           Debian.Control (parseControlFromFile)
 import           Debian.Control.Policy (HasDebianControl, DebianControl, ControlFileError(..), validateDebianControl, debianSourcePackageName, debianBinaryPackageNames, debianBuildDeps, debianBuildDepsIndep)
@@ -68,7 +68,7 @@ buildDependencies control = do
   DepInfo { sourceName = debianSourcePackageName control
           , relations = rels
           , binaryNames = bins
-          , depSet = Set.fromList (map (\(Rel x _ _) -> x) (concat rels))
+          , depSet = Set.fromList (List.map (\(Rel x _ _) -> x) (concat rels))
           , binSet = Set.fromList bins }
 
 -- | source package name
@@ -102,7 +102,7 @@ type RelaxInfo = SrcPkgName -> BinPkgName -> Bool
 -- |Remove any dependencies that are designated \"relaxed\" by relaxInfo.
 relaxDeps :: RelaxInfo -> [DepInfo] -> [DepInfo]
 relaxDeps relaxInfo deps =
-    map relaxDep deps
+    List.map relaxDep deps
     where
       relaxDep :: DepInfo -> DepInfo
       relaxDep info = info {relations = filteredDependencies}
@@ -111,7 +111,7 @@ relaxDeps relaxInfo deps =
             -- this results in an empty list in an or-dep the entire dependency can
             -- be discarded.
             filteredDependencies :: Relations
-            filteredDependencies = filter (/= []) (map (filter keepDep) (relations info))
+            filteredDependencies = filter (/= []) (List.map (filter keepDep) (relations info))
             keepDep :: Relation -> Bool
             keepDep (Rel name _ _) = not (relaxInfo (sourceName info) name)
 
@@ -143,21 +143,21 @@ buildable relax packages =
     case partition (\ x -> reachable hasDep x == [x]) verts of
       -- None of the packages are buildable, return information
       -- about how to break this build dependency cycle.
-      ([], _) -> CycleInfo {depPairs = map ofEdge $ head $ (allCycles hasDep)}
+      ([], _) -> CycleInfo {depPairs = List.map ofEdge $ head $ (allCycles hasDep)}
       -- We have some buildable packages, return them along with
       -- the list of packages each one directly blocks
       (allReady, blocked) ->
-          BuildableInfo { readyTargets = map (makeReady blocked allReady) allReady
-                        , allBlocked = map ofVertex blocked }
+          BuildableInfo { readyTargets = List.map (makeReady blocked allReady) allReady
+                        , allBlocked = List.map ofVertex blocked }
     where
       makeReady :: [Vertex] -> [Vertex] -> Vertex -> ReadyTarget a
       makeReady blocked ready thisReady =
           let otherReady = filter (/= thisReady) ready
               (directlyBlocked, otherBlocked) = partition (\ x -> elem x (reachable isDep thisReady)) blocked in
           ReadyTarget { ready = ofVertex thisReady
-                      , waiting = map ofVertex directlyBlocked
-                      , other = map ofVertex (otherReady ++ otherBlocked) }
-      --allDeps x = (ofVertex x, map ofVertex (filter (/= x) (reachable hasDep x)))
+                      , waiting = List.map ofVertex directlyBlocked
+                      , other = List.map ofVertex (otherReady ++ otherBlocked) }
+      --allDeps x = (ofVertex x, List.map ofVertex (filter (/= x) (reachable hasDep x)))
       isDep :: Graph
       isDep = transposeG hasDep
       hasDep :: Graph
@@ -169,7 +169,7 @@ buildable relax packages =
           nub (foldr f [] (tails vertPairs))
           where f :: [(Int, DepInfo)] -> [(Int, Int)] -> [(Int, Int)]
                 f [] es = es
-                f (x : xs) es = catMaybes (map (toEdge x) xs) ++ es
+                f (x : xs) es = catMaybes (List.map (toEdge x) xs) ++ es
                 toEdge :: (Int, DepInfo) -> (Int, DepInfo) -> Maybe Edge
                 toEdge (xv, xa) (yv, ya) =
                     case compareSource xa ya of
@@ -276,14 +276,15 @@ compareSource p1 p2
 #if 0
     | any (\rel -> isJust (find (checkPackageNameReq rel) (binaryNames p2))) (concat (relations p1)) = GT
     | any (\rel -> isJust (find (checkPackageNameReq rel) (binaryNames p1))) (concat (relations p2)) = LT
-#else
-    | not (null (Set.intersection (depSet p1) (binSet p2))) = GT
-    | not (null (Set.intersection (depSet p2) (binSet p1))) = LT
-#endif
     | otherwise = EQ
     where
       checkPackageNameReq :: Relation -> BinPkgName -> Bool
       checkPackageNameReq (Rel rPkgName _ _) bPkgName = rPkgName == bPkgName
+#else
+    | not (Set.null (Set.intersection (depSet p1) (binSet p2))) = GT
+    | not (Set.null (Set.intersection (depSet p2) (binSet p1))) = LT
+    | otherwise = EQ
+#endif
 
 compareSource' :: HasDebianControl control => control -> control -> Ordering
 compareSource' control1 control2
