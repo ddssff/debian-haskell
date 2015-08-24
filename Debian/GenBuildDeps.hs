@@ -40,6 +40,7 @@ import           Debian.Control.Policy (HasDebianControl, DebianControl, Control
 import           Debian.Loc (__LOC__)
 import           Debian.Relation
 import           Debian.Relation.Text ()
+-- import           Debug.Trace (trace)
 import           System.Directory (getDirectoryContents, doesFileExist)
 
 -- | This type describes the build dependencies of a source package.
@@ -187,12 +188,13 @@ buildable relax packages =
                          Just r' -> return r'
                          Nothing -> do
                            let r' = compareSource xa ya
+                           -- trace ("compareSource " ++ show (unSrcPkgName $ sourceName xa) ++ " " ++ show (unSrcPkgName $ sourceName ya) ++ " -> " ++ show r') (return ())
                            modify (Map.insert (xv, yv) r')
                            return r'
                   case r of
                     EQ -> return Nothing
-                    LT -> {-trace ("compareSource " ++ show xv ++ " " ++ show yv ++ " -> LT") $-} return $ Just (yv, xv)
-                    GT -> {-trace ("compareSource " ++ show xv ++ " " ++ show yv ++ " -> GT") $-} return $ Just (xv, yv)
+                    LT -> return $ Just (yv, xv)
+                    GT -> return $ Just (xv, yv)
 #endif
       ofEdge :: Edge -> (a, a)
       ofEdge (a, b) = (ofVertex a, ofVertex b)
