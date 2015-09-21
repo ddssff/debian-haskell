@@ -11,7 +11,7 @@ import Debian.Control.Policy
 import Debian.Control.Text ({- Pretty instances -})
 import Debian.Pretty (prettyShow)
 import Debian.Relation
-import Debian.Version (parseDebianVersion)
+import Debian.Version (parseDebianVersion, parseDebianVersion')
 import Paths_debian (version)
 import Text.Parsec.Error (ParseError)
 import Text.PrettyPrint.HughesPJClass (Doc, text, pPrint)
@@ -95,9 +95,9 @@ paragraphs =
 
 -- The parsed build dependencies
 builddeps :: Relations
-builddeps = [[Rel (BinPkgName {unBinPkgName = "debhelper"}) (Just (GRE (Debian.Version.parseDebianVersion ("7" :: String)))) Nothing],
+builddeps = [[Rel (BinPkgName {unBinPkgName = "debhelper"}) (Just (GRE (Debian.Version.parseDebianVersion' ("7" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "cdbs"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "haskell-devscripts"}) (Just (GRE (Debian.Version.parseDebianVersion ("0.7" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "haskell-devscripts"}) (Just (GRE (Debian.Version.parseDebianVersion' ("0.7" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "ghc"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "ghc-prof"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-hunit-dev"}) Nothing Nothing],
@@ -108,21 +108,21 @@ builddeps = [[Rel (BinPkgName {unBinPkgName = "debhelper"}) (Just (GRE (Debian.V
              [Rel (BinPkgName {unBinPkgName = "libghc-parsec3-prof"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-pretty-class-dev"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-pretty-class-prof"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-process-extras-dev"}) (Just (GRE (Debian.Version.parseDebianVersion ("0.4" :: String)))) Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-process-extras-prof"}) (Just (GRE (Debian.Version.parseDebianVersion ("0.4" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-process-extras-dev"}) (Just (GRE (Debian.Version.parseDebianVersion' ("0.4" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-process-extras-prof"}) (Just (GRE (Debian.Version.parseDebianVersion' ("0.4" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-regex-compat-dev"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-regex-compat-prof"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-regex-tdfa-dev"}) (Just (GRE (Debian.Version.parseDebianVersion ("1.1.3" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-regex-tdfa-dev"}) (Just (GRE (Debian.Version.parseDebianVersion' ("1.1.3" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-regex-tdfa-prof"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-bzlib-dev"}) (Just (GRE (Debian.Version.parseDebianVersion ("0.5.0.0-4" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-bzlib-dev"}) (Just (GRE (Debian.Version.parseDebianVersion' ("0.5.0.0-4" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-bzlib-prof"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-haxml-prof"}) (Just (GRE (Debian.Version.parseDebianVersion ("1:1.20" :: String)))) Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-unixutils-dev"}) (Just (GRE (Debian.Version.parseDebianVersion ("1.50" :: String)))) Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-unixutils-prof"}) (Just (GRE (Debian.Version.parseDebianVersion ("1.50" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-haxml-prof"}) (Just (GRE (Debian.Version.parseDebianVersion' ("1:1.20" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-unixutils-dev"}) (Just (GRE (Debian.Version.parseDebianVersion' ("1.50" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-unixutils-prof"}) (Just (GRE (Debian.Version.parseDebianVersion' ("1.50" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-zlib-dev"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-zlib-prof"}) Nothing Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-network-dev"}) (Just (GRE (Debian.Version.parseDebianVersion ("2.4" :: String)))) Nothing],
-             [Rel (BinPkgName {unBinPkgName = "libghc-network-prof"}) (Just (GRE (Debian.Version.parseDebianVersion ("2.4" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-network-dev"}) (Just (GRE (Debian.Version.parseDebianVersion' ("2.4" :: String)))) Nothing],
+             [Rel (BinPkgName {unBinPkgName = "libghc-network-prof"}) (Just (GRE (Debian.Version.parseDebianVersion' ("2.4" :: String)))) Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-utf8-string-dev"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libghc-utf8-string-prof"}) Nothing Nothing],
              [Rel (BinPkgName {unBinPkgName = "libcrypto++-dev"}) Nothing Nothing]]

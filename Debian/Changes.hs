@@ -209,7 +209,7 @@ parseEntry text =
       x | mrSubList x == [] -> Left ["Parse error in " ++ show text]
       MR {mrAfter = after, mrSubList = [_, name, ver, dists, urgency, _, details, _, _, who, _, date, _]} ->
           Right (Entry name
-                         (parseDebianVersion ver)
+                         (parseDebianVersion' ver)
                          (map parseReleaseName . words $ dists)
                          urgency
                          ("  " ++ unpack (strip (pack details)) ++ "\n")
@@ -251,7 +251,7 @@ parseChanges text =
       MR {mrSubList = []} -> Nothing
       MR {mrSubList = [_, name, ver, dists, urgency, _, details]} ->
           Just $ Entry name
-                       (parseDebianVersion ver)
+                       (parseDebianVersion' ver)
                        (map parseReleaseName . words $ dists)
                        urgency
                        details

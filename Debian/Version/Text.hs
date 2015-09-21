@@ -14,5 +14,5 @@ instance ParseDebianVersion T.Text where
     parseDebianVersion text =
         let str = T.unpack text in
         case parse parseDV str str of
-          Left e -> error (show e)
-          Right dv -> DebianVersion str dv
+          Left e -> Left e
+          Right dv -> Right (DebianVersion str dv)

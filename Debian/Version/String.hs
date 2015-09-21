@@ -13,13 +13,13 @@ import Debian.Version.Internal
 instance ParseDebianVersion String where
     parseDebianVersion str =
         case parse parseDV str str of
-          Left e -> error (show e)
-          Right dv -> DebianVersion str dv
-
+          Left e -> Left e
+          Right dv -> Right (DebianVersion str dv)
+ 
 instance Read DebianVersion where
     readsPrec _ s =
         case stripPrefix "Debian.Version.parseDebianVersion " s of
           Just s' -> case reads s' :: [(String, String)] of
                        []-> []
-                       (v, s'') : _ -> [(parseDebianVersion v, s'')]
+                       (v, s'') : _ -> [(parseDebianVersion' v, s'')]
           Nothing -> []

@@ -16,13 +16,14 @@ module Debian.Apt.Dependencies
 import Control.Arrow (second)
 import qualified Data.ByteString.Char8 as C
 import Data.List as List (find, union)
-import Data.Tree(Tree(rootLabel, Node))
-import Debian.Apt.Package(PackageNameMap, packageNameMap, lookupPackageByRel)
-import Debian.Control.ByteString(ControlFunctions(stripWS, lookupP, parseControlFromFile),
-                                 Field'(Field, Comment), Control'(Control), Paragraph, Control)
+import Data.Tree (Tree(rootLabel, Node))
+import Debian.Apt.Package (PackageNameMap, packageNameMap, lookupPackageByRel)
+import Debian.Control.ByteString (ControlFunctions(stripWS, lookupP, parseControlFromFile),
+                                  Field'(Field, Comment), Control'(Control), Paragraph, Control)
 import Debian.Relation (BinPkgName(..))
-import Debian.Relation.ByteString(ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
-import Debian.Version(DebianVersion, parseDebianVersion, prettyDebianVersion)
+import Debian.Relation.ByteString (ParseRelations(..), Relation(..), OrRelation, AndRelation, Relations, checkVersionReq)
+import Debian.Version (DebianVersion, parseDebianVersion, prettyDebianVersion)
+import Debian.Version.ByteString ()
 import Text.PrettyPrint (render)
 
 -- * Basic CSP Types and Functions
@@ -113,7 +114,10 @@ packageVersionParagraph p =
       (Just (Field (_, name))) ->
           case lookupP "Version" p of
             Nothing -> error $ "Paragraph missing Version field"
-            (Just (Field (_, version))) -> (BinPkgName (C.unpack (stripWS name)), parseDebianVersion (C.unpack version))
+            (Just (Field (_, str))) ->
+                case parseDebianVersion str of
+                  Right ver -> (BinPkgName (C.unpack (stripWS name)), ver)
+                  Left e -> error $ "packageVersionParagraph: " ++ show e
             (Just (Comment _)) -> error "packageVersionParagraph"
       (Just (Comment _)) -> error "packageVersionParagraph"
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, FlexibleContexts #-}
 module Debian.Version.Internal
     ( DebianVersion(..)
     , Numeric(..)

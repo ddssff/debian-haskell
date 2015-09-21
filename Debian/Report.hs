@@ -40,7 +40,7 @@ packageMap extractValue resolveConflict control =
 
 -- |extract the version number from a control paragraph
 extractVersion :: Paragraph -> Maybe DebianVersion
-extractVersion paragraph = fmap (parseDebianVersion . unpack)  $ fieldValue "Version" paragraph
+extractVersion paragraph = fmap (parseDebianVersion' . unpack)  $ fieldValue "Version" paragraph
 
 -- * Trump Report
 

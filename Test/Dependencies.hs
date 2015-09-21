@@ -129,7 +129,7 @@ packageVersionParagraph p =
           case lookup "Version" p of
             Nothing -> error $ "Could not find Package in " ++ show p
             (Just v) -> 
-                (BinPkgName (stripWS n), parseDebianVersion v)
+                (BinPkgName (stripWS n), parseDebianVersion' v)
 
 mapSnd :: (b -> c) -> [(a,b)] -> [(a,c)]
 mapSnd f = map (second f)

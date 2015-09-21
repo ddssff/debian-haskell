@@ -4,6 +4,7 @@ module Debian.Version
     (DebianVersion -- |Exported abstract because the internal representation is likely to change
     , prettyDebianVersion
     , parseDebianVersion
+    , parseDebianVersion'
     , epoch
     , version
     , revision

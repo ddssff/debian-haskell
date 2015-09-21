@@ -6,6 +6,7 @@ module Debian.Version.Common
     ( DebianVersion -- |Exported abstract because the internal representation is likely to change
     , prettyDebianVersion
     , ParseDebianVersion(..)
+    , parseDebianVersion'
     , evr               -- DebianVersion -> (Maybe Int, String, Maybe String)
     , epoch
     , version
@@ -94,11 +95,14 @@ instance Ord Numeric where
 -- * Parser
 
 class ParseDebianVersion a where
-    parseDebianVersion :: a-> DebianVersion
+    parseDebianVersion :: a-> Either ParseError DebianVersion
 -- |Convert a string to a debian version number. May throw an
 -- exception if the string is unparsable -- but I am not sure if that
 -- can currently happen. Are there any invalid version strings?
 -- Perhaps ones with underscore, or something?
+
+parseDebianVersion' :: ParseDebianVersion string => string -> DebianVersion
+parseDebianVersion' str = either (\e -> error (show e)) id (parseDebianVersion str)
 
 {-
 showNN :: NonNumeric -> String

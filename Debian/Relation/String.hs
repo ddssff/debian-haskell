@@ -84,7 +84,7 @@ pMaybeVerReq =
        ver <- many1 (noneOf [' ',')','\t','\n'])
        skipMany whiteChar
        char ')'
-       return $ Just (op (parseDebianVersion ver))
+       return $ Just (op (parseDebianVersion' ver))
     <|>
     do return $ Nothing
 

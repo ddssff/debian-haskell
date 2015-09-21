@@ -1,3 +1,10 @@
+haskell-debian (3.89) unstable; urgency=low
+
+  * Change signature of parseDebianVersion to return Either ParseError DebianVerions.
+  * Provide the old signature as parseDebianVersion'.
+
+ -- David Fox <dsf@seereason.com>  Mon, 21 Sep 2015 15:23:32 -0700
+
 haskell-debian (3.88.1) unstable; urgency=low
 
   * Make ghc-7.10.2 a required travis test
