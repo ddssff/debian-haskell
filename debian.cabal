@@ -37,7 +37,7 @@ Library
    filepath,
    HaXml >= 1.20,
    HUnit,
-   ListLike >= 4.1.1,
+   ListLike >= 4.3.5,
    mtl,
    old-locale,
    parsec >= 2 && <4,
@@ -72,6 +72,7 @@ Library
         Debian.Changes,
         Debian.Control,
         Debian.Control.Common,
+        Debian.Control.Builder
         Debian.Control.ByteString,
         Debian.Control.Policy,
         Debian.Control.String,
