@@ -77,6 +77,7 @@ Library
         Debian.Control.Policy,
         Debian.Control.String,
         Debian.Control.Text,
+        Debian.Control.TextLazy,
         Debian.Deb,
         Debian.Extra.Files,
         Debian.GenBuildDeps,
