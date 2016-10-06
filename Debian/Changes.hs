@@ -167,11 +167,11 @@ The entire changelog must be encoded in UTF-8.
 
 -- | Parse the entries of a debian changelog and verify they are all
 -- valid.
-parseChangeLog :: String -> ChangeLog
+parseChangeLog :: String -> Either [[String]] ChangeLog
 parseChangeLog s =
     case partitionEithers (parseEntries s) of
-      ([], xs) -> ChangeLog xs
-      (ss, _) -> error (intercalate "\n  " ("Error(s) parsing changelog:" : concat ss))
+      ([], xs) -> Right (ChangeLog xs)
+      (ss, _) -> Left ss
 
 -- |Parse a Debian Changelog and return a lazy list of entries
 parseEntries :: String -> [Either [String] ChangeLogEntry]
@@ -182,27 +182,6 @@ parseEntries text =
       Right (entry, text') -> Right entry : parseEntries text'
 
 -- |Parse a single changelog entry, returning the entry and the remaining text.
-{-
-parseEntry :: String -> Failing (ChangeLogEntry, String)
-parseEntry text =
-    case span (\ x -> elem x " \t\n") text of
-      ("", _) ->
-          case matchRegexAll entryRE text of
-            Nothing -> Failure ["Parse error in changelog:\n" ++ show text]
-            Just ("", _, remaining, [_, name, version, dists, urgency, _, details, _, _, _, _, _, who, date, _]) ->
-                Success (Entry name
-                               (parseDebianVersion version)
-                               (map parseReleaseName . words $ dists)
-                               urgency
-                               details
-                               who
-                               date,
-                         remaining)
-            Just (before, _, remaining, submatches) ->
-                Failure ["Internal error:\n  text=" ++ show text ++ "\n before=" ++ show before ++ "\n  remaining=" ++ show remaining ++ ", submatches=" ++ show submatches]
-      (w, text') -> Success (WhiteSpace (trace ("whitespace: " ++ show w) w), text')
--}
-
 parseEntry :: String -> Either [String] (ChangeLogEntry, String)
 parseEntry text =
     case text =~ entryRE :: MatchResult String of
@@ -218,30 +197,10 @@ parseEntry text =
                    after)
       MR {mrBefore = _before, mrMatch = _matched, mrAfter = after, mrSubList = matches} ->
           Left ["Internal error\n after=" ++ show after ++ "\n " ++ show (length matches) ++ " matches: " ++ show matches]
-{-
-parseREs :: [Regex] -> String -> Failing ([String], String)
-parseREs res text =
-    foldr f (Success ([], text)) entryREs
-    where
-      f _ (Failure msgs) = Failure msgs
-      f re (Success (oldMatches, text)) =
-          case matchRegexAll re text of
-            Nothing -> Failure ["Parse error at " ++ show text]
-            Just (before, matched, after, newMatches) ->
-                Success (oldMatches ++ trace ("newMatches=" ++ show newMatches) newMatches, after)
--}
 
 entryRE = bol ++ blankLines ++ headerRE ++ changeDetails ++ signature ++ blankLines
 changeDetails = "((\n| \n| -\n|([^ ]| [^--]| -[^--])[^\n]*\n)*)"
 signature = " -- ([ ]*([^ ]+ )* )([^\n]*)\n"
-
-{-
-entryRE = mkRegexWithOpts (bol ++ blankLines ++ headerRE ++ nonSigLines ++ blankLines ++ signature ++ blankLines) False True
-nonSigLines = "(((  .*|\t.*| \t.*)|([ \t]*)\n)+)"
--- In the debian repository, sometimes the extra space in front of the
--- day-of-month is missing, sometimes an extra one is added.
-signature = "( -- ([^\n]*)  (..., ? ?.. ... .... ........ .....))[ \t]*\n"
--}
 
 -- |Parse the changelog information that shows up in the .changes
 -- file, i.e. a changelog entry with no signature.

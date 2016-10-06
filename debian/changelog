@@ -1,3 +1,9 @@
+haskell-debian (3.91) unstable; urgency=low
+
+  * Eliminate error call in parseChangeLog
+
+ -- David Fox <dsf@seereason.com>  Thu, 06 Oct 2016 09:42:06 -0700
+
 haskell-debian (3.89) unstable; urgency=low
 
   * Change signature of parseDebianVersion to return Either ParseError DebianVerions.
