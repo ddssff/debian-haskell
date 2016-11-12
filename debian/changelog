@@ -1,3 +1,13 @@
+haskell-debian (3.91.2) unstable; urgency=low
+
+  * Work around for https://ghc.haskell.org/trac/ghc/ticket/12130
+  * Add travis config for ghc-8.0
+  * fix test suite
+  * Make changelog a duplicate of debian/changelog
+  * eliminate error call in parseChangeLog
+
+ -- David Fox <dsf@foxthompson.net>  Fri, 11 Nov 2016 21:31:09 -0800
+
 haskell-debian (3.91) unstable; urgency=low
 
   * Eliminate error call in parseChangeLog
