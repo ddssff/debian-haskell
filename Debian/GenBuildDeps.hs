@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP, FlexibleContexts, OverloadedStrings, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE NoDisambiguateRecordFields, NoRecordWildCards #-}
 -- |Figure out the dependency relation between debianized source
 -- directories.  The code to actually solve these dependency relations
 -- for a particular set of binary packages is in Debian.Repo.Dependency.
