@@ -23,6 +23,7 @@ flag network-uri
 flag pretty-new
  Description: pretty-1.1.2 includes the Text.PrettyPrint.HughesPJClass module from prettyclass
  Default: True
+ Manual: True
 
 Library
  Hs-Source-Dirs: .
