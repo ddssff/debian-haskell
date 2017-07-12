@@ -1,3 +1,12 @@
+haskell-debian (3.92) unstable; urgency=low
+
+  * Support parsing of the option list in sources.list lines - see
+    https://manpages.debian.org/stretch/apt/sources.list.5.en.html
+  * Move tests of sources.list pretty and parse into Debian.Sources
+  * Change sig of parseSourceLine' to return Either rather than Maybe
+
+ -- David Fox <dsf@foxthompson.net>  Wed, 12 Jul 2017 06:30:01 -0700
+
 haskell-debian (3.91.2) unstable; urgency=low
 
   * Work around for https://ghc.haskell.org/trac/ghc/ticket/12130

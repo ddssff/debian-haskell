@@ -1,22 +1,58 @@
 {-# LANGUAGE FlexibleInstances, OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-module Debian.Sources where
+module Debian.Sources
+    {- ( SourceType(..)
+    , SourceOption(..)
+    , SourceOp(..)
+    , DebSource(..)
+    , parseSourceLine
+    , parseSourceLine'
+    , parseSourcesList
+    ) -} where
 
-import Data.List (intercalate)
+import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
+import Data.Text (Text)
 import Debian.Pretty (PP(..))
 import Debian.Release
 import Network.URI (URI, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
-import Text.PrettyPrint (text, hcat)
+import Test.HUnit
+import Text.ParserCombinators.Parsec
+import Text.PrettyPrint (hcat, punctuate, render, text)
 import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
 
 data SourceType
     = Deb | DebSrc
     deriving (Eq, Ord, Show)
 
+-- arch
+-- lang
+-- target
+-- pdiffs
+-- by-hash
+-- allow-insecure=no
+-- allow-weak=no
+-- allow-downgrade-to-insecure=no
+-- trusted=no
+-- signed-by
+-- check-valid-until
+-- valid-until-min
+-- valid-until-max
+data SourceOption
+    = SourceOption String SourceOp [String]
+    deriving (Eq, Ord, Show)
+
+data SourceOp = OpSet | OpAdd | OpDel deriving (Eq, Ord, Show)
+
+instance Pretty SourceOp where
+    pPrint OpSet = text "="
+    pPrint OpAdd = text "+="
+    pPrint OpDel = text "-="
+
 data DebSource
     = DebSource
     { sourceType :: SourceType
+    , sourceOptions :: [SourceOption]
     , sourceUri :: URI
     , sourceDist :: Either String (ReleaseName, [Section])
     } deriving (Eq, Ord, Show)
@@ -25,14 +61,21 @@ instance Pretty SourceType where
     pPrint Deb = text "deb"
     pPrint DebSrc = text "deb-src"
 
+instance Pretty SourceOption where
+    pPrint (SourceOption k op vs) = text k <> pPrint op <> hcat (punctuate (text ",") (map text vs))
+
 instance Pretty DebSource where
-    pPrint (DebSource thetype theuri thedist) =
-        pPrint thetype <>
-        text (" " <> uriToString id theuri " " <>
-              case thedist of
-                Left exactPath -> escape exactPath
-                Right (dist, sections) -> releaseName' dist <> " " <> intercalate " " (map sectionName' sections))
-            where escape = escapeURIString isAllowedInURI
+    pPrint (DebSource thetype theoptions theuri thedist) =
+        hcat (punctuate (text " ")
+                ([pPrint thetype] ++
+                 (case theoptions of
+                    [] -> []
+                    _ -> [text "[" <> hcat (punctuate (text ", ") (map pPrint theoptions)) <> text "]"]) ++
+                 [text (uriToString id theuri "")] ++
+                 case thedist of
+                   Left exactPath -> [text (escapeURIString isAllowedInURI exactPath)]
+                   Right (dist, sections) ->
+                       map text (releaseName' dist : map sectionName' sections)))
 
 instance Pretty (PP [DebSource]) where
     pPrint = hcat . map (\ x -> pPrint x <> text "\n") . unPP
@@ -121,7 +164,8 @@ sourceLines = filter (not . null) . map stripLine . lines
 -- the argument must be a non-empty, valid source line with comments stripped
 -- see: 'sourceLines'
 parseSourceLine :: String -> DebSource
-parseSourceLine str =
+parseSourceLine str = either error id (parseSourceLine' str)
+{-
     case quoteWords str of
       (theTypeStr : theUriStr : theDistStr : sectionStrs) ->
           let sections = map parseSection' sectionStrs
@@ -136,36 +180,144 @@ parseSourceLine str =
           in
             case last theDist of
               '/' -> if null sections
-                      then DebSource { sourceType = theType, sourceUri = theUri, sourceDist = Left theDist }
+                      then DebSource { sourceType = theType, sourceOptions = [], sourceUri = theUri, sourceDist = Left theDist }
                       else error ("parseSourceLine: Dist is an exact path, so sections are not allowed on the line:\n" ++ str)
               _ -> if null sections
                     then error ("parseSourceLine: Dist is not an exact path, so at least one section is required on the line:\n" ++ str)
-                    else DebSource { sourceType = theType, sourceUri = theUri, sourceDist = Right (parseReleaseName theDist, sections) }
+                    else DebSource { sourceType = theType, sourceOptions = [], sourceUri = theUri, sourceDist = Right (parseReleaseName theDist, sections) }
       _ -> error ("parseSourceLine: invalid line in sources.list:\n" ++ str)
+-}
 
-parseSourceLine' :: String -> Maybe DebSource
+parseOptions :: String -> Either ParseError [SourceOption]
+parseOptions s = parse pOptions s s
+
+pOptions :: CharParser () [SourceOption]
+pOptions = do _ <- char '['
+              skipMany (oneOf [' ','\t'])
+              opts <- sepBy1 pOption (char ',')
+              skipMany (oneOf [' ','\t'])
+              _ <- char ']'
+              return opts
+
+pOption :: CharParser () SourceOption
+pOption = do skipMany (oneOf [' ','\t'])
+             key <- many1 (noneOf ['+','-','=',' ','\t'])
+             skipMany (oneOf [' ','\t'])
+             op <- pOp
+             skipMany (oneOf [' ','\t'])
+             values <- sepBy1 (many1 (noneOf [',',']',' ','\t'])) (char ',')
+             skipMany (oneOf [' ','\t'])
+             return $ SourceOption key op values
+
+pOp :: CharParser () SourceOp
+pOp = do (char '+' >> char '=' >> return OpAdd)
+         <|>
+         (char '-' >> char '=' >> return OpDel)
+         <|>
+         (char '=' >> return OpSet)
+
+parseSourceLine' :: String -> Either String DebSource
 parseSourceLine' str =
     case quoteWords str of
-      (theTypeStr : theUriStr : theDistStr : sectionStrs) ->
+      theTypeStr : theOptionStr@('[' : _) : theURIStr : theDistStr : sectionStrs ->
+          either
+            (Left . show)
+            (\opts -> go theTypeStr opts theURIStr theDistStr sectionStrs)
+            (parseOptions theOptionStr)
+      theTypeStr : theURIStr : theDistStr : sectionStrs ->
+          go theTypeStr [] theURIStr theDistStr sectionStrs
+      _ -> Left ("parseSourceLine: invalid line in sources.list:\n" ++ str)
+    where
+      go theTypeStr theOptions theURIStr theDistStr sectionStrs =
           let sections = map parseSection' sectionStrs
               theType = case unEscapeString theTypeStr of
-                          "deb" -> Just Deb
-                          "deb-src" -> Just DebSrc
-                          _ -> Nothing
-              theUri = case parseURI theUriStr of
-                         Nothing -> Nothing
-                         Just u -> Just u
+                          "deb" -> Right Deb
+                          "deb-src" -> Right DebSrc
+                          s -> Left ("parseSourceLine: invalid type " ++ s ++ " in line:\n" ++ str)
+              theURI = case parseURI theURIStr of
+                         Nothing -> Left ("parseSourceLine: invalid uri " ++ theURIStr ++ " in the line:\n" ++ str)
+                         Just u -> Right u
               theDist = unEscapeString theDistStr
           in
-            case (last theDist, theType, theUri) of
-              ('/', Just typ, Just uri) -> if null sections
-                      then Just $ DebSource { sourceType = typ, sourceUri = uri, sourceDist = Left theDist }
-                      else error ("parseSourceLine: Dist is an exact path, so sections are not allowed on the line:\n" ++ str)
-              (_, Just typ, Just uri) -> if null sections
-                    then Nothing
-                    else Just $ DebSource { sourceType = typ, sourceUri = uri, sourceDist = Right ((parseReleaseName theDist), sections) }
-              _ -> Nothing
-      _ -> Nothing
+            case (last theDist, theType, theURI) of
+              ('/', Right typ, Right uri) -> if null sections
+                      then Right $ DebSource { sourceType = typ, sourceOptions = theOptions, sourceUri = uri, sourceDist = Left theDist }
+                      else Left ("parseSourceLine: Dist is an exact path, so sections are not allowed on the line:\n" ++ str)
+              (_, Right typ, Right uri) -> if null sections
+                    then Left ("parseSourceLine: Dist is not an exact path, so at least one section is required on the line:\n" ++ str)
+                    else Right $ DebSource { sourceType = typ, sourceOptions = theOptions, sourceUri = uri, sourceDist = Right ((parseReleaseName theDist), sections) }
+              (_, Left msg, _) -> Left msg
+              (_, _, Left msg) -> Left msg
 
 parseSourcesList :: String -> [DebSource]
 parseSourcesList = map parseSourceLine . sourceLines
+
+-- * Unit Tests
+
+-- TODO: add test cases that test for unterminated double-quote or bracket
+testQuoteWords :: Test
+testQuoteWords =
+    test [ assertEqual "Space seperate words, no quoting" ["hello", "world","!"] (quoteWords "  hello    world !  ")
+         , assertEqual "Space seperate words, double quotes" ["hello  world","!"] (quoteWords "  hel\"lo  world\" !  ")
+         , assertEqual "Space seperate words, square brackets" ["hel[lo  worl]d","!"] (quoteWords "  hel[lo  worl]d ! ")
+         , assertEqual "Space seperate words, square-bracket at end" ["hel[lo world]"] (quoteWords " hel[lo world]")
+         , assertEqual "Space seperate words, double quote at end" ["hello world"] (quoteWords " hel\"lo world\"")
+         , assertEqual "Space seperate words, square-bracket at beginning" ["[hello wo]rld","!"] (quoteWords "[hello wo]rld !")
+         , assertEqual "Space seperate words, double quote at beginning" ["hello world","!"] (quoteWords "\"hello wor\"ld !")
+         ]
+
+testSourcesList :: Test
+testSourcesList =
+    test [ assertEqual "parse and pretty sources.list" validSourcesListExpected (render . pPrint . PP . parseSourcesList $ validSourcesListStr) ]
+
+testSourcesList2 :: Test
+testSourcesList2 =
+    test [ assertEqual "pretty sources.list" validSourcesListExpected (render . pPrint . PP $ validSourcesList) ]
+
+validSourcesListStr :: String
+validSourcesListStr =
+          unlines $ [ " # A comment only line "
+                    , " deb ftp://ftp.debian.org/debian unstable main contrib non-free # typical deb line"
+                    , " deb-src ftp://ftp.debian.org/debian unstable main contrib non-free # typical deb-src line"
+                    , ""
+                    , "# comment line"
+                    , "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ # exact path"
+                    , "deb [trusted=yes] http://ftp.debian.org/whee \"space dist\" main"
+                    , "deb [trusted=yes] http://ftp.debian.org/whee dist space%20section"
+                    ]
+
+validSourcesList :: [DebSource]
+validSourcesList =
+    [DebSource {sourceType = Deb, sourceOptions = [], sourceUri = fromJust (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (ReleaseName {relName = "unstable"},[Section "main",Section "contrib",Section "non-free"])},
+     DebSource {sourceType = DebSrc, sourceOptions = [], sourceUri = fromJust (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (ReleaseName {relName = "unstable"},[Section "main",Section "contrib",Section "non-free"])},
+     DebSource {sourceType = Deb, sourceOptions = [], sourceUri = fromJust (parseURI "http://pkg-kde.alioth.debian.org/kde-3.5.0/"), sourceDist = Left "./"},
+     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = fromJust (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (ReleaseName {relName = "space dist"},[Section "main"])},
+     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = fromJust (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (ReleaseName {relName = "dist"},[Section "space section"])}]
+
+validSourcesListExpected :: String
+validSourcesListExpected =
+          unlines $ [ "deb ftp://ftp.debian.org/debian unstable main contrib non-free"
+                    , "deb-src ftp://ftp.debian.org/debian unstable main contrib non-free"
+                    , "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./"
+                    , "deb [trusted=yes] http://ftp.debian.org/whee space%20dist main"
+                    , "deb [trusted=yes] http://ftp.debian.org/whee dist space%20section"
+                    ]
+_invalidSourcesListStr1 :: Text
+_invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ main contrib non-free # exact path with sections"
+
+testSourcesListParse :: Test
+testSourcesListParse =
+    test [ assertEqual "" gutsy (mconcat . map (<> "\n") . map (render . pPrint) . parseSourcesList $ gutsy) ]
+    where
+      gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
+                      "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
+                      "deb http://us.archive.ubuntu.com/ubuntu/ gutsy-updates main restricted universe multiverse\n",
+                      "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-updates main restricted universe multiverse\n",
+                      "deb http://us.archive.ubuntu.com/ubuntu/ gutsy-backports main restricted universe multiverse\n",
+                      "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy-backports main restricted universe multiverse\n",
+                      "deb http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n",
+                      "deb-src http://security.ubuntu.com/ubuntu/ gutsy-security main restricted universe multiverse\n"]
+
+sourcesListTests :: Test
+sourcesListTests =
+    TestList [ testQuoteWords, testSourcesList, testSourcesList2, testSourcesListParse ]

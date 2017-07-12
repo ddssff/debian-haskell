@@ -5,12 +5,12 @@ import System.Exit
 import Changes
 import Control
 import Versions
-import SourcesList
+import Debian.Sources
 import Dependencies
 import Text.PrettyPrint
 
 main =
-    do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ sourcesListTests ++ dependencyTests ++ changesTests ++ controlTests ++ prettyTests))
+    do (c,st) <- runTestText putTextToShowS (TestList (versionTests ++ [sourcesListTests] ++ dependencyTests ++ changesTests ++ controlTests ++ prettyTests))
        putStrLn (st "")
        case (failures c) + (errors c) of
          0 -> return ()

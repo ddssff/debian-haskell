@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.91.2
+Version:        3.92
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -14,7 +14,7 @@ Description:
   the Debian policy manual - version numbers, control file syntax, etc.
 extra-source-files:
   Test/Main.hs, Test/Changes.hs, Test/Dependencies.hs,
-  Test/SourcesList.hs, Test/Versions.hs, Test/Control.hs, changelog, debian/changelog, debian/changelog.pre-debian
+  Test/Versions.hs, Test/Control.hs, changelog, debian/changelog, debian/changelog.pre-debian
 
 flag network-uri
  Description: Get Network.URI from the network-uri package
