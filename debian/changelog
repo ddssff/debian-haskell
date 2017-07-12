@@ -1,3 +1,9 @@
+haskell-debian (3.92.1) unstable; urgency=low
+
+  * Import mconcat for older base compatibility.
+
+ -- David Fox <dsf@foxthompson.net>  Wed, 12 Jul 2017 09:03:18 -0700
+
 haskell-debian (3.92) unstable; urgency=low
 
   * Support parsing of the option list in sources.list lines - see
