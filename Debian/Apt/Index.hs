@@ -21,6 +21,8 @@ import qualified Codec.Compression.BZip as BZip
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Digest.Pure.MD5 as MD5
+import qualified Data.Digest.Pure.SHA as SHA
+import Data.Either (partitionEithers)
 import Data.Function
 import Data.List as List (null, intercalate, sortBy, isSuffixOf, isPrefixOf)
 import qualified Data.Map as M
@@ -43,6 +45,7 @@ import System.FilePath (takeBaseName)
 import Text.ParserCombinators.Parsec.Error
 import Text.PrettyPrint (render)
 import Text.PrettyPrint.HughesPJClass (pPrint)
+import Text.Read (readMaybe)
 
 -- |Package indexes on the server are uncompressed or compressed with
 -- gzip or bzip2. We do not know what will exist on the server until we
@@ -270,16 +273,40 @@ indexesInRelease :: (FilePath -> Bool)
                  -> Control' Text -- ^ A release file
                  -> [(CheckSums, Integer, FilePath)] -- ^
 indexesInRelease filterp (Control [p]) =
-    let md5sums =
-            case md5sumField p of
-              (Just md5) -> md5
-              Nothing -> error $ "Did not find MD5Sum field."
-    in
-      filter (\(_,_,fp) -> filterp fp) $ map (makeTuple . Text.words) $ filter (not . Text.null) (Text.lines md5sums)
+    -- In a release file we should find one or more of the fields
+    -- "SHA256", "SHA1", or "MD5Sum", each containing a list of triples
+    either error (filter (\(_,_,fp) -> filterp fp)) $
+           msum [either Left (makeTuples makeSHA256) (maybe (Left "No SHA256 Field") makeTriples $ fieldValue "SHA256" p),
+                 either Left (makeTuples makeSHA1) (maybe (Left "No SHA1 Field") makeTriples $ fieldValue "SHA1" p),
+                 either Left (makeTuples makeMD5) (maybe (Left "No MD5Sum Field") makeTriples $ msum [fieldValue "MD5Sum" p,
+                                                                                                      fieldValue "Md5Sum" p,
+                                                                                                      fieldValue "MD5sum" p])]
     where
-      makeTuple :: [Text] -> (CheckSums, Integer, FilePath)
-      makeTuple [md5sum, size, fp] = (CheckSums { md5sum = Just (Text.unpack md5sum), sha1 = Nothing, sha256 = Nothing }, read (Text.unpack size), Text.unpack fp)
-      makeTuple x = error $ "Invalid line in release file: " ++ show x
+      makeSHA256 s = CheckSums {md5sum = Nothing, sha1 = Nothing, sha256 = Just s}
+      makeSHA1 s = CheckSums {md5sum = Nothing, sha1 = Just s, sha256 = Nothing}
+      makeMD5 s = CheckSums {md5sum = Just s, sha1 = Nothing, sha256 = Nothing}
+
+      makeTuples :: (String -> CheckSums) -> [(Text, Text, Text)] -> Either String [(CheckSums, Integer, FilePath)]
+      makeTuples mk triples =
+          case partitionEithers (fmap (makeTuple mk) triples) of
+            ([], tuples) -> Right tuples
+            (s : _, _) -> Left s
+
+      makeTuple :: (String -> CheckSums) -> (Text, Text, Text) -> Either String (CheckSums, Integer, FilePath)
+      makeTuple mk (sum, size, fp) =
+          (,,) <$> pure (mk (Text.unpack sum))
+               <*> maybe (Left ("Invalid size field: " ++ show size)) Right (readMaybe (Text.unpack size))
+               <*> pure (Text.unpack fp)
+
+      makeTriples :: Text -> Either String [(Text, Text, Text)]
+      makeTriples t = case partitionEithers (map makeTriple (Text.lines t)) of
+                        ([], xs) -> Right xs
+                        (s : _, _) -> Left s
+
+      makeTriple :: Text -> Either String (Text, Text, Text)
+      makeTriple t = case Text.words t of
+                       [a, b, c] -> Right (a, b, c)
+                       _ -> Left ("Invalid checksum line: " ++ show t)
 indexesInRelease _ x = error $ "Invalid release file: " <> Text.unpack (Text.concat (formatControl x))
 
 -- |make a FileTuple for a file found on the local disk
@@ -291,7 +318,9 @@ tupleFromFilePath basePath fp =
               then return Nothing
               else do size <- getFileStatus (basePath </> fp) >>= return . fromIntegral . fileSize
                       md5 <- L.readFile (basePath </> fp) >>= return . show . MD5.md5
-                      return $ Just (CheckSums { md5sum = Just md5, sha1 = Nothing, sha256 = Nothing }, size, fp)
+                      sha1 <- L.readFile (basePath </> fp) >>= return . show . SHA.sha1
+                      sha256 <- L.readFile (basePath </> fp) >>= return . show . SHA.sha256
+                      return $ Just (CheckSums { md5sum = Just md5, sha1 = Just sha1, sha256 = Just sha256 }, size, fp)
 
 -- |find the Contents-* files. These are not listed in the Release file
 findContentsFiles :: (FilePath -> Bool) -> FilePath -> IO [FilePath]

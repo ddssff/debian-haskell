@@ -6,7 +6,7 @@ import Control.Exception
 import Control.Monad hiding (mapM)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Data (Data, Typeable)
-import qualified Data.Digest.Pure.MD5 as MD5
+import Data.Digest.Pure.SHA as SHA
 import Data.Foldable (concat, all, foldr)
 import Data.List as List (intercalate, nub, partition, isSuffixOf)
 import Data.Maybe
@@ -164,14 +164,14 @@ getBinArch files =
 mkFileLine :: FilePath -> IO String
 mkFileLine fp
     | ".deb" `isSuffixOf` fp =
-        do sum <- L.readFile fp >>= return . show . MD5.md5
+        do sum <- L.readFile fp >>= return . show . sha256
            size <- liftM fileSize $ getFileStatus fp
            (Control (p:_)) <- Deb.fields fp
            return $ concat [ " ", sum, " ", show size, " ", fromMaybe "unknown" (fieldValue "Section" p), " "
                            , fromMaybe "optional" (fieldValue "Priority" p), " ", (takeBaseName fp)
                            ]
     | otherwise =
-        do sum <- L.readFile fp >>= return . show . MD5.md5
+        do sum <- L.readFile fp >>= return . show . sha256
            size <- liftM fileSize $ getFileStatus fp
            return $ concat [ " ", sum, " ", show size, " ", "unknown", " "
                            , "optional"," ", (takeBaseName fp)

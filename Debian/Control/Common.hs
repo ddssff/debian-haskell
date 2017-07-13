@@ -19,6 +19,7 @@ module Debian.Control.Common
     )
     where
 
+import Control.Monad (msum)
 import Data.Char (isSpace)
 import Data.List as List (dropWhileEnd, partition, intersperse)
 import Data.ListLike as LL (ListLike, cons, dropWhileEnd, empty, find, null, singleton)
@@ -182,10 +183,4 @@ parseControlFromCmd cmd =
 --  Md5Sum:
 --  MD5sum:
 md5sumField :: (ControlFunctions a) => Paragraph' a -> Maybe a
-md5sumField p =
-    case fieldValue "MD5Sum" p of
-      m@(Just _) -> m
-      Nothing ->
-          case fieldValue "Md5Sum" p of
-            m@(Just _) -> m
-            Nothing -> fieldValue "MD5sum" p
+md5sumField p = msum [fieldValue "MD5Sum" p, fieldValue "Md5Sum" p, fieldValue "MD5sum" p]

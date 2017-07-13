@@ -1,6 +1,7 @@
 :set -XCPP -optP -DCABAL19
 :set -i.:Test:dist/build/autogen
 :set -DMIN_VERSION_base(major1,major2,minor)=((major1)<4||(major1)==4&&(major2)<8||(major1)==4&&(major2)==8&&(minor)<=2)
+:set -DMIN_VERSION_time(major1,major2,minor)=((major1)<1||(major1)==1&&(major2)<5||(major1)==1&&(major2)==5&&(minor)<=0)
 :set -DMIN_VERSION_pretty(major1,major2,minor)=((major1)<1||(major1)==1&&(major2)<1||(major1)==1&&(major2)==1&&(minor)<=2)
 
 :set prompt "λ "
