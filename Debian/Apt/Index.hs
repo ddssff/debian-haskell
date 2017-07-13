@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, FlexibleContexts, OverloadedStrings, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleContexts, OverloadedStrings, ScopedTypeVariables #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Apt.Index
     ( update
