@@ -1,3 +1,9 @@
+haskell-debian (3.93.1) unstable; urgency=low
+
+  * Put SHA256 checksums into package info rather than obsolete md5
+
+ -- David Fox <dsf@foxthompson.net>  Thu, 13 Jul 2017 16:00:10 -0700
+
 haskell-debian (3.92.1) unstable; urgency=low
 
   * Import mconcat for older base compatibility.
