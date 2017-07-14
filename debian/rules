@@ -2,6 +2,7 @@
 
 DEB_ENABLE_TESTS = yes
 DEB_BUILD_OPTIONS += nocheck
+DEB_SETUP_BIN_NAME = debian/hlibrary.setup
 DEB_CABAL_PACKAGE = debian
 DEB_DEFAULT_COMPILER = ghc
 
