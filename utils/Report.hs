@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
+{-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables #-}
 module Main where
 
 import Control.Exception (try)
@@ -92,8 +92,8 @@ getWidth :: IO (Maybe Int)
 getWidth =
     do (cols, _) <- getWinSize
        case cols of
-         0 -> return . fmap read =<< getEnv "COLUMNS"
-         0 -> (either (const Nothing) (maybe Nothing readMaybe)) <$> (try (getEnv "COLUMNS") :: IO (Either IOError (Maybe String)))
+         -- 0 -> return . fmap read =<< getEnv "COLUMNS"
+         0 -> either (\(e :: IOError) -> Nothing) (fmap read) <$> try (getEnv "COLUMNS")
          _ -> return (Just cols)
 
 
