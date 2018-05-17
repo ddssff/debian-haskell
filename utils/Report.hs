@@ -1,6 +1,7 @@
 {-# LANGUAGE ForeignFunctionInterface #-}
 module Main where
 
+import Control.Exception (try)
 import Control.Monad
 import Data.Maybe (fromMaybe)
 import Debian.Apt.Methods
@@ -13,6 +14,7 @@ import Text.XML.HaXml
 import Text.XML.HaXml.Pretty (document)
 import Text.XML.HaXml.Posn
 import Text.PrettyPrint.HughesPJ
+import Text.Read (readMaybe)
 import System.IO
 import System.Posix.Env
 
@@ -91,6 +93,7 @@ getWidth =
     do (cols, _) <- getWinSize
        case cols of
          0 -> return . fmap read =<< getEnv "COLUMNS"
+         0 -> (either (const Nothing) (maybe Nothing readMaybe)) <$> (try (getEnv "COLUMNS") :: IO (Either IOError (Maybe String)))
          _ -> return (Just cols)
 
 
