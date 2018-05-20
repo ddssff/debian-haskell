@@ -1,11 +1,11 @@
 {-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables #-}
 module Main where
 
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#endif
 import Control.Exception (try)
 import Control.Monad
-#if !MIN_VERSION_base(4,8,0)
-import Data.Monoid ((<$>))
-#endif
 import Data.Maybe (fromMaybe)
 import Debian.Apt.Methods
 import Debian.Report
