@@ -4,7 +4,7 @@ module Main where
 import Control.Exception (try)
 import Control.Monad
 #if !MIN_VERSION_base(4,8,0)
-import Control.Monoid ((<$>))
+import Data.Monoid ((<$>))
 #endif
 import Data.Maybe (fromMaybe)
 import Debian.Apt.Methods
