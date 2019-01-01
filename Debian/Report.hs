@@ -66,7 +66,7 @@ trumpedMap :: M.Map Text DebianVersion -- ^ package map a
            -> M.Map Text DebianVersion -- ^ package map b
            -> M.Map Text (DebianVersion, DebianVersion) -- ^ trumped packages (version a, version b)
 trumpedMap pmA pmB =
-    M.foldWithKey (checkTrumped pmB) M.empty pmA
+    M.foldrWithKey (checkTrumped pmB) M.empty pmA
     where
       checkTrumped pm package aVersion trumpedPM =
           case M.lookup package pm of

@@ -1,3 +1,9 @@
+haskell-debian (3.93.3) unstable; urgency=medium
+
+  * Changes for ghc-8.6
+
+ -- David Fox <dsf@seereason.com>  Tue, 01 Jan 2019 15:57:16 -0800
+
 haskell-debian (3.93.2) unstable; urgency=low
 
   * Put SHA256 checksums into package info rather than obsolete md5
