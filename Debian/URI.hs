@@ -1,5 +1,6 @@
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE CPP, PackageImports #-}
 {-# OPTIONS -Wall -fno-warn-orphans #-}
+
 module Debian.URI
     ( module Network.URI
     , URI'
@@ -12,6 +13,9 @@ module Debian.URI
     , dirFromURI
     ) where
 
+#if !MIN_VERSION_base(4,8,0)
+import Control.Applicative ((<$>))
+#endif
 import Control.Exception (SomeException, throw, try)
 import Data.ByteString.Lazy.UTF8 as L
 import qualified Data.ByteString.Lazy.Char8 as L

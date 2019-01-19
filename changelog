@@ -1,3 +1,9 @@
+haskell-debian (3.93.5) unstable; urgency=medium
+
+  * Restore import of <$> for older versions of base.
+
+ -- David Fox <dsf@x1>  Fri, 18 Jan 2019 19:04:40 -0800
+
 haskell-debian (3.93.4) unstable; urgency=medium
 
   * Handle errors in the shell commands run by functions in Debian.URI
