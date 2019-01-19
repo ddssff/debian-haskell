@@ -64,7 +64,7 @@ Library
  else
    Build-Depends: pretty, prettyclass
 
- ghc-options: -Wall -O2
+ ghc-options: -Wall
  Exposed-modules:
         Debian.Apt.Dependencies,
         Debian.Apt.Index,
@@ -109,14 +109,14 @@ Executable fakechanges
  Hs-Source-Dirs: utils
  Main-is: FakeChanges.hs
  Build-Depends: base, debian, directory, filepath
- ghc-options: -threaded -W -O2
+ ghc-options: -threaded -W
  Extensions:           ExistentialQuantification CPP
 
 Executable debian-report
  Hs-Source-Dirs: utils
  Main-is: Report.hs
  Build-Depends: base, debian, HaXml, unix
- ghc-options: -threaded -W -O2
+ ghc-options: -threaded -W
  C-Sources:           cbits/gwinsz.c
  Include-Dirs:        cbits
  Install-Includes:    gwinsz.h
@@ -127,7 +127,7 @@ Executable apt-get-build-depends
  Hs-Source-Dirs: utils
  Main-is: AptGetBuildDeps.hs
  Build-Depends: base, debian, process
- ghc-options: -threaded -W -O2
+ ghc-options: -threaded -W
  Extensions:           ExistentialQuantification CPP
 
 Test-Suite debian-tests
