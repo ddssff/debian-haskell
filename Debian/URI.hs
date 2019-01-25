@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, PackageImports #-}
+{-# LANGUAGE CPP, OverloadedStrings, PackageImports, ScopedTypeVariables #-}
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
 module Debian.URI
@@ -16,11 +16,12 @@ module Debian.URI
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative ((<$>))
 #endif
-import Control.Exception (SomeException, throw, try)
+import Control.Exception (catch, IOException, throw, try)
+import Control.Monad.Trans (liftIO)
 import Data.ByteString.Lazy.UTF8 as L
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Maybe (catMaybes, fromJust)
-import Data.Text as T (unpack)
+import Data.Text as T (isInfixOf, pack, Text, unpack)
 import Data.Text.Encoding (decodeUtf8)
 import Network.URI (URI(..), URIAuth(..), parseURI, uriToString)
 import System.Directory (getDirectoryContents)
@@ -51,10 +52,10 @@ toURI' = URI' . show
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""
 
-fileFromURI :: URI -> IO (Either SomeException L.ByteString)
+fileFromURI :: URI -> IO (Either IOException L.ByteString)
 fileFromURI uri = fileFromURIStrict uri
 
-fileFromURIStrict :: URI -> IO (Either SomeException L.ByteString)
+fileFromURIStrict :: URI -> IO (Either IOException L.ByteString)
 fileFromURIStrict uri = try $
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> L.readFile (uriPath uri)
@@ -68,25 +69,26 @@ fileFromURIStrict uri = try $
 -- server.  This is currently only known to work with Apache.
 -- NOTE: there is a second copy of this function in
 -- Extra:Extra.Net. Please update both locations if you make changes.
-webServerDirectoryContents :: L.ByteString -> [String]
+webServerDirectoryContents :: Text -> IO [String]
+webServerDirectoryContents text | isInfixOf "<title>404 Not Found</title>" text = fail "Bad URL"
 webServerDirectoryContents text =
-    catMaybes . map (second . matchRegex re) . Prelude.lines . L.toString $ text
+    return . catMaybes . map (second . matchRegex re) . Prelude.lines . T.unpack $ text
     where
       re = mkRegex "( <A HREF|<a href)=\"([^/][^\"]*)/\""
       second (Just [_, b]) = Just b
       second _ = Nothing
 
 
-dirFromURI :: URI -> IO (Either SomeException [String])
-dirFromURI uri = try $
+dirFromURI :: URI -> IO (Either IOException [String])
+dirFromURI uri = try $ do
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> getDirectoryContents (uriPath uri)
       ("ssh:", Just auth) ->
           (Prelude.lines . L.toString) <$>
             run (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri])
       _ ->
-          webServerDirectoryContents <$>
-            run (proc "curl" ["-s", "-g", uriToString' uri])
+          (webServerDirectoryContents =<< (T.pack . L.toString) <$> run (proc "curl" ["-s", "-g", uriToString' uri]))
+            `catch` (\(e :: IOException) -> throw (userError (show e ++ ": " ++ show uri)))
 
 run :: CreateProcess -> IO L.ByteString
 run cp = do
