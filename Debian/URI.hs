@@ -44,6 +44,9 @@ import Data.ByteString.Lazy.UTF8 as L hiding (fromString)
 import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Foldable (foldrM)
 import Data.Maybe (catMaybes, fromJust)
+#if !MIN_VERSION_base(4,11,0)
+import Data.Monoid ((<>))
+#endif
 import Data.Text as T (isInfixOf, pack, Text, unpack)
 import Data.Text.Encoding (decodeUtf8)
 import Network.URI (nullURI, parseURIReference, parseURI, parseAbsoluteURI, parseRelativeReference, URI(..), URIAuth(..), uriToString)

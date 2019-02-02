@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.93.7
+Version:        3.94
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -37,6 +37,7 @@ Library
    exceptions,
    filepath,
    HaXml >= 1.20,
+   hostname,
    HUnit,
    lens,
    ListLike >= 4.3.5,
@@ -58,7 +59,7 @@ Library
    utf8-string,
    zlib
  if flag(network-uri)
-   Build-Depends: network >= 2.6, network-uri >= 2.6
+   Build-Depends: network-uri >= 2.6
  else
    Build-Depends: network >= 2.4 && < 2.6
  if flag(pretty-new)
@@ -137,6 +138,7 @@ Test-Suite debian-tests
   Hs-Source-Dirs: Test
   Main-Is: Main.hs
  Build-Depends: base, debian, HUnit, parsec, regex-tdfa, text
+ Other-Modules: Changes Control Dependencies Paths_debian Versions
  if flag(pretty-new)
    Build-Depends: pretty >= 1.1.2
  else

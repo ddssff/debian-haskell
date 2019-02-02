@@ -15,7 +15,7 @@ import Data.Traversable
 import Debian.Control
 import qualified Debian.Deb as Deb
 import Debian.Time
-import Network.BSD (getHostName)
+import Network.HostName (getHostName)
 import Prelude hiding (concat, foldr, all, mapM, sum)
 import System.Environment
 import System.FilePath
