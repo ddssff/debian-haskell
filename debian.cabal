@@ -1,5 +1,5 @@
 Name:           debian
-Version:        3.93.6
+Version:        3.93.7
 License:        BSD3
 License-File:   debian/copyright
 Author:         David Fox <dsf@seereason.com>, Jeremy Shaw <jeremy@seereason.com>, Clifford Beshers <beshers@seereason.com>
@@ -38,6 +38,7 @@ Library
    filepath,
    HaXml >= 1.20,
    HUnit,
+   lens,
    ListLike >= 4.3.5,
    mtl,
    old-locale,
@@ -45,6 +46,7 @@ Library
    process,
    process-extras >= 0.2.0,
    pureMD5,
+   QuickCheck,
    regex-compat,
    regex-tdfa,
    SHA,

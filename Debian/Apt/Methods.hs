@@ -25,7 +25,7 @@ import Debian.Time
 import Debian.URI
 
 import Control.Exception
-import "mtl" Control.Monad.Error
+import Control.Monad.Except
 import Data.Maybe
 import Data.Time
 import System.Directory

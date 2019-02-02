@@ -27,12 +27,12 @@ import Data.Function
 import Data.List as List (null, intercalate, sortBy, isSuffixOf, isPrefixOf)
 import qualified Data.Map as M
 import Data.Monoid ((<>))
-import Data.Text as Text (Text, unpack, concat, lines, null, words)
+import Data.Text as Text (Text, unpack, concat, lines, words)
 import Data.Time
 import Debian.Apt.Methods
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
-import Debian.Control.Common
+--import Debian.Control.Common
 import Debian.Control.Text (decodeControl)
 import Debian.Release
 import Debian.Sources
