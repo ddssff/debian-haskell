@@ -15,9 +15,10 @@ module Debian.Apt.Index
     , tupleFromFilePath
     ) where
 
-import Control.Monad
 import qualified Codec.Compression.GZip as GZip
 import qualified Codec.Compression.BZip as BZip
+import Control.Lens (over, to, view)
+import Control.Monad
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy.Char8 as L
 import qualified Data.Digest.Pure.MD5 as MD5
@@ -138,7 +139,7 @@ indexURIs arch debSource =
 -- FIXME: support for Release and Release.gpg
 calcPath :: SourceType -- ^ do we want Packages or Sources
          -> String  -- ^ The binary architecture to use for Packages
-         -> URI -- ^ base URI as it appears in sources.list
+         -> VendorURI -- ^ base URI as it appears in sources.list
          -> ReleaseName -- ^ the release (e.g., unstable, testing, stable, sid, etc)
          -> Section -- ^ the section (main, contrib, non-free, etc)
          -> (URI, [Char]) -- ^ (uri to index file, basename for the downloaded file)
@@ -146,8 +147,9 @@ calcPath srcType arch baseURI release section =
           let indexPath = case srcType of
                       DebSrc -> "source/Sources"
                       Deb -> "binary-" ++ arch </> "Packages"
-              path = (uriPath baseURI) </> "dists" </> (releaseName' release) </> sectionName' section </> indexPath
-          in (baseURI { uriPath = path }, addPrefix . escapePath $ path)
+              uri' = over uriPathLens (\path -> path </> "dists" </> releaseName' release </> sectionName' section </> indexPath) (view vendorURI baseURI)
+              path = view uriPathLens uri'
+          in (uri', addPrefix (escapePath path))
           where
             addPrefix s = prefix scheme user' pass' reg port ++ {- "_" ++ -} s
             prefix "http:" (Just user) Nothing (Just host) port = user ++ host ++ port
@@ -156,15 +158,15 @@ calcPath srcType arch baseURI release section =
             prefix "file:" Nothing Nothing Nothing "" = ""
             prefix "ssh:" (Just user) Nothing (Just host) port = user ++ host ++ port
             prefix "ssh:" _ _ (Just host) port = host ++ port
-            prefix _ _ _ _ _ = error ("calcPath: unsupported uri: " ++ uriToString' baseURI)
+            prefix _ _ _ _ _ = error ("calcPath: unsupported uri: " ++ view (vendorURI . to uriToString') baseURI)
             user' = maybeOfString user
             pass' = maybeOfString pass
             (user, pass) = break (== ':') userpass
             userpass = maybe "" uriUserInfo auth
             reg = maybeOfString $ maybe "" uriRegName auth
             port = maybe "" uriPort auth
-            scheme = uriScheme baseURI
-            auth = uriAuthority baseURI
+            scheme = view (vendorURI . to uriScheme) baseURI
+            auth = view (vendorURI . to uriAuthority) baseURI
             --path = uriPath baseURI
 
             escapePath :: String -> String

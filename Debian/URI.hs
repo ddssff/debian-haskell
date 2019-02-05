@@ -10,8 +10,13 @@ module Debian.URI
     , uriPathLens
     , uriQueryLens
     , uriFragmentLens
-    -- * String known to parsable by parseURIReference
+    -- * String known to parsable by parseURIReference.  Mainly
+    -- useful because it has a Read instance.
     , URI'
+    , toURI'
+    , fromURI'
+    , readURI'
+
     -- Show URI as a Haskell expression
     , showURI
     -- Monadic URI parsers
@@ -22,9 +27,7 @@ module Debian.URI
     -- URI appending
     , appendURI
     , appendURIs
-    , toURI'
-    , fromURI'
-    , readURI'
+    , parentURI
     , uriToString'
     , fileFromURI
     , fileFromURIStrict
@@ -38,7 +41,7 @@ module Debian.URI
 import Control.Applicative ((<$>))
 #endif
 import Control.Exception (catch, IOException, throw, try)
-import Control.Lens (makeLensesFor)
+import Control.Lens (makeLensesFor, view)
 import Control.Monad.Except (MonadError, throwError)
 import Data.ByteString.Lazy.UTF8 as L hiding (fromString)
 import qualified Data.ByteString.Lazy.Char8 as L
@@ -48,15 +51,13 @@ import Data.Maybe (catMaybes, fromJust)
 import Data.Monoid ((<>))
 #endif
 import Data.Text as T (isInfixOf, pack, Text, unpack)
-import Data.Text.Encoding (decodeUtf8)
+import Debian.Sources (VendorURI, vendorURI)
+import Debian.TH (run')
+import Language.Haskell.TH.Syntax (Loc)
 import Network.URI (nullURI, parseURIReference, parseURI, parseAbsoluteURI, parseRelativeReference, URI(..), URIAuth(..), uriToString)
 import System.Directory (getDirectoryContents)
-import System.Exit (ExitCode(..))
-import System.FilePath ((</>))
--- import System.Process.ByteString (readProcessWithExitCode)
-import System.Process (CreateProcess, proc)
-import System.Process.Common (showCreateProcessForUser)
-import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
+import System.FilePath ((</>), dropTrailingPathSeparator, takeDirectory)
+import System.Process (proc)
 import Test.QuickCheck (Arbitrary)
 import Text.Regex (mkRegex, matchRegex)
 
@@ -92,6 +93,7 @@ parseRelativeReference' s = maybe (throwError (URIParseError "parseRelativeRefer
 data URIError =
     URIParseError String String
   | URIAppendError URI URI
+  | URIOtherError String
   deriving (Eq, Ord, Show)
 
 -- | Conservative appending of absolute and relative URIs.  There may
@@ -107,6 +109,9 @@ appendURI a b = throwError (URIAppendError a b)
 -- λ> appendURIs (parseURI "http://host.com") (parseURIRelative "/bar")
 appendURIs :: (Foldable t, MonadError URIError m) => t URI -> m URI
 appendURIs uris = foldrM appendURI nullURI uris
+
+parentURI :: URI -> URI
+parentURI uri = uri {uriPath = takeDirectory (dropTrailingPathSeparator (uriPath uri))}
 
 -- properties
 -- appendURIs [x] == x
@@ -128,31 +133,31 @@ readURI' :: String -> Maybe URI'
 readURI' s = maybe Nothing (const (Just (URI' s))) (parseURIReference s)
 
 fromURI' :: URI' -> URI
-fromURI' (URI' s) = fromJust (parseURI s)
+fromURI' (URI' s) = fromJust (parseURI s) -- this should provably parse
 
 -- | Using the bogus Show instance of URI here.  If it ever gets fixed
 -- this will stop working.  Worth noting that show will obscure any
 -- password info embedded in the URI, so that's nice.
-toURI' :: URI -> URI'
-toURI' = URI' . show
+toURI' :: VendorURI -> URI'
+toURI' = URI' . show . view vendorURI
 
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""
 
 instance Arbitrary URI where
 
-fileFromURI :: URI -> IO (Either IOException L.ByteString)
-fileFromURI uri = fileFromURIStrict uri
+fileFromURI :: Loc -> URI -> IO (Either IOException L.ByteString)
+fileFromURI loc uri = fileFromURIStrict loc uri
 
-fileFromURIStrict :: URI -> IO (Either IOException L.ByteString)
-fileFromURIStrict uri = try $
+fileFromURIStrict :: Loc -> URI -> IO (Either IOException L.ByteString)
+fileFromURIStrict loc uri = try $
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> L.readFile (uriPath uri)
       -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
       ("ssh:", Just auth) ->
-          run (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri])
+          run' loc (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri])
       _ ->
-          run (proc "curl" ["-s", "-g", uriToString' uri])
+          run' loc (proc "curl" ["-s", "-g", uriToString' uri])
 
 -- | Parse the text returned when a directory is listed by a web
 -- server.  This is currently only known to work with Apache.
@@ -168,23 +173,13 @@ webServerDirectoryContents text =
       second _ = Nothing
 
 
-dirFromURI :: URI -> IO (Either IOException [String])
-dirFromURI uri = try $ do
+dirFromURI :: Loc -> URI -> IO (Either IOException [String])
+dirFromURI loc uri = try $ do
     case (uriScheme uri, uriAuthority uri) of
       ("file:", Nothing) -> getDirectoryContents (uriPath uri)
       ("ssh:", Just auth) ->
           (Prelude.lines . L.toString) <$>
-            run (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri])
+            run' loc (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri])
       _ ->
-          (webServerDirectoryContents =<< (T.pack . L.toString) <$> run (proc "curl" ["-s", "-g", uriToString' uri]))
+          (webServerDirectoryContents =<< (T.pack . L.toString) <$> run' loc (proc "curl" ["-s", "-g", uriToString' uri]))
             `catch` (\(e :: IOException) -> throw (userError (show e ++ ": " ++ show uri)))
-
-run :: CreateProcess -> IO L.ByteString
-run cp = do
-  (code, out, err) <- readCreateProcessWithExitCode cp L.empty
-  case code of
-    ExitSuccess -> return out
-    ExitFailure _ -> throw (userError (show code ++ "\n" ++
-                                       " command: " ++ showCreateProcessForUser cp ++ "\n" ++
-                                       " stderr: " ++ unpack (decodeUtf8 (L.toStrict err)) ++ "\n" ++
-                                       " stdout: " ++ unpack (decodeUtf8 (L.toStrict out))))

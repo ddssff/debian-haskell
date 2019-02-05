@@ -101,6 +101,7 @@ Library
         Debian.Version.String,
         Debian.Version.Text,
         Debian.Report,
+        Debian.TH,
         Debian.Time,
         Debian.URI,
         Debian.UTF8,
