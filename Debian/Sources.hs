@@ -17,7 +17,7 @@ import Data.Text (Text)
 import Debian.Pretty (PP(..))
 import Debian.Release
 import Debian.TH (here, Loc)
-import Network.URI (URI, uriPath, uriToString, parseURI, unEscapeString, escapeURIString, isAllowedInURI)
+import Network.URI (URI, uriPath, {-uriToString,-} parseURI, unEscapeString, escapeURIString, isAllowedInURI)
 import System.FilePath (splitDirectories)
 import Test.HUnit
 import Text.ParserCombinators.Parsec
@@ -33,7 +33,7 @@ parseVendorURI loc s =
     case parseURI s of
       Nothing -> Nothing
       Just u -> case splitDirectories (uriPath u) of
-                  ["/", vendor] -> Just (review vendorURI u)
+                  ["/", _vendor] -> Just (review vendorURI u)
                   ["/", "hvr", "ghc", "ubuntu"] -> Just (review vendorURI u)
                   ["/", "srv", "deb", "ubuntu"] -> Just (review vendorURI u)
                   ["/", "srv", "deb86", "ubuntu"] -> Just (review vendorURI u)

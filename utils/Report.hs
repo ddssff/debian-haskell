@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, ForeignFunctionInterface, ScopedTypeVariables, TemplateHaskell #-}
 module Main where
 
 #if !MIN_VERSION_base(4,8,0)
@@ -10,6 +10,7 @@ import Data.Maybe (fromMaybe)
 import Debian.Apt.Methods
 import Debian.Report
 import Debian.Sources
+import Debian.TH (here)
 import Foreign.C.Types
 import System.Environment (getArgs, getProgName)
 import System.Exit (exitFailure)
@@ -17,7 +18,6 @@ import Text.XML.HaXml
 import Text.XML.HaXml.Pretty (document)
 import Text.XML.HaXml.Posn
 import Text.PrettyPrint.HughesPJ
-import Text.Read (readMaybe)
 import System.IO
 import System.Posix.Env
 
@@ -29,8 +29,8 @@ main =
     do (sourcesAFP, sourcesBFP) <- parseArgs
        let arch     = "i386" -- not actually used for anything right now, could be when binary package list is enabled
            cacheDir = "."    -- FIXME: replace with tempdir later
-       sourcesA <- liftM parseSourcesList $ readFile sourcesAFP
-       sourcesB <- liftM parseSourcesList $ readFile sourcesBFP
+       sourcesA <- liftM (parseSourcesList $here) $ readFile sourcesAFP
+       sourcesB <- liftM (parseSourcesList $here) $ readFile sourcesBFP
        trumpMap <- trumped (fetch emptyFetchCallbacks []) cacheDir arch sourcesA sourcesB
        print (showXML "trump.xsl" (trumpedXML trumpMap))
     where
@@ -96,7 +96,7 @@ getWidth =
     do (cols, _) <- getWinSize
        case cols of
          -- 0 -> return . fmap read =<< getEnv "COLUMNS"
-         0 -> either (\(e :: IOError) -> Nothing) (fmap read) <$> try (getEnv "COLUMNS")
+         0 -> either (\(_ :: IOError) -> Nothing) (fmap read) <$> try (getEnv "COLUMNS")
          _ -> return (Just cols)
 
 

@@ -53,6 +53,8 @@ Library
    SHA,
    template-haskell,
    text,
+   th-lift,
+   th-orphans,
    time,
    unix,
    Unixutils >= 1.52.4,

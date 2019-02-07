@@ -31,9 +31,9 @@ import Data.Char (toLower, chr)
 import Data.List (find)
 import qualified Data.ListLike as LL
 import Data.ListLike.Text.Builder ()
-import qualified Data.Text as T (pack, unpack, map, reverse)
+--import qualified Data.Text as T (pack, unpack, map, reverse)
 import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Builder (Builder, fromLazyText, fromText, toLazyText)
+import Data.Text.Lazy.Builder (Builder, {-fromLazyText,-} fromText, toLazyText)
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 --import Data.Text.IO as T (readFile)
 import qualified Debian.Control.ByteString as B

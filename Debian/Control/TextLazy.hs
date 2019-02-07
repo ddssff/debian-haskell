@@ -29,7 +29,7 @@ module Debian.Control.TextLazy
 import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower, chr)
 import Data.List (find)
-import qualified Data.Text.Lazy as T (Text, pack, unpack, map, dropAround, reverse, fromStrict, toStrict)
+import qualified Data.Text.Lazy as T (Text, pack, unpack, map, dropAround, {-reverse,-} fromStrict, toStrict)
 import Data.Text.Encoding (decodeUtf8With, encodeUtf8)
 --import Data.Text.IO as T (readFile)
 import qualified Debian.Control.ByteString as B

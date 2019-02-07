@@ -53,7 +53,7 @@ import Data.List
 import Data.Text as T (Text, pack, concat)
 import qualified Debian.Control.Builder ()
 import qualified Debian.Control.Text as T
-import qualified Debian.Control.TextLazy as TL
+--import qualified Debian.Control.TextLazy as TL
 import qualified Debian.Control.ByteString as B ()
 import qualified Debian.Control.Policy as P
 import qualified Debian.Control.String as S

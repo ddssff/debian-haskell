@@ -20,7 +20,7 @@ formatTimeRFC822 :: (FormatTime t) => t -> String
 formatTimeRFC822 = formatTime defaultTimeLocale rfc822DateFormat'
 
 parseTimeRFC822 :: (ParseTime t) => String -> Maybe t
-parseTimeRFC822 = parseTime defaultTimeLocale rfc822DateFormat'
+parseTimeRFC822 = parseTimeM True defaultTimeLocale rfc822DateFormat'
 
 getCurrentLocalRFC822Time :: IO String
 getCurrentLocalRFC822Time = getCurrentTime >>= utcToLocalZonedTime >>= return . formatTime defaultTimeLocale rfc822DateFormat'
