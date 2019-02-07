@@ -90,6 +90,7 @@ Library
         Debian.GenBuildDeps,
         Debian.Loc,
         Debian.Pretty,
+        Debian.Process,
         Debian.Relation,
         Debian.Relation.ByteString,
         Debian.Relation.Common,
