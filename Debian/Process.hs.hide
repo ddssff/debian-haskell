@@ -1,0 +1,161 @@
+#if 0
+{-# LANGUAGE CPP, OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS -Wall -fno-warn-orphans #-}
+
+module Debian.Process
+    (
+    -- * Lift IO operations into a MonadError instance
+      HasIOException(fromIOException)
+    , liftEIO
+    , liftEIO'
+    , HasSomeException(fromSomeException) , liftSE
+    , HasWrappedIOException(wrapIOException)
+    , wrapIO, WrappedIOException(WrappedIOException)
+    , MonadIO, MonadError, IOException
+    , run, run'
+    ) where
+
+import Control.Exception (evaluate, Exception, IOException, SomeException)
+import Control.Monad.Catch (try)
+import Control.Monad.Except (MonadError, throwError)
+import Control.Monad.Trans (liftIO, MonadIO)
+import Data.ByteString.Lazy.UTF8 as L hiding (fromString)
+import qualified Data.ByteString.Lazy.Char8 as L
+#if !MIN_VERSION_base(4,11,0)
+import Data.Monoid ((<>))
+#endif
+import Data.Text as T (unpack)
+import Data.Text.Encoding (decodeUtf8)
+import Debian.TH (here)
+import Language.Haskell.TH (ExpQ)
+import Language.Haskell.TH.Syntax (Loc)
+import System.Exit (ExitCode(ExitFailure, ExitSuccess))
+import System.Process (CreateProcess)
+import System.Process.Common (showCreateProcessForUser)
+import System.Process.ByteString.Lazy (readCreateProcessWithExitCode)
+
+-- | This class includes an instance for IOException itself, so we
+-- don't know whether the exception has been caught.
+class HasIOException e where fromIOException :: Loc -> IOException -> e
+instance HasIOException IOException where fromIOException _loc = id
+
+class HasSomeException e where fromSomeException :: Loc -> SomeException -> e
+instance HasSomeException SomeException where fromSomeException _loc = id
+
+liftEIO :: forall e m a. (MonadIO m, HasIOException e, MonadError e m) => Loc -> IO a -> m a
+liftEIO loc action =
+    -- This evaluate ensures that the action is fully evaluated and
+    -- any resulting IOExceptions are thrown.
+    (liftIO (try (action >>= evaluate)) :: m (Either IOException a)) >>= either handle return
+    where handle :: IOException -> m a
+          handle = throwError . fromIOException loc
+-- | Lift an IO operation into ExceptT FileError IO
+liftSE :: forall e m a. (MonadIO m, HasSomeException e, MonadError e m) => Loc -> IO a -> m a
+liftSE loc action =
+    liftIO (try action) >>= either (\(e :: SomeException) -> f e) return
+    where f = throwError . fromSomeException loc
+
+-- | This class is like HasIOException but there is no instance for
+-- IOException.  This is to avoid the IO monad's functional dependency
+-- on IOException.  Thus we know we caught the bare IOException and
+-- wrapped it up.  (This doesn't work.)
+class HasWrappedIOException e where wrapIOException :: IOException -> e
+
+liftEIO' :: forall e m a. (MonadIO m, HasWrappedIOException e, MonadError e m) => IO a -> m a
+liftEIO' action = liftIO (try action) >>= either (throwError . wrapIOException) return
+
+newtype WrappedIOException = WrappedIOException IOException
+instance HasWrappedIOException WrappedIOException where wrapIOException = WrappedIOException
+
+-- | Wrap an IOException with a specific newtype
+wrapIO :: forall m a. (MonadError WrappedIOException m, MonadIO m) => IO a -> m a
+wrapIO action = liftIO (try action) >>= either (throwError . WrappedIOException) return
+
+run :: ExpQ
+run = [|run' $here|]
+
+#if 0
+run' ::
+    (MonadIO m, HasIOException e, MonadError e m)
+    => Loc
+    -> CreateProcess
+    -> m L.ByteString
+run' loc cp = do
+  (code, out, err) <- liftEIO $here $ readCreateProcessWithExitCode cp L.empty
+  case code of
+    ExitSuccess -> return out
+    ExitFailure _ -> throwError $ fromIOException loc $ userError $ unlines $
+                                       [ show code
+                                       , " command: " ++ showCreateProcessForUser cp
+                                       , " stderr: " ++ unpack (decodeUtf8 (L.toStrict err))
+                                       , " stdout: " ++ unpack (decodeUtf8 (L.toStrict out))
+                                       , " location: " ++ show loc ]
+#else
+data RunOptions a m
+    = StartMessage (String -> CreateProcess -> m ())
+    | OverOutput ([Chunk a] -> m [Chunk a]) -- e.g. putIndented
+    | FinishMessage (String -> CreateProcess -> (ExitCode, a, a) -> m ())
+    -- | Verbosity Int
+    | RunOptions [RunOptions a m]
+
+instance Semigroup (RunOptions a m) where
+    RunOptions a <> RunOptions b = RunOptions (a <> b)
+    RunOptions a <> b = RunOptions (a <> [b])
+    a <> RunOptions b = RunOptions ([a] <> b)
+    a <> b = RunOptions [a, b]
+
+run' ::
+    forall a c e m. (HasIOException e, MonadError e m, ListLikeProcessIO a c, MonadIO m, MonadCatch m)
+    => Loc
+    -> RunOptions a m
+    -> CreateProcess
+    -> a
+    -> m (ExitCode, a, a)
+run' loc opts p input = do
+  start " -> " p
+  (result :: (ExitCode, a, a)) <- catch (liftIO (readCreateProcessLazy p input) >>= overOutput >>= return . collectOutput)
+                                        (\se -> withException (\e -> liftIO (hPutStrLn stderr ("(" ++ show e ++ ") :: " ++ show (typeOf e)))) se >> throw se)
+  finish " <- " p result
+  liftIO $ evaluate result
+    where
+      -- We need the options as a Foldable type
+      opts' :: [RunOptions a m]
+      opts' = case opts of RunOptions xs -> xs; x -> [x]
+      start :: String -> CreateProcess -> m ()
+      start = foldr (\o f -> case o of (StartMessage f') -> f'; _ -> f) (\_ _ -> pure ()) opts'
+      finish :: String -> CreateProcess -> (ExitCode, a, a) -> m ()
+      finish = foldr (\o f -> case o of (FinishMessage f') -> f'; _ -> f) (\_ _ _ -> pure ()) opts'
+      overOutput :: [Chunk a] -> m [Chunk a]
+      overOutput = foldr (\o f -> case o of (OverOutput f') -> f'; _ -> f) return opts'
+#endif
+
+--runVE :: (Eq c, IsString a, ListLikeProcessIO a c, MonadIO m, MonadCatch m) => CreateProcess -> a -> m (Either SomeException (ExitCode, a, a))
+--runVE p input = try $ runV p input
+
+runV ::
+    (Eq c, IsString a, ListLikeProcessIO a c, MonadIO m, HasIOException e, MonadError e m, MonadCatch m)
+    => Loc -> CreateProcess -> a -> m (ExitCode, a, a)
+runV loc p input = run loc (StartMessage showCommand <> OverOutput putIndented <> FinishMessage showCommandAndResult) p input
+
+runVE ::
+    (Eq c, IsString a, ListLikeProcessIO a c, MonadCatch m, MonadIO m, HasIOException e, MonadError e m, Exception e)
+    => Loc -> CreateProcess -> a -> m (Either e (ExitCode, a, a))
+runVE loc p i = try $ runV loc p i
+
+--runQE :: (ListLikeProcessIO a c, MonadIO m, MonadCatch m) => CreateProcess -> a -> m (Either SomeException (ExitCode, a, a))
+--runQE p input = try $ runQ p input
+
+runQ ::
+    (ListLikeProcessIO a c, MonadIO m, HasIOException e, MonadError e m, MonadCatch m)
+    => Loc -> CreateProcess -> a -> m (ExitCode, a, a)
+runQ loc p input = run loc (StartMessage showCommand <> FinishMessage showCommandAndResult) p input
+
+runQE ::
+    (ListLikeProcessIO a c, MonadCatch m, MonadIO m, HasIOException e, MonadError e m, Exception e)
+    => Loc -> CreateProcess -> a -> m (Either e (ExitCode, a, a))
+runQE loc p i = try $ runQ loc p i
+
+instance Ord IOException where
+    compare a b = compare (show a) (show b)
+#endif

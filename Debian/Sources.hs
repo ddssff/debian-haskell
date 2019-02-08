@@ -10,36 +10,20 @@ module Debian.Sources
     , parseSourcesList
     ) -} where
 
-import Control.Lens (makeLenses, review, view)
+import Control.Lens (review, view)
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.Text (Text)
+import Debian.Codename (Codename, codename, parseCodename)
 import Debian.Pretty (PP(..))
 import Debian.Release
 import Debian.TH (here, Loc)
-import Network.URI (URI, uriPath, {-uriToString,-} parseURI, unEscapeString, escapeURIString, isAllowedInURI)
-import System.FilePath (splitDirectories)
+import Debian.VendorURI (parseVendorURI, VendorURI, vendorURI)
+import Network.URI (parseURI, unEscapeString, escapeURIString, isAllowedInURI)
 import Test.HUnit
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint (hcat, punctuate, render, text)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), prettyShow)
-
-newtype VendorURI = VendorURI {_vendorURI :: URI} deriving (Eq, Ord, Show)
-
-$(makeLenses ''VendorURI)
-
-parseVendorURI :: Loc -> String -> Maybe VendorURI
-parseVendorURI loc s =
-    case parseURI s of
-      Nothing -> Nothing
-      Just u -> case splitDirectories (uriPath u) of
-                  ["/", _vendor] -> Just (review vendorURI u)
-                  ["/", "hvr", "ghc", "ubuntu"] -> Just (review vendorURI u)
-                  ["/", "srv", "deb", "ubuntu"] -> Just (review vendorURI u)
-                  ["/", "srv", "deb86", "ubuntu"] -> Just (review vendorURI u)
-                  ["/", "srv", "deb-private", "ubuntu"] -> Just (review vendorURI u)
-                  ["/", "srv", "deb86-private", "ubuntu"] -> Just (review vendorURI u)
-                  _ -> error $ "parseVendorURI " ++ show loc ++ " - bad VendorURI path: " ++ show (uriPath u)
+import Distribution.Pretty (Pretty(pretty), prettyShow)
 
 data SourceType
     = Deb | DebSrc
@@ -65,45 +49,40 @@ data SourceOption
 data SourceOp = OpSet | OpAdd | OpDel deriving (Eq, Ord, Show)
 
 instance Pretty SourceOp where
-    pPrint OpSet = text "="
-    pPrint OpAdd = text "+="
-    pPrint OpDel = text "-="
+    pretty OpSet = text "="
+    pretty OpAdd = text "+="
+    pretty OpDel = text "-="
 
 data DebSource
     = DebSource
     { sourceType :: SourceType
     , sourceOptions :: [SourceOption]
     , sourceUri :: VendorURI
-    , sourceDist :: Either String (ReleaseName, [Section])
+    , sourceDist :: Either String (Codename, [Section])
     } deriving (Eq, Ord, Show)
 
 instance Pretty SourceType where
-    pPrint Deb = text "deb"
-    pPrint DebSrc = text "deb-src"
+    pretty Deb = text "deb"
+    pretty DebSrc = text "deb-src"
 
 instance Pretty SourceOption where
-    pPrint (SourceOption k op vs) = text k <> pPrint op <> hcat (punctuate (text ",") (map text vs))
+    pretty (SourceOption k op vs) = text k <> pretty op <> hcat (punctuate (text ",") (map text vs))
 
 instance Pretty DebSource where
-    pPrint (DebSource thetype theoptions theuri thedist) =
+    pretty (DebSource thetype theoptions theuri thedist) =
         hcat (punctuate (text " ")
-                ([pPrint thetype] ++
+                ([pretty thetype] ++
                  (case theoptions of
                     [] -> []
-                    _ -> [text "[" <> hcat (punctuate (text ", ") (map pPrint theoptions)) <> text "]"]) ++
+                    _ -> [text "[" <> hcat (punctuate (text ", ") (map pretty theoptions)) <> text "]"]) ++
                  [text (show (view vendorURI theuri))] ++
                  case thedist of
                    Left exactPath -> [text (escapeURIString isAllowedInURI exactPath)]
                    Right (dist, sections) ->
-                       map text (releaseName' dist : map sectionName' sections)))
+                       map text (codename dist : map sectionName' sections)))
 
 instance Pretty (PP [DebSource]) where
-    pPrint = hcat . map (\ x -> pPrint x <> text "\n") . unPP
-
--- |This is a name given to a combination of parts of one or more
--- releases that can be specified by a sources.list file.
-type SliceName = ReleaseName
--- data SliceName = SliceName { sliceName :: String } deriving (Eq, Ord, Show)
+    pretty = hcat . map (\ x -> pretty x <> text "\n") . unPP
 
 {-
 
@@ -266,7 +245,7 @@ parseSourceLine' loc str =
                       else Left ("parseSourceLine: Dist is an exact path, so sections are not allowed on the line:\n" ++ str)
               (_, Right typ, Right uri) -> if null sections
                     then Left ("parseSourceLine: Dist is not an exact path, so at least one section is required on the line:\n" ++ str)
-                    else Right $ DebSource { sourceType = typ, sourceOptions = theOptions, sourceUri = uri, sourceDist = Right ((parseReleaseName theDist), sections) }
+                    else Right $ DebSource { sourceType = typ, sourceOptions = theOptions, sourceUri = uri, sourceDist = Right ((parseCodename theDist), sections) }
               (_, Left msg, _) -> Left msg
               (_, _, Left msg) -> Left msg
 
@@ -289,11 +268,11 @@ testQuoteWords =
 
 testSourcesList :: Test
 testSourcesList =
-    test [ assertEqual "parse and pretty sources.list" validSourcesListExpected (render . pPrint . PP . parseSourcesList $here $ validSourcesListStr) ]
+    test [ assertEqual "parse and pretty sources.list" validSourcesListExpected (render . pretty . PP . parseSourcesList $here $ validSourcesListStr) ]
 
 testSourcesList2 :: Test
 testSourcesList2 =
-    test [ assertEqual "pretty sources.list" validSourcesListExpected (render . pPrint . PP $ validSourcesList) ]
+    test [ assertEqual "pretty sources.list" validSourcesListExpected (render . pretty . PP $ validSourcesList) ]
 
 validSourcesListStr :: String
 validSourcesListStr =
@@ -309,11 +288,11 @@ validSourcesListStr =
 
 validSourcesList :: [DebSource]
 validSourcesList =
-    [DebSource {sourceType = Deb, sourceOptions = [], sourceUri = (review vendorURI . fromJust) (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (ReleaseName {relName = "unstable"},[Section "main",Section "contrib",Section "non-free"])},
-     DebSource {sourceType = DebSrc, sourceOptions = [], sourceUri = (review vendorURI . fromJust) (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (ReleaseName {relName = "unstable"},[Section "main",Section "contrib",Section "non-free"])},
+    [DebSource {sourceType = Deb, sourceOptions = [], sourceUri = (review vendorURI . fromJust) (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (parseCodename "unstable",[Section "main",Section "contrib",Section "non-free"])},
+     DebSource {sourceType = DebSrc, sourceOptions = [], sourceUri = (review vendorURI . fromJust) (parseURI "ftp://ftp.debian.org/debian"), sourceDist = Right (parseCodename "unstable",[Section "main",Section "contrib",Section "non-free"])},
      DebSource {sourceType = Deb, sourceOptions = [], sourceUri = (review vendorURI . fromJust) (parseURI "http://pkg-kde.alioth.debian.org/kde-3.5.0/"), sourceDist = Left "./"},
-     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = (review vendorURI . fromJust) (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (ReleaseName {relName = "space dist"},[Section "main"])},
-     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = (review vendorURI . fromJust) (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (ReleaseName {relName = "dist"},[Section "space section"])}]
+     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = (review vendorURI . fromJust) (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (parseCodename "space dist",[Section "main"])},
+     DebSource {sourceType = Deb, sourceOptions = [SourceOption "trusted" OpSet ["yes"]], sourceUri = (review vendorURI . fromJust) (parseURI "http://ftp.debian.org/whee"), sourceDist = Right (parseCodename "dist",[Section "space section"])}]
 
 validSourcesListExpected :: String
 validSourcesListExpected =
@@ -328,7 +307,7 @@ _invalidSourcesListStr1 = "deb http://pkg-kde.alioth.debian.org/kde-3.5.0/ ./ ma
 
 testSourcesListParse :: Test
 testSourcesListParse =
-    test [ assertEqual "" gutsy (concat . map (<> "\n") . map (render . pPrint) . parseSourcesList $here $ gutsy) ]
+    test [ assertEqual "" gutsy (concat . map (<> "\n") . map (render . pretty) . parseSourcesList $here $ gutsy) ]
     where
       gutsy = concat ["deb http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",
                       "deb-src http://us.archive.ubuntu.com/ubuntu/ gutsy main restricted universe multiverse\n",

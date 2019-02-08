@@ -1,9 +1,18 @@
-{-# LANGUAGE CPP, OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables, TemplateHaskell #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, OverloadedStrings, PackageImports, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TypeFamilies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS -Wall -fno-warn-orphans #-}
 
 module Debian.URI
     ( module Network.URI
+
+#if 0
+    , _NodeElement -- :: Prism' Node Element
+    , _NodeContent -- :: Prism' Node Text
+    , eltAttrsLens -- :: Lens' Element (HashMap AttrName AttrValue)
+    , eltChildrenLens --  :: Lens' Element [Node]
+    , eltNameLens -- :: Lens' Element Text
+#endif
+
     , URIError(..)
     , uriSchemeLens
     , uriAuthorityLens
@@ -13,8 +22,8 @@ module Debian.URI
     -- * String known to parsable by parseURIReference.  Mainly
     -- useful because it has a Read instance.
     , URI'
-    , toURI'
     , fromURI'
+    , toURI'
     , readURI'
 
     -- Show URI as a Haskell expression
@@ -29,44 +38,25 @@ module Debian.URI
     , appendURIs
     , parentURI
     , uriToString'
-    , fileFromURI
-    , fileFromURIStrict
-    , dirFromURI
     -- * Lift IO operations into a MonadError instance
     , HasParseError(fromParseError)
     , HasURIError(fromURIError)
-    -- * URI, IO, or Parse Error
-    , DebError(..)
     -- * QuickCheck properties
     , prop_print_parse
     , prop_append_singleton
     ) where
 
-#if !MIN_VERSION_base(4,8,0)
-import Control.Applicative ((<$>))
-#endif
-import Control.Exception (catch, Exception, IOException, throw, try)
-import Control.Lens (makeLensesFor, view)
+import Control.Lens (makeLensesFor)
 import Control.Monad.Except (MonadError, throwError)
-import Control.Monad.Trans (MonadIO)
-import Data.ByteString.Lazy.UTF8 as L hiding (fromString)
-import qualified Data.ByteString.Lazy.Char8 as L
 import Data.Foldable (foldrM)
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (fromJust)
 #if !MIN_VERSION_base(4,11,0)
 import Data.Monoid ((<>))
 #endif
-import Data.Text as T (isInfixOf, pack, Text, unpack)
-import Debian.Process (HasIOException(fromIOException), liftEIO, run')
-import Debian.Sources (VendorURI, vendorURI)
-import Language.Haskell.TH.Syntax (Loc)
 import Network.URI (nullURI, parseURIReference, parseURI, parseAbsoluteURI, parseRelativeReference, URI(..), URIAuth(..), uriToString)
-import System.Directory (getDirectoryContents)
 import System.FilePath ((</>), dropTrailingPathSeparator, takeDirectory)
-import System.Process (proc)
 import Test.QuickCheck (Arbitrary)
 import Text.Parsec (ParseError)
-import Text.Regex (mkRegex, matchRegex)
 
 $(makeLensesFor [("uriScheme", "uriSchemeLens"),
                  ("uriAuthority", "uriAuthorityLens"),
@@ -128,8 +118,6 @@ prop_append_singleton uri = appendURIs [uri] == Right uri
 prop_print_parse :: URI -> Bool
 prop_print_parse uri = parseURIReference (show uri) == Just uri
 
--- instance Arbitrary
-
 -- | A wrapper around a String containing a known parsable URI.  Not
 -- absolutely safe, because you could say read "URI' \"bogus string\""
 -- :: URI'.  But enough to save me from myself.
@@ -144,51 +132,14 @@ fromURI' (URI' s) = fromJust (parseURI s) -- this should provably parse
 -- | Using the bogus Show instance of URI here.  If it ever gets fixed
 -- this will stop working.  Worth noting that show will obscure any
 -- password info embedded in the URI, so that's nice.
-toURI' :: VendorURI -> URI'
-toURI' = URI' . show . view vendorURI
+toURI' :: URI -> URI'
+toURI' = URI' . show
 
 uriToString' :: URI -> String
 uriToString' uri = uriToString id uri ""
 
 instance Arbitrary URI where
-
-fileFromURI :: (MonadIO m, HasIOException e, MonadError e m) => Loc -> URI -> m L.ByteString
-fileFromURI loc uri = fileFromURIStrict loc uri
-
-fileFromURIStrict :: (MonadIO m, HasIOException e, MonadError e m) => Loc -> URI -> m L.ByteString
-fileFromURIStrict loc uri =
-    case (uriScheme uri, uriAuthority uri) of
-      ("file:", Nothing) -> liftEIO $ L.readFile (uriPath uri)
-      -- ("ssh:", Just auth) -> cmdOutputStrict ("ssh " ++ uriUserInfo auth ++ uriRegName auth ++ uriPort auth ++ " cat " ++ show (uriPath uri))
-      ("ssh:", Just auth) ->
-          run' loc (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "cat", uriPath uri])
-      _ ->
-          run' loc (proc "curl" ["-s", "-g", uriToString' uri])
-
--- | Parse the text returned when a directory is listed by a web
--- server.  This is currently only known to work with Apache.
--- NOTE: there is a second copy of this function in
--- Extra:Extra.Net. Please update both locations if you make changes.
-webServerDirectoryContents :: Text -> IO [String]
-webServerDirectoryContents text | isInfixOf "<title>404 Not Found</title>" text = fail "Bad URL"
-webServerDirectoryContents text =
-    return . catMaybes . map (second . matchRegex re) . Prelude.lines . T.unpack $ text
-    where
-      re = mkRegex "( <A HREF|<a href)=\"([^/][^\"]*)/\""
-      second (Just [_, b]) = Just b
-      second _ = Nothing
-
-
-dirFromURI :: Loc -> URI -> IO (Either IOException [String])
-dirFromURI loc uri = try $ do
-    case (uriScheme uri, uriAuthority uri) of
-      ("file:", Nothing) -> getDirectoryContents (uriPath uri)
-      ("ssh:", Just auth) ->
-          (Prelude.lines . L.toString) <$>
-            run' loc (proc "ssh" [uriUserInfo auth ++ uriRegName auth ++ uriPort auth, "ls", "-1", uriPath uri])
-      _ ->
-          (webServerDirectoryContents =<< (T.pack . L.toString) <$> run' loc (proc "curl" ["-s", "-g", uriToString' uri]))
-            `catch` (\(e :: IOException) -> throw (userError (show e ++ ": " ++ show uri)))
+    -- Replace with import from network-arbitrary package
 
 class HasParseError e where fromParseError :: ParseError -> e
 instance HasParseError ParseError where fromParseError = id
@@ -196,17 +147,5 @@ instance HasParseError ParseError where fromParseError = id
 class HasURIError e where fromURIError :: URIError -> e
 instance HasURIError URIError where fromURIError = id
 
-data DebError
-    = IOException IOException
-    | URIError URIError
-    | ParseError ParseError
-    deriving (Show, Eq, Ord)
-
-instance Exception DebError
-
 instance Ord ParseError where
     compare a b = compare (show a) (show b)
-
-instance HasIOException DebError where fromIOException = IOException
-instance HasParseError DebError where fromParseError = ParseError
-instance HasURIError DebError where fromURIError = URIError

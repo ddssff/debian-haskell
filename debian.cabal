@@ -31,6 +31,7 @@ Library
    base >= 4 && < 5,
    bytestring,
    bzlib,
+   Cabal,
    containers,
    directory,
    either,
@@ -51,6 +52,7 @@ Library
    regex-compat,
    regex-tdfa,
    SHA,
+   syb,
    template-haskell,
    text,
    th-lift,
@@ -77,6 +79,7 @@ Library
         Debian.Apt.Package,
         Debian.Arch,
         Debian.Changes,
+        Debian.Codename,
         Debian.Control,
         Debian.Control.Common,
         Debian.Control.Builder
@@ -86,11 +89,11 @@ Library
         Debian.Control.Text,
         Debian.Control.TextLazy,
         Debian.Deb,
+        Debian.Except,
         Debian.Extra.Files,
         Debian.GenBuildDeps,
         Debian.Loc,
         Debian.Pretty,
-        Debian.Process,
         Debian.Relation,
         Debian.Relation.ByteString,
         Debian.Relation.Common,
@@ -108,7 +111,8 @@ Library
         Debian.Time,
         Debian.URI,
         Debian.UTF8,
-        Debian.Util.FakeChanges
+        Debian.Util.FakeChanges,
+        Debian.VendorURI
  other-modules:
         Debian.Version.Internal
 
@@ -141,7 +145,7 @@ Test-Suite debian-tests
   Type: exitcode-stdio-1.0
   Hs-Source-Dirs: Test
   Main-Is: Main.hs
- Build-Depends: base, debian, HUnit, parsec, regex-tdfa, text
+ Build-Depends: base, Cabal, debian, HUnit, parsec, regex-tdfa, text
  Other-Modules: Changes Control Dependencies Paths_debian Versions
  if flag(pretty-new)
    Build-Depends: pretty >= 1.1.2

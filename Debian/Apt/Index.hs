@@ -31,13 +31,16 @@ import Data.Monoid ((<>))
 import Data.Text as Text (Text, unpack, concat, lines, words)
 import Data.Time
 import Debian.Apt.Methods
+import Debian.Codename (Codename, codename)
 import Debian.Control (formatControl)
 import Debian.Control.ByteString
 --import Debian.Control.Common
 import Debian.Control.Text (decodeControl)
 import Debian.Release
 import Debian.Sources
-import Debian.URI
+import Debian.URI (uriPathLens, uriToString')
+import Debian.VendorURI (VendorURI, vendorURI)
+import Network.URI
 import System.Directory
 import System.FilePath ((</>))
 import System.Posix.Files
@@ -45,7 +48,7 @@ import System.FilePath (takeBaseName)
 --import qualified System.Unix.Misc as Misc
 import Text.ParserCombinators.Parsec.Error
 import Text.PrettyPrint (render)
-import Text.PrettyPrint.HughesPJClass (pPrint)
+import Distribution.Pretty (pretty)
 import Text.Read (readMaybe)
 #if !MIN_VERSION_base(4,8,0)
 import Control.Applicative (pure, (<$>), (<*>))
@@ -131,7 +134,7 @@ indexURIs arch debSource =
     where
       baseURI = sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pPrint debSource)) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pretty debSource)) id (sourceDist debSource)
 
 -- |return a tuple for the section
 --  - the URI to the uncompressed index file
@@ -140,14 +143,14 @@ indexURIs arch debSource =
 calcPath :: SourceType -- ^ do we want Packages or Sources
          -> String  -- ^ The binary architecture to use for Packages
          -> VendorURI -- ^ base URI as it appears in sources.list
-         -> ReleaseName -- ^ the release (e.g., unstable, testing, stable, sid, etc)
+         -> Codename -- ^ the release (e.g., unstable, testing, stable, sid, etc)
          -> Section -- ^ the section (main, contrib, non-free, etc)
          -> (URI, [Char]) -- ^ (uri to index file, basename for the downloaded file)
 calcPath srcType arch baseURI release section =
           let indexPath = case srcType of
                       DebSrc -> "source/Sources"
                       Deb -> "binary-" ++ arch </> "Packages"
-              uri' = over uriPathLens (\path -> path </> "dists" </> releaseName' release </> sectionName' section </> indexPath) (view vendorURI baseURI)
+              uri' = over uriPathLens (\path -> path </> "dists" </> codename release </> sectionName' section </> indexPath) (view vendorURI baseURI)
               path = view uriPathLens uri'
           in (uri', addPrefix (escapePath path))
           where

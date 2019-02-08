@@ -1,9 +1,10 @@
+-- | This module name is spurious - "Release" is not an official term
+-- in the debian documentation.
+
 {-# LANGUAGE DeriveDataTypeable #-}
+
 module Debian.Release
-    ( ReleaseName(..)
-    , parseReleaseName
-    , releaseName'
-    , Section(..)
+    ( Section(..)
     , SubSection(..)
     , sectionName
     , sectionName'
@@ -12,20 +13,7 @@ module Debian.Release
     , parseSection'
     ) where
 
-import Data.Data (Data)
-import Data.Typeable (Typeable)
 import Network.URI (unEscapeString, escapeURIString, isAllowedInURI)
-
--- |A distribution (aka release) name.  This type is expected to refer
--- to a subdirectory of the dists directory which is at the top level
--- of a repository.
-data ReleaseName = ReleaseName { relName :: String } deriving (Eq, Ord, Read, Show, Data, Typeable)
-
-parseReleaseName :: String -> ReleaseName
-parseReleaseName name = ReleaseName {relName = unEscapeString name}
-
-releaseName' :: ReleaseName -> String
-releaseName' (ReleaseName {relName = s}) = escapeURIString isAllowedInURI s
 
 -- |A section of a repository such as main, contrib, non-free,
 -- restricted.  The indexes for a section are located below the

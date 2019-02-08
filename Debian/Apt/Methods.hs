@@ -22,7 +22,7 @@ module Debian.Apt.Methods
     where
 
 import Debian.Time
-import Debian.URI
+import Debian.URI (URI(..), parseURI, uriToString')
 
 import Control.Exception
 import Control.Monad.Except

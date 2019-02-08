@@ -8,15 +8,17 @@
 {-# LANGUAGE DeriveFunctor, FlexibleContexts, FlexibleInstances, OverloadedStrings, TypeSynonymInstances #-}
 module Debian.Pretty
     ( PP(PP, unPP)
-    , prettyShow
     , prettyText
     , ppPrint
     , ppShow
     , ppText
+    -- * Re-export
+    , prettyShow
     ) where
 
 import Data.Text (Text, unpack, pack)
-import Text.PrettyPrint.HughesPJClass (Doc, Pretty(pPrint), text, empty, prettyShow)
+import Text.PrettyPrint.HughesPJClass (Doc, text, empty)
+import Distribution.Pretty (Pretty(pretty), prettyShow)
 
 -- | This type is wrapped around values before we pretty print them so
 -- we can write our own Pretty instances for common types without
@@ -25,19 +27,19 @@ import Text.PrettyPrint.HughesPJClass (Doc, Pretty(pPrint), text, empty, prettyS
 newtype PP a = PP {unPP :: a} deriving (Functor)
 
 instance Pretty (PP Text) where
-    pPrint = text . unpack . unPP
+    pretty = text . unpack . unPP
 
 instance Pretty (PP String) where
-    pPrint = text . unPP
+    pretty = text . unPP
 
 instance Pretty (PP a) => Pretty (PP (Maybe a)) where
-    pPrint = maybe empty ppPrint . unPP
+    pretty = maybe empty ppPrint . unPP
 
 prettyText :: Pretty a => a -> Text
 prettyText = pack . prettyShow
 
 ppPrint :: Pretty (PP a) => a -> Doc
-ppPrint = pPrint . PP
+ppPrint = pretty . PP
 
 ppShow :: Pretty (PP a) => a -> String
 ppShow = prettyShow . PP

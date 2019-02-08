@@ -31,7 +31,7 @@ import System.IO (Handle)
 import System.Process (runInteractiveCommand, waitForProcess)
 import Text.ParserCombinators.Parsec (ParseError)
 import Text.PrettyPrint (Doc, text, hcat)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
+import Distribution.Pretty (Pretty(pretty))
 
 newtype Control' a
     = Control { unControl :: [Paragraph' a] } deriving (Eq, Ord, Read, Show)
@@ -99,12 +99,12 @@ protectFieldText' s =
 -- | This may have bad performance issues (dsf: Whoever wrote this
 -- comment should have explained why.)
 instance (ControlFunctions a, Pretty (PP a)) => Pretty (Control' a) where
-    pPrint = ppControl
+    pretty = ppControl
 instance (ControlFunctions a, Pretty (PP a)) => Pretty (Paragraph' a) where
-    pPrint = ppParagraph
+    pretty = ppParagraph
 
 instance (ControlFunctions a, Pretty (PP a)) => Pretty (Field' a) where
-    pPrint = ppField
+    pretty = ppField
 
 ppControl :: (ControlFunctions a, Pretty (PP a)) => Control' a -> Doc
 ppControl (Control paragraph) =
@@ -115,8 +115,8 @@ ppParagraph (Paragraph fields) =
     hcat (map (\ x -> ppField x <> text "\n") fields)
 
 ppField :: (ControlFunctions a, Pretty (PP a)) => Field' a -> Doc
-ppField (Field (n,v)) = pPrint (PP n) <> text ":" <> pPrint (PP (protectFieldText v))
-ppField (Comment c) = pPrint (PP c)
+ppField (Field (n,v)) = pretty (PP n) <> text ":" <> pretty (PP (protectFieldText v))
+ppField (Comment c) = pretty (PP c)
 
 mergeControls :: [Control' a] -> Control' a
 mergeControls controls =

@@ -20,14 +20,14 @@ import Debian.Pretty (PP(..))
 import Debian.Version.Internal
 import Text.ParserCombinators.Parsec
 import Text.Regex
-import Text.PrettyPrint (Doc, render)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
+import Text.PrettyPrint (Doc, render, text)
+import Distribution.Pretty (Pretty(pretty))
 
 prettyDebianVersion :: DebianVersion -> Doc
 prettyDebianVersion (DebianVersion s _) = text s
 
 instance Pretty (PP DebianVersion) where
-    pPrint = prettyDebianVersion . unPP
+    pretty = prettyDebianVersion . unPP
 
 instance Eq DebianVersion where
     (DebianVersion _ v1) == (DebianVersion _ v2) = v1 == v2

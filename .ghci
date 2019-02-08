@@ -4,4 +4,4 @@
 :set -DMIN_VERSION_time(major1,major2,minor)=((major1)<1||(major1)==1&&(major2)<5||(major1)==1&&(major2)==5&&(minor)<=0)
 :set -DMIN_VERSION_pretty(major1,major2,minor)=((major1)<1||(major1)==1&&(major2)<1||(major1)==1&&(major2)==1&&(minor)<=2)
 
-:set prompt "λ "
+:set prompt "λ> "

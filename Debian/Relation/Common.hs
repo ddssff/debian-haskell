@@ -14,7 +14,7 @@ import Debian.Pretty (PP(..))
 import Prelude hiding (map)
 import Text.ParserCombinators.Parsec
 import Text.PrettyPrint (Doc, text, empty)
-import Text.PrettyPrint.HughesPJClass (Pretty(pPrint))
+import Distribution.Pretty (Pretty(pretty))
 
 -- Local Modules
 
@@ -55,7 +55,7 @@ prettyOrRelation xs = mconcat . intersperse (text " | ") . List.map prettyRelati
 
 prettyRelation :: Relation -> Doc
 prettyRelation (Rel name ver arch) =
-    pPrint (PP name) <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
+    pretty (PP name) <> maybe empty prettyVersionReq ver <> maybe empty prettyArchitectureReq arch
 
 instance Ord Relation where
     compare (Rel pkgName1 mVerReq1 _mArch1) (Rel pkgName2 mVerReq2 _mArch2) =
@@ -109,24 +109,24 @@ checkVersionReq (Just (GRE v1)) (Just v2) = v2 >= v1
 checkVersionReq (Just (SGR v1)) (Just v2) = v2 > v1
 
 instance Pretty (PP BinPkgName) where
-    pPrint = text . unBinPkgName . unPP
+    pretty = text . unBinPkgName . unPP
 
 instance Pretty (PP SrcPkgName) where
-    pPrint = text . unSrcPkgName . unPP
+    pretty = text . unSrcPkgName . unPP
 
 -- | Wrap `PP` around type synonyms that might overlap with the
 -- `Pretty [a]` instance.
 instance Pretty (PP Relations) where
-    pPrint = prettyRelations . unPP
+    pretty = prettyRelations . unPP
 
 instance Pretty (PP OrRelation) where
-    pPrint = prettyOrRelation . unPP
+    pretty = prettyOrRelation . unPP
 
 instance Pretty (PP Relation) where
-    pPrint = prettyRelation . unPP
+    pretty = prettyRelation . unPP
 
 instance Pretty (PP VersionReq) where
-    pPrint = prettyVersionReq . unPP
+    pretty = prettyVersionReq . unPP
 
 instance Pretty (PP ArchitectureReq) where
-    pPrint = prettyArchitectureReq . unPP
+    pretty = prettyArchitectureReq . unPP

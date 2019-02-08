@@ -12,9 +12,10 @@ import Debian.Control.Text ({- Pretty instances -})
 import Debian.Pretty (prettyShow)
 import Debian.Relation
 import Debian.Version (parseDebianVersion, parseDebianVersion')
+import Distribution.Pretty (pretty)
 import Paths_debian (version)
 import Text.Parsec.Error (ParseError)
-import Text.PrettyPrint.HughesPJClass (Doc, text, pPrint)
+import Text.PrettyPrint.HughesPJClass (Doc, text)
 import Text.Regex.TDFA ((=~), MatchResult(..))
 
 #if !MIN_VERSION_pretty(1,1,2)
@@ -38,14 +39,14 @@ replaceString old new x =
 -- inter-paragraph newlines, or missing terminating newlines, would be
 -- good.
 controlTests =
-    [ TestCase (assertEqual "pretty1" (pPrint control) (either (error "parser failed") pPrint (parseControl "debian/control" sample)))
-    , TestCase (assertEqual "pretty2" (text sample) (pPrint control))
-    , TestCase (assertEqual "pretty3" (text (head paragraphs <> "\n")) (pPrint (head (unControl control))))
+    [ TestCase (assertEqual "pretty1" (pretty control) (either (error "parser failed") pretty (parseControl "debian/control" sample)))
+    , TestCase (assertEqual "pretty2" (text sample) (pretty control))
+    , TestCase (assertEqual "pretty3" (text (head paragraphs <> "\n")) (pretty (head (unControl control))))
     -- The Pretty class instances are distinct implementations from
     -- those in Debian.Control.PrettyPrint.  Not sure why, there is a
     -- terse note about performance concerns.
-    , TestCase (assertEqual "pretty4" (text sample) (pPrint control))
-    , TestCase (assertEqual "pretty5" (text (head paragraphs <> "\n")) (pPrint (head (unControl control))))
+    , TestCase (assertEqual "pretty4" (text sample) (pretty control))
+    , TestCase (assertEqual "pretty5" (text (head paragraphs <> "\n")) (pretty (head (unControl control))))
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy1" (Right (unsafeDebianControl control)) vc) -- validate control file
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy2" (Right (Just builddeps)) (either Left (debianRelations "Build-Depends") vc)) -- parse build deps
     , TestCase (validateDebianControl control >>= \ vc -> assertEqual "policy3" (Right Nothing) (either Left (debianRelations "Foo") vc)) -- absent field
