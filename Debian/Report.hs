@@ -59,7 +59,8 @@ trumped fetcher cacheDir arch sourcesA sourcesB =
        pmB <- makePackageMap (fromJust . extractVersion) max (map fromJust indexesB)
        return (trumpedMap pmA pmB)
     where
-      isDebSrc ds = sourceType ds == DebSrc
+      isDebSrc :: DebSource -> Bool
+      isDebSrc ds = _sourceType ds == DebSrc
 
 -- |calculate all the trumped packages
 trumpedMap :: M.Map Text DebianVersion -- ^ package map a

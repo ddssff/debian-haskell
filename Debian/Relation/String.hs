@@ -40,7 +40,7 @@ instance ParseRelations String where
           x -> x
         where
           scrub = unlines . filter (not . comment) . lines
-          comment s = case dropWhile (`elem` " \t") s of
+          comment s = case dropWhile (`elem` [' ', '\t']) s of
                            ('#' : _) -> True
                            _ -> False
 

@@ -125,7 +125,7 @@ instance ControlFunctions C.ByteString where
         find (\ (Field (fieldName',_)) -> C.map toLower fieldName' == pFieldName) fields
     -- NOTE: probably inefficient
     stripWS = C.reverse . strip . C.reverse . strip
-        where strip = C.dropWhile (flip elem " \t")
+        where strip = C.dropWhile (flip elem [' ', '\t'])
     protectFieldText = protectFieldText'
     asString = C.unpack
 

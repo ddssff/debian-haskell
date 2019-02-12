@@ -3,7 +3,7 @@
 {-# LANGUAGE DeriveDataTypeable, TemplateHaskell #-}
 
 module Debian.Codename
-    ( Codename
+    ( Codename(..)
     , codename
     , parseCodename
     ) where
@@ -15,10 +15,7 @@ import Network.URI (unEscapeString, escapeURIString, isAllowedInURI)
 import Text.PrettyPrint (text)
 import Distribution.Pretty
 
-data Codename = Codename String deriving (Eq, Ord, Read, Data, Typeable)
-
-instance Show Codename where
-    show c = "parseCodename (" <> show (codename c) <> ")"
+data Codename = Codename String deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 parseCodename :: String -> Codename
 parseCodename = Codename . unEscapeString

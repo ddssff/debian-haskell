@@ -21,7 +21,7 @@ module Debian.URI
     , uriFragmentLens
     -- * String known to parsable by parseURIReference.  Mainly
     -- useful because it has a Read instance.
-    , URI'
+    , URI'(..)
     , fromURI'
     , toURI'
     , readURI'
@@ -33,6 +33,7 @@ module Debian.URI
     , parseURI'
     , parseAbsoluteURI'
     , parseRelativeReference'
+    , parseURIUnsafe
     -- URI appending
     , appendURI
     , appendURIs
@@ -49,7 +50,7 @@ module Debian.URI
 import Control.Lens (makeLensesFor)
 import Control.Monad.Except (MonadError, throwError)
 import Data.Foldable (foldrM)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust, fromMaybe)
 #if !MIN_VERSION_base(4,11,0)
 import Data.Monoid ((<>))
 #endif
@@ -81,6 +82,9 @@ parseAbsoluteURI' :: (HasURIError e, MonadError e m) => String -> m URI
 parseAbsoluteURI' s = maybe (throwError $ fromURIError $ URIParseError "parseAbsoluteURI" s) return (parseAbsoluteURI s)
 parseRelativeReference' :: (HasURIError e, MonadError e m) => String -> m URI
 parseRelativeReference' s = maybe (throwError $ fromURIError $ URIParseError "parseRelativeReference" s) return (parseRelativeReference s)
+
+parseURIUnsafe :: String -> URI
+parseURIUnsafe s = fromMaybe (error ("parseURIUnsafe " ++ show s)) $ parseURIReference s
 
 --parseAbsoluteURI :: String -> Maybe URI
 --parseRelativeReference :: String -> Maybe URI

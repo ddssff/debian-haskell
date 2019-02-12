@@ -1,4 +1,4 @@
-{-# LANGUAGE RankNTypes, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts, FlexibleInstances, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables #-}
 
 module Debian.Except
     (
@@ -12,13 +12,18 @@ module Debian.Except
     , HasSomeException(fromSomeException)
     , liftEIO
     , liftSE
+    -- * A class for mainaging a call stack with the Reader monad
+    , HasStack(stackLens)
+    , pushStack
     -- * Re-exports from Control.Monad.Except
     , module Control.Monad.Except
     ) where
 
 import Control.Exception (evaluate, Exception, IOException, SomeException(SomeException))
+import Control.Lens (Lens', over)
 import Control.Monad.Catch (try)
 import Control.Monad.Except (ExceptT, lift, liftIO, MonadError, MonadIO, runExceptT, throwError)
+import Control.Monad.Reader (local, MonadReader)
 import Data.Typeable (typeOf)
 import Language.Haskell.TH.Syntax (Loc)
 
@@ -35,27 +40,37 @@ displaySomeExceptionType = withException (show . typeOf)
 tryExceptT :: Monad m => ExceptT e m a -> ExceptT e m (Either e a)
 tryExceptT = lift . runExceptT
 
+-- | A value that can be specified in a @MonadReader r m@ to maintain a
+-- call stack of @loc@.  Examples of type @loc@ would be @Loc@ or @(Loc,
+-- String)@
+class HasStack loc r where stackLens :: Lens' r [loc]
+instance HasStack loc [loc] where stackLens = id
+
+pushStack :: forall loc r m a. (HasStack loc r, MonadReader r m) => loc -> m a -> m a
+pushStack loc action = local (over stackLens (loc :) :: r -> r) action
+
 -- | This class includes an instance for IOException itself, so we
 -- don't know whether the exception has been caught.
-class HasIOException e where fromIOException :: Loc -> IOException -> e
-instance HasIOException IOException where fromIOException _loc = id
+class HasIOException e where fromIOException :: [Loc] -> IOException -> e
+-- This instance unfortunately throws away the stack info.
+instance HasIOException IOException where fromIOException _locs = id
 
-class HasSomeException e where fromSomeException :: Loc -> SomeException -> e
-instance HasSomeException SomeException where fromSomeException _loc = id
+class HasSomeException e where fromSomeException :: [Loc] -> SomeException -> e
+instance HasSomeException SomeException where fromSomeException _locs = id
 
 -- | Evaluate an IO action, catching any IOException, and lift the
 -- result into a MonadError instance.
-liftEIO :: forall e m a. (MonadIO m, HasIOException e, MonadError e m) => Loc -> IO a -> m a
-liftEIO loc action =
+liftEIO :: forall e m a. (MonadIO m, HasIOException e, MonadError e m) => [Loc] -> IO a -> m a
+liftEIO locs action =
     -- This evaluate ensures that the action is fully evaluated and
     -- any resulting IOExceptions are thrown.
     (liftIO (try (action >>= evaluate)) :: m (Either IOException a)) >>= either handle return
     where handle :: IOException -> m a
-          handle = throwError . fromIOException loc
+          handle = throwError . fromIOException locs
 
 -- | Evaluate an IO action, catching any exception, and lift the
 -- result into a MonadError instance.
-liftSE :: forall e m a. (MonadIO m, HasSomeException e, MonadError e m) => Loc -> IO a -> m a
-liftSE loc action =
+liftSE :: forall e m a. (MonadIO m, HasSomeException e, MonadError e m) => [Loc] -> IO a -> m a
+liftSE locs action =
     liftIO (try action) >>= either (\(e :: SomeException) -> f e) return
-    where f = throwError . fromSomeException loc
+    where f = throwError . fromSomeException locs

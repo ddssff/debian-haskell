@@ -101,6 +101,7 @@ instance ControlFunctions Builder where
     protectFieldText = protectFieldText'
     asString = LL.toString
 
+dropAround :: LL.ListLike c item => (item -> Bool) -> c -> c
 dropAround p = LL.dropWhile p . LL.dropWhileEnd p
 
 -- * Control File Parser

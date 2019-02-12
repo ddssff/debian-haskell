@@ -29,8 +29,8 @@ main =
     do (sourcesAFP, sourcesBFP) <- parseArgs
        let arch     = "i386" -- not actually used for anything right now, could be when binary package list is enabled
            cacheDir = "."    -- FIXME: replace with tempdir later
-       sourcesA <- liftM (parseSourcesList $here) $ readFile sourcesAFP
-       sourcesB <- liftM (parseSourcesList $here) $ readFile sourcesBFP
+       sourcesA <- liftM (parseSourcesList [$here]) $ readFile sourcesAFP
+       sourcesB <- liftM (parseSourcesList [$here]) $ readFile sourcesBFP
        trumpMap <- trumped (fetch emptyFetchCallbacks []) cacheDir arch sourcesA sourcesB
        print (showXML "trump.xsl" (trumpedXML trumpMap))
     where

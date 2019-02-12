@@ -129,12 +129,12 @@ indexURIs :: String -- ^ which binary architecture
           -> DebSource -- ^ line from sources.list
           -> [(URI, FilePath, DebSource)] -- ^ (remote uri, local name, deb source for just this section)
 indexURIs arch debSource =
-    map (\ section -> let (uri, fp) = calcPath (sourceType debSource) arch baseURI release section
-                      in (uri,fp, debSource { sourceDist = (Right (release, [section])) }) ) sections
+    map (\ section -> let (uri, fp) = calcPath (view sourceType debSource) arch baseURI release section
+                      in (uri,fp, debSource { _sourceDist = (Right (release, [section])) }) ) sections
     where
-      baseURI = sourceUri debSource
+      baseURI = view sourceUri debSource
       (release, sections) =
-          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pretty debSource)) id (sourceDist debSource)
+          either (error $ "indexURIs: support not implemented for exact path: " ++ render (pretty debSource)) id (view sourceDist debSource)
 
 -- |return a tuple for the section
 --  - the URI to the uncompressed index file

@@ -52,7 +52,7 @@ instance ControlFunctions String where
         where hasFieldName name (Field (fieldName',_)) = name == map toLower fieldName'
               hasFieldName _ _ = False
     stripWS = reverse . strip . reverse . strip
-        where strip = dropWhile (flip elem " \t")
+        where strip = dropWhile (flip elem (" \t" :: [Char]))
     protectFieldText = protectFieldText'
     asString = id
 
