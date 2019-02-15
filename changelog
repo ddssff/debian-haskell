@@ -1,6 +1,9 @@
 haskell-debian (3.95) unstable; urgency=medium
 
   * Clean up error handling and monad transformers.
+  * Move source code into src subdirectory to avoid build problems on case
+    insensitive HFS partitions.
+  * Move Debian.Except module to Extra.Except in sr-extra package.
 
  -- David Fox <dsf@seereason.com>  Tue, 12 Feb 2019 16:38:30 -0800
 
