@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, FlexibleContexts, MultiParamTypeClasses, PackageImports, ScopedTypeVariables #-}
+{-# LANGUAGE CPP, FlexibleContexts, MultiParamTypeClasses, PackageImports, ScopedTypeVariables, TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-name-shadowing -fno-warn-orphans #-}
 module Debian.Control.ByteString
     ( Control'(..)
@@ -32,13 +32,14 @@ import Data.Char(toLower, isSpace, chr, ord)
 import Data.Word (Word8)
 import Data.List
 import qualified Data.ListLike as LL
-import qualified Data.ListLike.String as LL
+import qualified Data.ListLike.String ()
 
 import Text.ParserCombinators.Parsec.Error
 import Text.ParserCombinators.Parsec.Pos
 
 -- Third Party Modules
 
+import qualified Data.ByteString as W
 import qualified Data.ByteString.Char8 as C
 
 import Debian.Control.Common hiding (protectFieldText')
@@ -129,15 +130,15 @@ instance ControlFunctions C.ByteString where
     protectFieldText = protectFieldText'
     asString = C.unpack
 
-protectFieldText' :: (LL.StringLike a, LL.ListLike a Word8) => ControlFunctions a => a -> a
+protectFieldText' :: (a ~ C.ByteString, LL.ListLike a Word8, ControlFunctions a) => a -> a
 protectFieldText' s =
-    case LL.lines s of
+    case C.lines s of
       [] -> LL.empty
-      (l : ls) -> dropWhileEnd (isSpace . chr . fromIntegral) $ LL.unlines $ l : map protect ls
+      (l : ls) -> dropWhileEnd (isSpace . chr . fromIntegral) $ C.unlines $ l : map protect ls
     where
-      dropWhileEnd :: (LL.StringLike a, LL.ListLike a Word8) => (Word8 -> Bool) -> a -> a
-      dropWhileEnd func = LL.reverse . LL.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
-      protect :: (LL.StringLike a, LL.ListLike a Word8) => a -> a
+      dropWhileEnd :: (a ~ W.ByteString, LL.ListLike a Word8) => (Word8 -> Bool) -> a -> a
+      dropWhileEnd func = LL.reverse . W.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
+      protect :: (LL.ListLike a Word8) => a -> a
       protect l = maybe LL.empty (\ c -> if isHorizSpace c then l else LL.cons (ord' ' ' :: Word8) l) (LL.find (const True :: Word8 -> Bool) l)
       -- isSpace' = isSpace . chr'
       isHorizSpace c = elem c (map ord' " \t")
