@@ -130,7 +130,7 @@ instance ControlFunctions C.ByteString where
     protectFieldText = protectFieldText'
     asString = C.unpack
 
-protectFieldText' :: (a ~ C.ByteString, LL.ListLike a Word8, ControlFunctions a) => a -> a
+protectFieldText' :: forall a. (a ~ C.ByteString, LL.ListLike a Word8, ControlFunctions a) => a -> a
 protectFieldText' s =
     case C.lines s of
       [] -> LL.empty
@@ -139,7 +139,7 @@ protectFieldText' s =
       dropWhileEnd :: (a ~ W.ByteString, LL.ListLike a Word8) => (Word8 -> Bool) -> a -> a
       dropWhileEnd func = LL.reverse . W.dropWhile func . LL.reverse -- foldr (\x xs -> if func x && LL.null xs then LL.empty else LL.cons x xs) empty
       protect :: (LL.ListLike a Word8) => a -> a
-      protect l = maybe LL.empty (\ c -> if isHorizSpace c then l else LL.cons (ord' ' ' :: Word8) l) (LL.find (const True :: Word8 -> Bool) l)
+      protect l = maybe LL.empty (\ c -> if isHorizSpace c then l else LL.cons (ord' ' ') l) (LL.find (const True) l)
       -- isSpace' = isSpace . chr'
       isHorizSpace c = elem c (map ord' " \t")
       ord' = fromIntegral . ord
