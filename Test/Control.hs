@@ -53,11 +53,11 @@ controlTests =
     , TestCase (parseDebianControlFromFile "Test/Control.hs" >>= \ vc ->
                 assertEqual "policy4"
                             -- Exceptions have bogus Eq instances, so we need to show then compare.
-                            "Left \"src/Debian/Control/Policy.hs\"(line 77, column 54): ParseControlError \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs"
+                            "Left \"src/Debian/Control/Policy.hs\"(line 77, column 55): ParseControlError \"Test/Control.hs\" (line 0, column 0):\nFailed to parse Test/Control.hs"
                             (show (either Left (either Left Right . debianRelations "Foo") vc)))
     , TestCase (parseDebianControlFromFile "nonexistant" >>= \ vc ->
                 assertEqual "policy5"
-                            "Left \"src/Debian/Control/Policy.hs\"(line 76, column 36): IOError nonexistant: openBinaryFile: does not exist (No such file or directory)"
+                            "Left \"src/Debian/Control/Policy.hs\"(line 76, column 37): IOError nonexistant: openBinaryFile: does not exist (No such file or directory)"
                             (replaceString "openFile" "openBinaryFile"
                              (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl)))))
 
