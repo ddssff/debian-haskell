@@ -57,7 +57,7 @@ controlTests =
                             (show (either Left (either Left Right . debianRelations "Foo") vc)))
     , TestCase (parseDebianControlFromFile "nonexistant" >>= \ vc ->
                 assertEqual "policy5"
-                            "Left \"src/Debian/Control/Policy.hs\"(line 76, column 37): IOError nonexistant: openBinaryFile: does not exist (No such file or directory)"
+                            "Left \"src/Debian/Control/Policy.hs\"(line 76, column 37): IOError nonexistant: withBinaryFile: does not exist (No such file or directory)"
                             (replaceString "openFile" "openBinaryFile"
                              (show (either Left (debianRelations "Foo") (vc :: Either ControlFileError DebianControl)))))
 
