@@ -46,7 +46,6 @@ Library
    old-locale,
    parsec >= 2 && <4,
    process,
-   process-extras >= 0.2.0,
    pureMD5,
    QuickCheck,
    regex-compat,
